@@ -1,0 +1,269 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>归档：2014/6 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">zxc</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/categories/essay/">随感</a></li>
+    
+      <li><a href="/categories/tech/">技术</a></li>
+    
+      <li><a href="/categories/investment/">理财</a></li>
+    
+      <li><a href="/categories/life/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title">2014/6</h2>
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-06-18T08:15:01.000Z"><a href="/2014/06/18/hello/">6月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在apache-tomcat托管的应用里如果使用了dubbo的消费端，关闭tomcat时，会无法退出进程，应用会被关闭，connector端口也关闭了，但dubbo相关的一些线程仍存在，导致java进程并不会消失。</p>
+<p>这其实是由非daemon线程引起的，jvm里当前main线程在退出时，只要存在非daemon的子线程，就不会退出jvm，哪怕这个非daemon的线程是在一个daemon线程里启动的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonTest</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">static</span> class MyThread extends Thread {</div><div class="line">        <span class="keyword">public</span> <span class="title">MyThread</span>(<span class="keyword">boolean</span> isDaemon){</div><div class="line">            <span class="keyword">this</span>.setDaemon(isDaemon);</div><div class="line">        }</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                Thread.sleep(<span class="number">1000</span>*<span class="number">10000</span>);;</div><div class="line">            } <span class="keyword">catch</span> (Exception e) {</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception{</div><div class="line">        Thread t1 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t2 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t3 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t4 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    <span class="keyword">new</span> MyThread(<span class="keyword">false</span>).start(); <span class="comment">//非daemon</span></div><div class="line">                    Thread.sleep(<span class="number">1000</span> * <span class="number">10000</span>);</div><div class="line">                } <span class="keyword">catch</span> (Exception e) {</div><div class="line">                }</div><div class="line">            }</div><div class="line">        };</div><div class="line"></div><div class="line"></div><div class="line">        t1.start();</div><div class="line">        t2.start();</div><div class="line">        t3.start();</div><div class="line">        t4.start();</div><div class="line"></div><div class="line">        Thread.sleep(<span class="number">2000</span>);</div><div class="line">        System.out.println(<span class="string">"main thread quit"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面启动了4个子线程，都是daemon的，其中有一个子线程又启动了一个非daemon线程，结果主线程退出时，jvm进程并不会退出，并且其他daemon线程也继续运行。</p>
+<p>Dubbo的线程都是daemon的，不过它使用的netty框架却有一个非daemon的“Hashed wheel timer”线程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="string">"Hashed wheel timer #1"</span> #<span class="number">1582</span> prio=<span class="number">5</span> os_prio=<span class="number">0</span> tid=<span class="number">0x00002aaac5054800</span> nid=<span class="number">0x7fd3</span> waiting on condition [<span class="number">0x0000000041262000</span>]</div><div class="line">   java.lang.Thread.State: TIMED_WAITING (sleeping)</div><div class="line">    at java.lang.Thread.sleep(Native Method)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.waitForNextTick(HashedWheelTimer.java:<span class="number">459</span>)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:<span class="number">376</span>)</div><div class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</div></pre></td></tr></table></figure>
+
+<p>正是这个非daemon线程，导致tomcat的主线程退出后，jvm进程没能退出。类似的问题以前在HSF2里也存在，后来已经解决了。dubbo的这个问题可以通过kill来结束。</p>
+<p>在tomcat的脚本里，先使用正常的方式(viaport)停止tomcat，在不成功之后会尝试”kill”方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"># stop failed. Shutdown port disabled? Try a normal kill.</div><div class="line"><span class="keyword">if</span> [ $? != <span class="number">0</span> ]; then</div><div class="line">    <span class="keyword">if</span> [ ! -z <span class="string">"$CATALINA_PID"</span> ]; then</div><div class="line">      echo <span class="string">"The stop command failed. Attempting to signal the process to stop through OS signal."</span></div><div class="line">      kill -<span class="number">15</span> `cat <span class="string">"$CATALINA_PID"</span>` &gt;/dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&<span class="number">1</span></div><div class="line">    fi</div><div class="line">fi</div></pre></td></tr></table></figure>
+
+<p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
+<p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+  
+
+  <ul class="page-direction" id="page-direction">
+    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
+    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
+</ul>
+
+<nav id="pagination">
+  
+  
+  <div class="clearfix"></div>
+</nav>
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Java/">Java</a><small>6</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>1</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>1</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/前端/">前端</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>2</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>2</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/理财/">理财</a><small>1</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="http://weibo.com/zxc337" target="_blank">欢迎光临我的技术Blog网站 :</br>weibo.com</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2014/10/24/blog2/">RESTful Web Services中API的设计原则</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/24/rizhi/">琐忆</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
+      </li>
+    
+      <li>
+        <a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
+      </li>
+    
+      <li>
+        <a href="/2014/09/05/blog1/">REST风格的软件架构</a>
+      </li>
+    
+      <li>
+        <a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a>
+      </li>
+    
+      <li>
+        <a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a>
+      </li>
+    
+      <li>
+        <a href="/2013/11/13/hello-world/">Hello World</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2014 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+</body>
+
+</html>
