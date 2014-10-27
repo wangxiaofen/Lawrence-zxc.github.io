@@ -44,7 +44,7 @@
   <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
   <header id="header" class="inner"><div class="alignleft">
   <h1><a href="/">Jeck_Zhang</a></h1>
-  <h2><a href="/">zxc</a></h2>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
   <ul>
@@ -53,16 +53,19 @@
     
       <li><a href="http://weibo.com/zxc337">weibo</a></li>
     
-      <li><a href="/categories/essay/">随感</a></li>
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
     
-      <li><a href="/categories/tech/">技术</a></li>
+      <li><a href="/tags/随感/">随感</a></li>
     
-      <li><a href="/categories/investment/">理财</a></li>
+      <li><a href="/tags/技术/">技术</a></li>
     
-      <li><a href="/categories/life/">生活</a></li>
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
     
       <li><a href="/archives">归档</a></li>
     
+    <li><a href="/atom.xml">RSS</a></li>
   </ul>
   <div class="clearfix"></div>
 </nav>
@@ -70,6 +73,78 @@
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
 <h2 class="archive-title">2014/9</h2>
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
 
 
   
@@ -128,6 +203,10 @@
     </footer>
   </div>
 </article>
+
+
+
+
 
 
   
@@ -205,6 +284,10 @@ Stateless 无状态
 </article>
 
 
+
+
+
+
   
 
   <ul class="page-direction" id="page-direction">
@@ -232,11 +315,11 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>6</small></li>
+    <li><a href="/tags/Java/">Java</a><small>7</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>2</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>1</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -246,15 +329,17 @@ Stateless 无状态
   
     <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>1</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>1</small></li>
+  
+    <li><a href="/tags/python/">python</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
     <li><a href="/tags/前端/">前端</a><small>1</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>2</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>2</small></li>
   
@@ -268,7 +353,7 @@ Stateless 无状态
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>1</small></li>
+    <li><a href="/tags/随感/">随感</a><small>2</small></li>
   
   </ul>
 </div>
@@ -287,15 +372,35 @@ Stateless 无状态
   <ul class="entry">
     
       <li>
-        <a href="/2014/10/24/blog2/">RESTful Web Services中API的设计原则</a>
+        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
       </li>
     
       <li>
-        <a href="/2014/10/24/rizhi/">琐忆</a>
+        <a href="/2014/10/23/qiu/">秋</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/05/rizhi/">琐忆</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/01/aboutMe/">关于我</a>
+      </li>
+    
+      <li>
+        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
       </li>
     
       <li>
@@ -311,11 +416,7 @@ Stateless 无状态
       </li>
     
       <li>
-        <a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a>
-      </li>
-    
-      <li>
-        <a href="/2013/11/13/hello-world/">Hello World</a>
+        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>

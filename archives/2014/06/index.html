@@ -44,7 +44,7 @@
   <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
   <header id="header" class="inner"><div class="alignleft">
   <h1><a href="/">Jeck_Zhang</a></h1>
-  <h2><a href="/">zxc</a></h2>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
   <ul>
@@ -53,16 +53,19 @@
     
       <li><a href="http://weibo.com/zxc337">weibo</a></li>
     
-      <li><a href="/categories/essay/">随感</a></li>
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
     
-      <li><a href="/categories/tech/">技术</a></li>
+      <li><a href="/tags/随感/">随感</a></li>
     
-      <li><a href="/categories/investment/">理财</a></li>
+      <li><a href="/tags/技术/">技术</a></li>
     
-      <li><a href="/categories/life/">生活</a></li>
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
     
       <li><a href="/archives">归档</a></li>
     
+    <li><a href="/atom.xml">RSS</a></li>
   </ul>
   <div class="clearfix"></div>
 </nav>
@@ -70,6 +73,60 @@
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
 <h2 class="archive-title">2014/6</h2>
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-06-27T01:52:00.000Z"><a href="/2014/06/27/linux-ps/">6月 27 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ps -eo rss,pmem,pcpu,vsize,args |  sort -k <span class="number">1</span> -r -n | less</div></pre></td></tr></table></figure>
+
+<p>解析一下：<br><code>ps</code> 都知道，是linux,unix显示进程信息的,<br><code>-e</code> 是显示所有进程,<br><code>-o</code>是定制显示信息的格式</p>
+<p> <code>rss</code>: resident set size, 表示进程占用RAM(内存)的大小，单位是KB<br> <code>pmem</code>: %M, 占用内存的百分比 </p>
+<p> <code>pcpu</code>：%C，占用cpu的百分比<br> <code>vsize</code>: 表示进程占用的虚拟内存的大小，KB</p>
+<p> <code>args</code>：进程名（command） </p>
+<p> <code>sort</code>命令对ps结果进行排序<br>   <code>-k 1</code>:按第一个参数 rss进行排序</p>
+<p>   <code>-r</code>：逆序<br>   <code>-n</code>：numeric，按数字来排序</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
 
 
   
@@ -128,6 +185,10 @@
 </article>
 
 
+
+
+
+
   
 
   <ul class="page-direction" id="page-direction">
@@ -155,11 +216,11 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>6</small></li>
+    <li><a href="/tags/Java/">Java</a><small>7</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>2</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>1</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -169,15 +230,17 @@
   
     <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>1</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>1</small></li>
+  
+    <li><a href="/tags/python/">python</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
     <li><a href="/tags/前端/">前端</a><small>1</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>2</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>2</small></li>
   
@@ -191,7 +254,7 @@
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>1</small></li>
+    <li><a href="/tags/随感/">随感</a><small>2</small></li>
   
   </ul>
 </div>
@@ -210,15 +273,35 @@
   <ul class="entry">
     
       <li>
-        <a href="/2014/10/24/blog2/">RESTful Web Services中API的设计原则</a>
+        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
       </li>
     
       <li>
-        <a href="/2014/10/24/rizhi/">琐忆</a>
+        <a href="/2014/10/23/qiu/">秋</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/05/rizhi/">琐忆</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/01/aboutMe/">关于我</a>
+      </li>
+    
+      <li>
+        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
       </li>
     
       <li>
@@ -234,11 +317,7 @@
       </li>
     
       <li>
-        <a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a>
-      </li>
-    
-      <li>
-        <a href="/2013/11/13/hello-world/">Hello World</a>
+        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>

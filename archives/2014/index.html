@@ -44,7 +44,7 @@
   <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
   <header id="header" class="inner"><div class="alignleft">
   <h1><a href="/">Jeck_Zhang</a></h1>
-  <h2><a href="/">zxc</a></h2>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
   <ul>
@@ -53,16 +53,19 @@
     
       <li><a href="http://weibo.com/zxc337">weibo</a></li>
     
-      <li><a href="/categories/essay/">随感</a></li>
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
     
-      <li><a href="/categories/tech/">技术</a></li>
+      <li><a href="/tags/随感/">随感</a></li>
     
-      <li><a href="/categories/investment/">理财</a></li>
+      <li><a href="/tags/技术/">技术</a></li>
     
-      <li><a href="/categories/life/">生活</a></li>
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
     
       <li><a href="/archives">归档</a></li>
     
+    <li><a href="/atom.xml">RSS</a></li>
   </ul>
   <div class="clearfix"></div>
 </nav>
@@ -90,11 +93,116 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-24T09:40:04.000Z"><a href="/2014/10/24/blog2/">10月 24 2014</a></time>
+        <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/10/24/blog2/">RESTful Web Services中API的设计原则</a></h1>
+    <h1 class="title"><a href="/2014/10/24/java-regex/">正则表达式匹配中文</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
+<p>js代码：</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">   }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+
+<p>java代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="秋意渐浓">秋意渐浓</h3>
+<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
+
+<p><br></p>
+<h3 id="晚秋">晚秋</h3>
+<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
   
 
     </header>
@@ -157,6 +265,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 </article>
 
 
+
+
+
+
   
     <article class="post">
   
@@ -175,17 +287,18 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-24T09:10:34.000Z"><a href="/2014/10/24/rizhi/">10月 24 2014</a></time>
+        <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/10/24/rizhi/">琐忆</a></h1>
+    <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>年年如是，<br>年年不同，<br>依稀往事，<br>如梦如风。</p>
+        <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python</span></div><div class="line"></div><div class="line"><span class="comment">#################################################</span></div><div class="line"><span class="comment">#         左边网开发环境SwitchHosts Tools</span></div><div class="line"><span class="comment">#   (初始化开发环境,安装相关开发软件,服务器）</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#    V1.0      Writen by: zxc       Date:2014-10-11</span></div><div class="line"><span class="comment">##################################################</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> re</div><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span></div><div class="line">    hostsmap = {}</div><div class="line">    envlist = []</div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)</div><div class="line">    current_env = <span class="string">''</span></div><div class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> hosts:</div><div class="line">        line = line.strip()</div><div class="line">        env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)</div><div class="line">        <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            current_env = env_p.group(<span class="number">1</span>)</div><div class="line">            <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:</div><div class="line">                <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env</div><div class="line">            envlist.append(current_env)</div><div class="line">            hostsmap[current_env] = [] </div><div class="line">            <span class="keyword">continue</span></div><div class="line">        <span class="keyword">if</span> current_env == <span class="string">''</span>:</div><div class="line">            <span class="keyword">continue</span></div><div class="line">        hostsmap[current_env].append(line)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line">    iter_idx = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)</div><div class="line">        iter_idx = iter_idx+<span class="number">1</span></div><div class="line">    hostsmapCount = {}</div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:</div><div class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):</div><div class="line">                <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">                    hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span></div><div class="line">                <span class="keyword">else</span>:</div><div class="line">                    hostsmapCount[env] = <span class="number">1</span></div><div class="line">    current_env = <span class="keyword">None</span></div><div class="line">    max_count = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">        <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:</div><div class="line">            current_env = env </div><div class="line">            max_count = hostsmapCount[env]</div><div class="line">    <span class="keyword">if</span> max_count == <span class="number">0</span>:</div><div class="line">        current_env = <span class="string">'base'</span></div><div class="line">    <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env</div><div class="line">    env = envlist[int(sys.stdin.readline().strip())]</div><div class="line">    writehosts(env, envlist, hostsmap)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span></div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)</div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        hosts.write(<span class="string">'### %s ###'</span> % env_iter)</div><div class="line">        hosts.write(<span class="string">'\n'</span>)</div><div class="line">        desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)</div><div class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:</div><div class="line">            <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):</div><div class="line">                item = item[<span class="number">1</span> : len(item)]</div><div class="line">            <span class="keyword">if</span> desc:</div><div class="line">                hosts.write(<span class="string">'%s'</span> % item.strip())</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                hosts.write(<span class="string">'# %s'</span> % item.strip())</div><div class="line">            hosts.write(<span class="string">'\n'</span>)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span></div><div class="line">    example = <span class="string">"""&gt; cat /etc/hosts</span></div><div class="line">### base ###</div><div class="line">127.0.0.1 localhost</div><div class="line">127.0.0.1 zxc-rMBP</div><div class="line">255.255.255.255    broadcasthost</div><div class="line">::1             localhost</div><div class="line">fe80::1%lo0    localhost</div><div class="line">91.213.30.151   www.google.com</div><div class="line">91.213.30.151   www.google.com.hk</div><div class="line">91.213.30.151   accounts.google.com</div><div class="line">91.213.30.151   accounts.google.com.hk</div><div class="line">91.213.30.151   mail.google.com</div><div class="line">91.213.30.151   mail.google.com.hk</div><div class="line">91.213.30.151   plus.google.com</div><div class="line">91.213.30.151   plus.google.com.hk</div><div class="line">### server190 ###</div><div class="line">192.168.0.190  web.zuobian.com</div><div class="line">### server150 ###</div><div class="line">192.168.0.150  web.zuobian.com</div><div class="line">### localdev ###</div><div class="line">127.0.0.1   web.zuobian.com</div><div class="line">### run ###</div><div class="line">"""</div><div class="line">    <span class="keyword">print</span> example</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):</div><div class="line">        <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span></div><div class="line">        print_example()</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    switchhosts()</div></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -198,6 +311,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </footer>
   </div>
 </article>
+
+
+
+
 
 
   
@@ -260,6 +377,196 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 </article>
 
 
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-01T06:55:13.000Z"><a href="/2014/10/01/aboutMe/">10月 1 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/01/aboutMe/">关于我</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="张兄才">张兄才</h3>
+<p>90后程序员，@上海，业余承接java/python项目，Blogger。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<h3 id="技术领域：">技术领域：</h3>
+<p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
+<h3 id="足迹">足迹</h3>
+<ul>
+<li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
+<li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/yahoo.png">邮箱：xiongcaizhang@yahoo.com</li>
+<li><img src="/img/qq.png">QQ：407815772</li>
+<li><img src="/img/twitter.png">twitter: <a href="http://twitter.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/facebook.png">facebook: <a href="https://www.facebook.com/zxc337" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/quora.png">Quora: <a href="http://quora.com/Jeck-Zhang" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/gmail.png">Gmail: zhangxiongcai337#gmail.com(把#换成@)</li>
+<li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
+<li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+</ul>
+<h3 id="咖啡">咖啡</h3>
+<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对Jeck_Zhang进行无负担小额赞助(1元即可)：</p>
+<ul>
+<li><strong>支付宝帐号</strong>: 407815772@qq.com</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
   
     <article class="post">
   
@@ -316,6 +623,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </footer>
   </div>
 </article>
+
+
+
+
 
 
   
@@ -393,108 +704,8 @@ Stateless 无状态
 </article>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含HttpGet, HttpPost, HttpPut, HttpDelete等类来实现http的常用操作。 其中，HttpPost继承自HttpEntityEnclosingRequestBase，HttpEntityEnclosingRequestBase类又实现了HttpEntityEnclosingRequest接口，实现了setEntity的方法。 而HttpDelete继承自HttpRequestBase，没有实现setEntity的方法，因此无法设置HttpEntity对象。 这样解决方法就明显了，我们可以自己实现一个MyHttpDelete类，继承自HttpEntityEnclosingRequestBase，覆盖其中的getMethod方法，使其返回“DELETE”。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHttpDelete</span> <span class="keyword">extends</span> <span class="title">HttpEntityEnclosingRequestBase</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String METHOD_NAME = <span class="string">"DELETE"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> String <span class="title">getMethod</span>() {</div><div class="line">        <span class="keyword">return</span> METHOD_NAME;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> String uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(URI.create(uri));</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> URI uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(uri);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>() {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>使用delete方法时，直接可以按下面方式操作</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">DefaultHttpClient httpClient = <span class="keyword">new</span> DefaultHttpClient(); </div><div class="line"></div><div class="line">MyHttpDelete delete = <span class="keyword">new</span> MyHttpDelete(<span class="string">"http://url.com"</span>); </div><div class="line"></div><div class="line">List&lt;NameValuePair&gt; nameValuePairs = <span class="keyword">new</span> ArrayList&lt;NameValuePair&gt;(); </div><div class="line"></div><div class="line">delete.setEntity(<span class="keyword">new</span> UrlEncodedFormEntity(nameValuePairs)); </div><div class="line"></div><div class="line">HttpResponse response = httpClient.execute(delete);</div></pre></td></tr></table></figure>
 
 
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-18T08:15:01.000Z"><a href="/2014/06/18/hello/">6月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在apache-tomcat托管的应用里如果使用了dubbo的消费端，关闭tomcat时，会无法退出进程，应用会被关闭，connector端口也关闭了，但dubbo相关的一些线程仍存在，导致java进程并不会消失。</p>
-<p>这其实是由非daemon线程引起的，jvm里当前main线程在退出时，只要存在非daemon的子线程，就不会退出jvm，哪怕这个非daemon的线程是在一个daemon线程里启动的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonTest</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">static</span> class MyThread extends Thread {</div><div class="line">        <span class="keyword">public</span> <span class="title">MyThread</span>(<span class="keyword">boolean</span> isDaemon){</div><div class="line">            <span class="keyword">this</span>.setDaemon(isDaemon);</div><div class="line">        }</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                Thread.sleep(<span class="number">1000</span>*<span class="number">10000</span>);;</div><div class="line">            } <span class="keyword">catch</span> (Exception e) {</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception{</div><div class="line">        Thread t1 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t2 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t3 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t4 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    <span class="keyword">new</span> MyThread(<span class="keyword">false</span>).start(); <span class="comment">//非daemon</span></div><div class="line">                    Thread.sleep(<span class="number">1000</span> * <span class="number">10000</span>);</div><div class="line">                } <span class="keyword">catch</span> (Exception e) {</div><div class="line">                }</div><div class="line">            }</div><div class="line">        };</div><div class="line"></div><div class="line"></div><div class="line">        t1.start();</div><div class="line">        t2.start();</div><div class="line">        t3.start();</div><div class="line">        t4.start();</div><div class="line"></div><div class="line">        Thread.sleep(<span class="number">2000</span>);</div><div class="line">        System.out.println(<span class="string">"main thread quit"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面启动了4个子线程，都是daemon的，其中有一个子线程又启动了一个非daemon线程，结果主线程退出时，jvm进程并不会退出，并且其他daemon线程也继续运行。</p>
-<p>Dubbo的线程都是daemon的，不过它使用的netty框架却有一个非daemon的“Hashed wheel timer”线程：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="string">"Hashed wheel timer #1"</span> #<span class="number">1582</span> prio=<span class="number">5</span> os_prio=<span class="number">0</span> tid=<span class="number">0x00002aaac5054800</span> nid=<span class="number">0x7fd3</span> waiting on condition [<span class="number">0x0000000041262000</span>]</div><div class="line">   java.lang.Thread.State: TIMED_WAITING (sleeping)</div><div class="line">    at java.lang.Thread.sleep(Native Method)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.waitForNextTick(HashedWheelTimer.java:<span class="number">459</span>)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:<span class="number">376</span>)</div><div class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</div></pre></td></tr></table></figure>
-
-<p>正是这个非daemon线程，导致tomcat的主线程退出后，jvm进程没能退出。类似的问题以前在HSF2里也存在，后来已经解决了。dubbo的这个问题可以通过kill来结束。</p>
-<p>在tomcat的脚本里，先使用正常的方式(viaport)停止tomcat，在不成功之后会尝试”kill”方式：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"># stop failed. Shutdown port disabled? Try a normal kill.</div><div class="line"><span class="keyword">if</span> [ $? != <span class="number">0</span> ]; then</div><div class="line">    <span class="keyword">if</span> [ ! -z <span class="string">"$CATALINA_PID"</span> ]; then</div><div class="line">      echo <span class="string">"The stop command failed. Attempting to signal the process to stop through OS signal."</span></div><div class="line">      kill -<span class="number">15</span> `cat <span class="string">"$CATALINA_PID"</span>` &gt;/dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&<span class="number">1</span></div><div class="line">    fi</div><div class="line">fi</div></pre></td></tr></table></figure>
-
-<p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
-<p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
 
 
   
@@ -504,8 +715,12 @@ Stateless 无状态
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
+    <nav id="page-list" class="page-list"><span class="page-number current">1</span><a class="page-number" href="/archives/2014/page/2/">2</a><a class="extend next" rel="next" href="/archives/2014/page/2/">Next</a></nav>
+
 <nav id="pagination">
   
+  
+    <a href="/archives/2014/page/2/" class="alignright next">下一页</a>
   
   <div class="clearfix"></div>
 </nav>
@@ -524,11 +739,11 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>6</small></li>
+    <li><a href="/tags/Java/">Java</a><small>7</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>2</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>1</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -538,15 +753,17 @@ Stateless 无状态
   
     <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>1</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>1</small></li>
+  
+    <li><a href="/tags/python/">python</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
     <li><a href="/tags/前端/">前端</a><small>1</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>2</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>2</small></li>
   
@@ -560,7 +777,7 @@ Stateless 无状态
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>1</small></li>
+    <li><a href="/tags/随感/">随感</a><small>2</small></li>
   
   </ul>
 </div>
@@ -579,15 +796,35 @@ Stateless 无状态
   <ul class="entry">
     
       <li>
-        <a href="/2014/10/24/blog2/">RESTful Web Services中API的设计原则</a>
+        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
       </li>
     
       <li>
-        <a href="/2014/10/24/rizhi/">琐忆</a>
+        <a href="/2014/10/23/qiu/">秋</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/05/rizhi/">琐忆</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/01/aboutMe/">关于我</a>
+      </li>
+    
+      <li>
+        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
       </li>
     
       <li>
@@ -603,11 +840,7 @@ Stateless 无状态
       </li>
     
       <li>
-        <a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a>
-      </li>
-    
-      <li>
-        <a href="/2013/11/13/hello-world/">Hello World</a>
+        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>
