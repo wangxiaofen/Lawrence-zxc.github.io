@@ -607,6 +607,567 @@ Stateless 无状态
   <div class="post-content">
     <header>
       
+        <time datetime="2014-06-15T09:06:46.000Z"><a href="/2014/06/15/java-mybatis/">6月 15 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/15/java-mybatis/">分享一个java对mybatis封装</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<p>写了一个对mybatis封装code,源码</p>
+<p>BaseDao是一个基础类,对Mapper中方法的实现</p>
+<pre><code><span class="comment">/*
+ * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
+ * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
+ * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
+ */</span>
+<span class="keyword">package</span> com.zb.app.biz.base;
+
+<span class="keyword">import</span> java.io.Serializable;
+<span class="keyword">import</span> java.lang.reflect.Method;
+<span class="keyword">import</span> java.lang.reflect.ParameterizedType;
+<span class="keyword">import</span> java.lang.reflect.Type;
+<span class="keyword">import</span> java.util.Arrays;
+<span class="keyword">import</span> java.util.Collection;
+<span class="keyword">import</span> java.util.Collections;
+<span class="keyword">import</span> java.util.HashMap;
+<span class="keyword">import</span> java.util.List;
+<span class="keyword">import</span> java.util.Map;
+
+<span class="keyword">import</span> org.apache.commons.lang.StringUtils;
+<span class="keyword">import</span> org.apache.ibatis.session.SqlSession;
+<span class="keyword">import</span> org.mybatis.spring.SqlSessionTemplate;
+<span class="keyword">import</span> org.mybatis.spring.support.SqlSessionDaoSupport;
+<span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;
+
+<span class="keyword">import</span> com.zb.app.common.core.lang.Argument;
+<span class="keyword">import</span> com.zb.app.common.core.lang.ArrayUtils;
+<span class="keyword">import</span> com.zb.app.common.core.lang.Assert;
+<span class="keyword">import</span> com.zb.app.common.exception.UnSupportBaseDaoException;
+<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
+<span class="keyword">import</span> com.zb.app.common.pagination.PaginationList;
+<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser;
+<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser.IPageUrl;
+
+<span class="javadoc">/**
+ * 分页可以不注入SqlSessionTemplate对象,用Mapper方式实现,在BaseDao封装
+ * 
+ *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:10:41 PM
+ */</span>
+<span class="annotation">@SuppressWarnings</span>({ <span class="string">"rawtypes"</span>, <span class="string">"unchecked"</span> })
+<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseDao</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>, <span class="title">M</span>, <span class="title">Q</span>&gt; <span class="keyword">extends</span> <span class="title">SqlSessionDaoSupport</span> <span class="keyword">implements</span> <span class="title">IBase</span> </span>{
+
+    <span class="annotation">@Autowired</span>
+    <span class="keyword">protected</span> M      m;
+
+    <span class="keyword">private</span> Class&lt;T&gt; entityClass;
+
+    <span class="keyword">private</span> Class&lt;M&gt; mapperClass;
+
+    <span class="annotation">@Autowired</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSqlSessionTemplate</span>(SqlSessionTemplate sqlSessionTemplate) {
+        <span class="keyword">super</span>.setSqlSessionTemplate(sqlSessionTemplate);
+    }
+
+    <span class="javadoc">/**
+     * 创建默认构造方法，以取得真正的泛型类型
+     */</span>
+    <span class="keyword">public</span> <span class="title">BaseDao</span>() {
+        Class&lt;?&gt; c = getClass();
+        Type type = c.getGenericSuperclass();
+        <span class="keyword">if</span> (type <span class="keyword">instanceof</span> ParameterizedType) {
+            Type[] parameterizedType = ((ParameterizedType) type).getActualTypeArguments();
+            <span class="keyword">if</span> (Argument.isEmptyArray(parameterizedType)) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> UnSupportBaseDaoException(<span class="string">"init entityClass mapperClass failed!"</span>);
+            }
+            <span class="keyword">this</span>.entityClass = (Class&lt;T&gt;) parameterizedType[<span class="number">0</span>];
+            <span class="keyword">this</span>.mapperClass = (Class&lt;M&gt;) parameterizedType[<span class="number">1</span>];
+        } <span class="keyword">else</span> {
+            <span class="keyword">throw</span> <span class="keyword">new</span> UnSupportBaseDaoException(String.format(<span class="string">"没有找到【%s】的动态参数T"</span>, getClass().getSimpleName()));
+        }
+    }
+
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> Class&lt;T&gt; <span class="title">getEntityClass</span>() {
+        <span class="keyword">return</span> entityClass;
+    }
+
+    <span class="javadoc">/**
+     * 命名空间
+     * 
+     *<span class="javadoctag"> @return</span> String
+     */</span>
+    <span class="keyword">public</span> String <span class="title">getNameSpace</span>() {
+        <span class="keyword">return</span> mapperClass.getName();
+    }
+
+    <span class="javadoc">/**
+     * 根据ID查询对象
+     */</span>
+    <span class="keyword">public</span> &lt;D extends Number&gt; T <span class="title">getById</span>(D id) {
+        Assert.assertNotNull(id);
+        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Integer) {
+            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).getById((Integer) id);
+        }
+        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Long) {
+            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).getById(((Long) id).intValue());
+        }
+        <span class="keyword">return</span> <span class="keyword">null</span>;
+    }
+
+    <span class="javadoc">/**
+     * 分页查询,已废弃，请使用paginationList
+     * 
+     *<span class="javadoctag"> @param</span> map
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="annotation">@Deprecated</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listPagination</span>(Pagination pagination) {
+        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).listPagination(pagination);
+    }
+
+    <span class="javadoc">/**
+     * 查询所有或limit 的几条数据
+     * 
+     *<span class="javadoctag"> @param</span> map
+     *<span class="javadoctag"> @param</span> limitSize == null 则查所有
+     */</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listAll</span>(Integer limitSize) {
+        Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();
+        map.put(<span class="string">"limitSize"</span>, limitSize);
+        map.put(<span class="string">"endRecordIndex"</span>, limitSize);
+        map.put(<span class="string">"startRecordIndex"</span>, <span class="number">0</span>);
+        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).list(map);
+    }
+
+    <span class="javadoc">/**
+     * 查询所有数据
+     */</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>() {
+        <span class="keyword">return</span> <span class="keyword">this</span>.listAll(<span class="keyword">null</span>);
+    }
+
+    <span class="javadoc">/**
+     * Find 查询所有数据,mapper.xml中必须有find等SQL语句
+     * 
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> T <span class="title">find</span>(Q q) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> (T) <span class="keyword">this</span>.getSqlSession().selectOne(_getNameSpace() + <span class="string">"find"</span>, (Pagination) q);
+    }
+
+    <span class="javadoc">/**
+     * Find 查询所有数据,mapper.xml中必须有自定义queryStatementName等SQL语句
+     * 
+     *<span class="javadoctag"> @param</span> queryStatementName 查询操作语句
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> T <span class="title">find</span>(Q q, String queryStatementName) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> (T) <span class="keyword">this</span>.getSqlSession().selectOne(_getNameSpace() + queryStatementName, (Pagination) q);
+    }
+
+    <span class="javadoc">/**
+     * List 查询数据,mapper.xml中必须有listQuery等SQL语句
+     * 
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Q q) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> <span class="keyword">this</span>.getSqlSession().selectList(_getNameSpace() + <span class="string">"listQuery"</span>, (Pagination) q);
+    }
+
+    <span class="javadoc">/**
+     * List 查询数据,mapper.xml中必须有自定义queryStatementName等SQL语句
+     * 
+     *<span class="javadoctag"> @param</span> queryStatementName 查询操作语句
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Q q, String queryStatementName) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> <span class="keyword">this</span>.getSqlSession().selectList(_getNameSpace() + queryStatementName, (Pagination) q);
+    }
+
+    <span class="javadoc">/**
+     * PaginationList 查询数据
+     * 
+     * &lt;pre&gt;
+     *      1.默认COUNT查询语句为'count',
+     *      2.默认PAGINATION查询语句为'listPagination',
+     *      3.请实现getNameSpace()方法
+     *      4.mapper.xml中必须有count，listPagination等SQL语句
+     * &lt;/pre&gt;
+     * 
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(Q q, IPageUrl... iPages) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.paginationList(<span class="string">"listPagination"</span>, q), iPages);
+    }
+
+    <span class="javadoc">/**
+     * 已过时,请使用带有IPageUrl的同名方法
+     * 
+     *<span class="javadoctag"> @param</span> q
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="annotation">@Deprecated</span>
+    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(Q q) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> <span class="keyword">this</span>.paginationList(<span class="string">"listPagination"</span>, q);
+    }
+
+    <span class="javadoc">/**
+     * 分页查询 默认COUNT查询语句为'count',请实现getNameSpace()方法
+     * 
+     *<span class="javadoctag"> @param</span> queryStatementName
+     *<span class="javadoctag"> @param</span> query
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(String queryStatementName, Q q, IPageUrl... iPages) {
+        <span class="keyword">if</span> (StringUtils.isEmpty(queryStatementName)) {
+            log.error(<span class="string">"BaseDao paginationList: queryStatementName is null,please check!"</span>);
+            <span class="keyword">return</span> (PaginationList) Collections.&lt;Object&gt; emptyList();
+        }
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.paginationList(<span class="string">"count"</span>, queryStatementName, q), iPages);
+    }
+
+    <span class="javadoc">/**
+     * PaginationList 查询数据
+     * 
+     *<span class="javadoctag"> @param</span> countStatementName count操作语句
+     *<span class="javadoctag"> @param</span> queryStatementName 分页操作语句
+     *<span class="javadoctag"> @param</span> q
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(String countStatementName, String queryStatementName, Q q, IPageUrl... iPages) {
+        <span class="keyword">if</span> (StringUtils.isEmpty(countStatementName) || StringUtils.isEmpty(queryStatementName)) {
+            log.error(<span class="string">"BaseDao paginationList:countStatementName or queryStatementName is null,please check!"</span>);
+            <span class="keyword">return</span> (PaginationList) Collections.&lt;Object&gt; emptyList();
+        }
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.queryForPagination(_getNameSpace() + countStatementName, _getNameSpace()
+                                                                                           + queryStatementName,
+                                                     (Pagination) q), iPages);
+    }
+
+    <span class="javadoc">/**
+     * count Query 数据:默认COUNT查询语句为'count',请实现getNameSpace()方法
+     * 
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">count</span>(Q q) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> (Integer) getSqlSession().selectOne(_getNameSpace() + <span class="string">"count"</span>, q);
+    }
+
+    <span class="javadoc">/**
+     * count Query 数据:COUNT查询语句自定义queryStatementName等SQL语句,请实现getNameSpace()方法
+     * 
+     *<span class="javadoctag"> @param</span> queryStatementName 分页操作语句
+     *<span class="javadoctag"> @param</span> q
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">count</span>(Q q, String queryStatementName) {
+        Assert.assertNotNull(q);
+        <span class="keyword">return</span> (Integer) getSqlSession().selectOne(_getNameSpace() + queryStatementName, q);
+    }
+
+    <span class="javadoc">/**
+     * 根据主键ID删除
+     */</span>
+    <span class="keyword">public</span> &lt;D extends Number&gt; <span class="keyword">boolean</span> <span class="title">deleteById</span>(D id) {
+        Assert.assertNotNull(id);
+        Integer count = <span class="number">0</span>;
+        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Integer) {
+            count = ((BaseMapper&lt;T&gt;) m).deleteById((Integer) id);
+        }
+        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Long) {
+            count = ((BaseMapper&lt;T&gt;) m).deleteById(((Long) id).intValue());
+        }
+        <span class="keyword">return</span> count == <span class="number">0</span> ? <span class="keyword">false</span> : <span class="keyword">true</span>;
+    }
+
+    <span class="javadoc">/**
+     * 插入 T
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">insert</span>(T t) {
+        Assert.assertNotNull(t);
+        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).insert(t);
+    }
+
+    <span class="javadoc">/**
+     * 插入 Arrays
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">insert</span>(T... t) {
+        ArrayUtils.removeNullElement(t);
+        <span class="keyword">if</span> (Argument.isEmptyArray(t)) {
+            <span class="keyword">return</span> <span class="number">0</span>;
+        }
+        Assert.assertNotNull(t);
+        <span class="keyword">if</span> (t.length == <span class="number">1</span> &amp;&amp; t[<span class="number">0</span>] != <span class="keyword">null</span>) {
+            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).insert(t[<span class="number">0</span>]);
+        }
+        <span class="keyword">return</span> <span class="keyword">this</span>.batchInsertByMapper(Arrays.asList(t));
+    }
+
+    <span class="javadoc">/**
+     * 插入 List
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">insert</span>(List&lt;T&gt; list) {
+        Assert.assertNotNull(list);
+        Integer lastInsertId = <span class="keyword">new</span> Integer(<span class="number">0</span>);
+        <span class="keyword">for</span> (T t : list) {
+            <span class="keyword">if</span> (t != <span class="keyword">null</span>) {
+                lastInsertId = ((BaseMapper&lt;T&gt;) m).insert(t);
+            }
+        }
+        <span class="keyword">return</span> lastInsertId;
+    }
+
+    <span class="javadoc">/**
+     * 根据主键ID更新
+     */</span>
+    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">updateById</span>(T... t) {
+        Assert.assertNotNull(t);
+        ArrayUtils.removeNullElement(t);
+        <span class="keyword">if</span> (Argument.isEmptyArray(t)) {
+            <span class="keyword">return</span> <span class="keyword">false</span>;
+        }
+        Assert.assertNotNull(t);
+        Integer count = <span class="number">0</span>;
+        <span class="keyword">if</span> (t.length == <span class="number">1</span> &amp;&amp; t[<span class="number">0</span>] != <span class="keyword">null</span>) {
+            count = ((BaseMapper&lt;T&gt;) m).updateById(t[<span class="number">0</span>]);
+        } <span class="keyword">else</span> {
+            count = <span class="keyword">this</span>.batchUpdateByMapper(Arrays.asList(t));
+        }
+        <span class="keyword">return</span> count == <span class="keyword">null</span> ? <span class="keyword">false</span> : count == <span class="number">0</span> ? <span class="keyword">false</span> : <span class="keyword">true</span>;
+    }
+
+    <span class="javadoc">/**
+     * 批量插入
+     * 
+     *<span class="javadoctag"> @param</span> sqlSessionFactory
+     *<span class="javadoctag"> @param</span> mapperClass 要使用的Mapper的Class
+     *<span class="javadoctag"> @param</span> pojoClass 列表中POJO对象的Class
+     *<span class="javadoctag"> @param</span> methodName 要执行的Mapper类中的方法名 默认insert
+     *<span class="javadoctag"> @param</span> objList 要入库的数据列表
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">batchInsertByMapper</span>(Collection&lt;T&gt; objList) {
+        <span class="keyword">return</span> batchOptByMapper(objList, <span class="string">"insert"</span>);
+    }
+
+    <span class="javadoc">/**
+     * 批量更新
+     * 
+     *<span class="javadoctag"> @param</span> sqlSessionFactory
+     *<span class="javadoctag"> @param</span> mapperClass 要使用的Mapper的Class
+     *<span class="javadoctag"> @param</span> pojoClass 列表中POJO对象的Class
+     *<span class="javadoctag"> @param</span> methodName 要执行的Mapper类中的方法名 默认"updateById"
+     *<span class="javadoctag"> @param</span> objList 要入库的数据列表
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">batchUpdateByMapper</span>(Collection&lt;T&gt; objList) {
+        <span class="keyword">return</span> batchOptByMapper(objList, <span class="string">"updateById"</span>);
+    }
+
+    <span class="keyword">private</span> PaginationList <span class="title">parsePages</span>(Q q, PaginationList paginationList, IPageUrl... iPages) {
+        ArrayUtils.removeNullElement(iPages);
+        <span class="keyword">if</span> (Argument.isEmptyArray(iPages)) {
+            <span class="keyword">return</span> paginationList;
+        }
+        <span class="keyword">if</span> (q <span class="keyword">instanceof</span> Pagination) {
+            paginationList.setQuery(PaginationParser.getPaginationList(((Pagination) q).getNowPageIndex(),
+                                                                       ((Pagination) q).getPageSize(),
+                                                                       ((Pagination) q).getAllRecordNum(), iPages[<span class="number">0</span>]));
+        }
+        <span class="keyword">return</span> paginationList;
+    }
+
+    <span class="keyword">private</span> Integer <span class="title">batchOptByMapper</span>(Collection&lt;T&gt; objList, String methodName) {
+        SqlSession session = getSqlSession();
+        Class[] paramTypes = <span class="keyword">new</span> Class[<span class="number">1</span>];
+        M mapper = (M) session.getMapper(mapperClass);
+
+        <span class="keyword">try</span> {
+            paramTypes[<span class="number">0</span>] = Class.forName(entityClass.getName());
+            Method method = mapperClass.getMethod(methodName, Serializable.class);
+            <span class="keyword">for</span> (Object obj : objList) {
+                method.invoke(mapper, obj);
+            }
+        } <span class="keyword">catch</span> (Exception e) {
+            log.error(<span class="string">"BaseDao batchOptByMapper:error()"</span>);
+        }
+        session.flushStatements();
+        <span class="keyword">return</span> <span class="keyword">new</span> Integer(<span class="number">1</span>);
+    }
+
+    <span class="javadoc">/**
+     * 分页查询
+     * 
+     *<span class="javadoctag"> @param</span> countStatementName 如果countStatementName==null，表示不查询Count()语句
+     *<span class="javadoctag"> @param</span> queryStatementName 查询记录的StatementName
+     *<span class="javadoctag"> @param</span> query 查询条件（需要设置currentPage和PageSize值，或是startRow和endRow值）
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">private</span> PaginationList <span class="title">queryForPagination</span>(String countStatementName, String queryStatementName, Pagination query) {
+        PaginationList paginationList = <span class="keyword">new</span> PaginationList(query);
+        <span class="keyword">if</span> (countStatementName != <span class="keyword">null</span>) {
+            Integer obj = (Integer) getSqlSession().selectOne(countStatementName, query);
+            <span class="keyword">int</span> totalCount = obj == <span class="keyword">null</span> ? <span class="number">0</span> : obj;
+            query.init(totalCount);
+
+            <span class="keyword">if</span> (totalCount &gt; <span class="number">0</span>) {
+                List items = getSqlSession().selectList(queryStatementName, query);
+                <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
+                    paginationList.addAll(items);
+                }
+            }
+        } <span class="keyword">else</span> {
+            List items = getSqlSession().selectList(queryStatementName, query);
+            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
+                paginationList.addAll(items);
+            }
+        }
+        <span class="keyword">return</span> paginationList;
+    }
+
+    <span class="keyword">private</span> PaginationList <span class="title">queryForPagination</span>(<span class="keyword">int</span> count, String queryStatementName, Pagination query) {
+        PaginationList paginationList = <span class="keyword">new</span> PaginationList(query);
+        <span class="keyword">if</span> (count &gt; <span class="number">0</span>) {
+            query.init(count);
+            List&lt;?&gt; items = getSqlSession().selectList(queryStatementName, query);
+            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
+                paginationList.addAll(items);
+            }
+        } <span class="keyword">else</span> {
+            List items = getSqlSession().selectList(queryStatementName, query);
+            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
+                paginationList.addAll(items);
+            }
+        }
+        <span class="keyword">return</span> paginationList;
+    }
+
+    <span class="keyword">private</span> String <span class="title">_getNameSpace</span>() {
+        <span class="keyword">if</span> (StringUtils.isEmpty(getNameSpace())) {
+            log.error(<span class="string">"BaseDao getNameSpace is null,please check!"</span>);
+            <span class="keyword">return</span> StringUtils.EMPTY;
+        }
+        <span class="keyword">return</span> getNameSpace() + POINT;
+    }
+}
+</code></pre><p><br></p>
+<p>BaseMapper类</p>
+<pre><code><span class="comment">/*
+ * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
+ * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
+ * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
+ */</span>
+<span class="keyword">package</span> com.zb.app.biz.base;
+
+<span class="keyword">import</span> java.io.Serializable;
+<span class="keyword">import</span> java.util.List;
+<span class="keyword">import</span> java.util.Map;
+
+<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
+
+<span class="javadoc">/**
+ * &lt;pre&gt;
+ *      可以在BaseMapper中加入Q查询对象 BaseMapper&lt;T,Q&gt;,分页可以用BaseMapper实现然后在BaseDao中封装掉
+ * &lt;/pre&gt;
+ * 
+ *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:11:48 PM
+ */</span>
+<span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BaseMapper</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>&gt; </span>{
+
+    <span class="javadoc">/**
+     * 根据ID查找
+     * 
+     *<span class="javadoctag"> @param</span> id
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">public</span> T <span class="title">getById</span>(Integer id);
+
+    <span class="javadoc">/**
+     * 分页查询返回第一页
+     * 
+     *<span class="javadoctag"> @param</span> map
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="annotation">@Deprecated</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listPagination</span>(Pagination pagination);
+
+    <span class="javadoc">/**
+     * 查询所有或limit 的几条数据
+     * 
+     *<span class="javadoctag"> @param</span> map
+     *<span class="javadoctag"> @param</span> limitSize == null 则查所有
+     */</span>
+    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Map&lt;String, Object&gt; map);
+
+    <span class="javadoc">/**
+     * 删除
+     * 
+     *<span class="javadoctag"> @param</span> id
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">deleteById</span>(Integer id);
+
+    <span class="javadoc">/**
+     * 插入新数据
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">insert</span>(T t);
+
+    <span class="javadoc">/**
+     * 根据Id更新对象
+     * 
+     *<span class="javadoctag"> @param</span> t
+     *<span class="javadoctag"> @return</span>
+     */</span>
+    <span class="keyword">public</span> Integer <span class="title">updateById</span>(T t);
+}
+</code></pre><p>Pagination类源码就不放了吧。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-05-19T06:34:24.000Z"><a href="/2014/05/19/python1/">5月 19 2014</a></time>
       
       
@@ -1001,122 +1562,6 @@ Stateless 无状态
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-04-28T05:45:35.000Z"><a href="/2014/04/28/python-mysql-restful/">4月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/04/28/python-mysql-restful/">python为mysql实现restful接口</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近在做游戏服务分层的时候，一直想把mysql的访问独立成一个单独的服务DBGate，原因如下:</p>
-<ul>
-<li>请求收拢到DBGate，可以使DBGate变为无状态的，方便横向扩展</li>
-<li>当请求量或者存储量变大时，mysql需要做分库分表，DBGate可以内部直接处理，外界无感知</li>
-<li>通过restful限制对数据请求的形式，仅支持简单的get/post/patch/put 进行增删改查，并不支持复杂查询。这个也是和游戏业务的特性有关，如果网站等需要复杂查询的业务，对此并不适合</li>
-<li>DBGate使用多进程模式，方便控制与mysql之间的链接数，进行mysql访问量阀值保护</li>
-<li>方便在DBGate上进行访问量统计，慢查询统计、权限控制等等一系列逻辑</li>
-<li>目前是使用python，以后要使用其他语言进行mysql操作时，只要进行标准的http请求即可，不会出现不兼容的情况<br>当然坏处也是有的：</li>
-<li>首当其冲就是单次请求的响应时间变长，毕竟中间加了一层服务，并且还是http格式</li>
-<li>部署上比原来复杂了一些，很多对mysql直接操作的思维需要进行转变，一开始可能会有些不适</li>
-</ul>
-<p>不过总的来说，还是利大于弊，所以最终还是决定搭建DBGate</p>
-<p>当然，我们不可能去手工挨个写每个库表对应的restful服务，值得庆幸的是django和flask都提供了对应的解决方案，我们一个个介绍.</p>
-<p>Flask<br>参考链接: flask-restless</p>
-<p>flask-restless使用方法比较简单，我直接贴一下代码即可:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"> </div><div class="line"><span class="keyword">import</span> datetime</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</div><div class="line"><span class="keyword">from</span> flask_sqlalchemy <span class="keyword">import</span> SQLAlchemy</div><div class="line"><span class="keyword">from</span> flask_restless <span class="keyword">import</span> APIManager</div><div class="line"> </div><div class="line"> </div><div class="line">app = Flask(__name__)</div><div class="line">db = SQLAlchemy(app)</div><div class="line">restless = APIManager(app, flask_sqlalchemy_db=db)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(db.Model)</span>:</span></div><div class="line">    <span class="string">"""</span></div><div class="line">    user</div><div class="line">    """</div><div class="line"> </div><div class="line">    id = db.Column(db.Integer, primary_key=<span class="keyword">True</span>)</div><div class="line">    username = db.Column(db.String(<span class="number">255</span>), unique=<span class="keyword">True</span>, nullable=<span class="keyword">False</span>)</div><div class="line">    password = db.Column(db.String(<span class="number">255</span>), nullable=<span class="keyword">False</span>)</div><div class="line">    create_time = db.Column(db.DateTime, nullable=<span class="keyword">False</span>, default=datetime.datetime.utcnow)</div><div class="line">    login_time = db.Column(db.DateTime)</div><div class="line"> </div><div class="line"> </div><div class="line">restless.create_api(User, methods=[<span class="string">'GET'</span>, <span class="string">'POST'</span>, <span class="string">'DELETE'</span>, <span class="string">'PATCH'</span>, <span class="string">'PUT'</span>], results_per_page=<span class="number">100</span>)</div><div class="line"> </div><div class="line">db.create_all()</div><div class="line"> </div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    app.run(port=<span class="number">25000</span>)</div></pre></td></tr></table></figure>
-
-<p>其对应的restful操作如下:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">获取用户列表:   GET /user</div><div class="line">添加用户:       POST /user</div><div class="line">获取单个用户:   GET /user/<span class="number">1</span></div><div class="line">覆盖单个用户:   PUT /user/<span class="number">1</span></div><div class="line">修改单个用户:   PATCH /user/<span class="number">1</span></div></pre></td></tr></table></figure>
-
-<p>注意:</p>
-<ul>
-<li>在http请求中，记得加入header: Content-Type: application/json</li>
-<li>flask-restless中，PUT和PATCH一样，都是传入什么字段，只修改什么字段，不会完全覆盖</li>
-</ul>
-<p>Django<br>参考链接: Django REST framework</p>
-<p>Django用起来要更复杂一些，也因为django版自带了一个可视化的操作页面，如下:<br><img src="/img/django1.png"></p>
-<ol>
-<li>在settings中添加:</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">REST_FRAMEWORK = {</div><div class="line">    <span class="comment"># Use hyperlinked styles by default.</span></div><div class="line">    <span class="comment"># Only used if the `serializer_class` attribute is not set on a view.</span></div><div class="line">    <span class="string">'DEFAULT_MODEL_SERIALIZER_CLASS'</span>:</div><div class="line">        <span class="string">'rest_framework.serializers.HyperlinkedModelSerializer'</span>,</div><div class="line"> </div><div class="line">    <span class="comment"># Use Django's standard `django.contrib.auth` permissions,</span></div><div class="line">    <span class="comment"># or allow read-only access for unauthenticated users.</span></div><div class="line">    <span class="string">'DEFAULT_PERMISSION_CLASSES'</span>: [</div><div class="line">        <span class="comment">#'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',</span></div><div class="line">        <span class="string">'rest_framework.permissions.IsAdminUser'</span>,</div><div class="line">    ]</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<ol>
-<li><p>通过startapp建立一个app: demo</p>
-</li>
-<li><p>修改demo的models:</p>
-</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(models.Model)</span>:</span></div><div class="line">    <span class="comment"># key是保留字</span></div><div class="line">    password = models.IntegerField()</div><div class="line">    nick = models.CharField(max_length=<span class="number">255</span>)</div><div class="line">    create_time = models.DateTimeField(default=datetime.datetime.now)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下新建serializers.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserSerializer</span><span class="params">(serializers.ModelSerializer)</span>:</span></div><div class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Meta</span>:</span></div><div class="line">        model = User</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下修改views.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render</div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets</div><div class="line"> </div><div class="line"><span class="keyword">from</span> serializers <span class="keyword">import</span> UserSerializer</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserViewSet</span><span class="params">(viewsets.ModelViewSet)</span>:</span></div><div class="line">    queryset = User.objects.all()</div><div class="line">    serializer_class = UserSerializer</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下新建urls.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> os.path</div><div class="line"><span class="keyword">from</span> django.conf.urls <span class="keyword">import</span> patterns, include, url</div><div class="line"><span class="keyword">from</span> django.conf.urls.static <span class="keyword">import</span> static</div><div class="line"><span class="keyword">from</span> django.conf <span class="keyword">import</span> settings</div><div class="line"><span class="keyword">import</span> views</div><div class="line"> </div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> routers</div><div class="line"> </div><div class="line">appname = os.path.basename(os.path.dirname(os.path.abspath(__file__)))</div><div class="line"> </div><div class="line">router = routers.DefaultRouter()</div><div class="line">router.register(<span class="string">'users'</span>, views.UserViewSet, appname)</div><div class="line"> </div><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">                       url(<span class="string">r'^'</span>, include(router.urls)),</div><div class="line">)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在mysite.urls下include demo.urls和rest_framework.urls</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">    url(<span class="string">r'^demo/'</span>, include(<span class="string">'demo.urls'</span>)),</div><div class="line">    url(<span class="string">r'^admin/'</span>, include(admin.site.urls)),</div><div class="line">    url(<span class="string">r'^api-auth/'</span>, include(<span class="string">'rest_framework.urls'</span>, namespace=<span class="string">'rest_framework'</span>))</div><div class="line">)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>执行初始化数据操作:</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py syncdb</div></pre></td></tr></table></figure>
-
-<p>之后访问: <a href="http://127.0.0.1:8000/demo" target="_blank" rel="external">http://127.0.0.1:8000/demo</a> 即可看到如下界面了:<br><img src="/img/django2.png"></p>
-<p>对应的测试代码如下:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> json</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">from</span> urlparse <span class="keyword">import</span> urljoin</div><div class="line"> </div><div class="line">BASE_URL = <span class="string">'http://127.0.0.1:16500/'</span></div><div class="line">AUTH = (<span class="string">'admin'</span>, <span class="string">'admin'</span>)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user_list</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span></div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_post_user_list</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">0</span>,</div><div class="line">        nick=<span class="string">'oo'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    rsp = requests.post(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    }, data=json.dumps(json_data))</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/1'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_put_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">100</span>,</div><div class="line">        nick=<span class="string">'xx'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    <span class="comment"># 注意最后的 /</span></div><div class="line">    rsp = requests.put(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_patch_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">300</span>,</div><div class="line">        )</div><div class="line">    rsp = requests.patch(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div></pre></td></tr></table></figure>
-
-<p>Django REST framework 是严格区分PUT和PATCH的，这一点和flask-restless 不一样，需要注意。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1149,7 +1594,7 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>9</small></li>
+    <li><a href="/tags/Java/">Java</a><small>10</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   

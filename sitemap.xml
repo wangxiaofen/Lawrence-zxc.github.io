@@ -2,6 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://lawrence-zxc.github.io/2014/06/15/java-mybatis/</loc>
+    <lastmod>2014-10-28T09:27:04.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://lawrence-zxc.github.io/2014/10/01/aboutMe/</loc>
+    <lastmod>2014-10-28T08:47:46.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://lawrence-zxc.github.io/2014/07/18/java-generics/</loc>
     <lastmod>2014-10-28T08:36:35.000Z</lastmod>
   </url>
@@ -34,11 +44,6 @@
   <url>
     <loc>http://lawrence-zxc.github.io/2014/06/18/javaScript-muban/</loc>
     <lastmod>2014-10-28T07:41:38.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lawrence-zxc.github.io/2014/10/01/aboutMe/</loc>
-    <lastmod>2014-10-28T03:18:19.000Z</lastmod>
   </url>
   
   <url>
