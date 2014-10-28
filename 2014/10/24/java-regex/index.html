@@ -100,7 +100,7 @@
       
         <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
 <p>js代码：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">   }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
 
 <p>java代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
@@ -111,6 +111,10 @@
     <footer>
       
 
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+          </div>
         
         
           <div class="alignright post-nav">
@@ -177,6 +181,8 @@
 
 <nav id="pagination" >
     
+    <a href="/2014/10/28/load-balancing/" class="alignleft prev" >上一页</a>
+    
     
     <a href="/2014/10/23/qiu/" class="alignright next" >下一页</a>
     
@@ -222,25 +228,23 @@ var duoshuoQuery = {short_name:"zxc337"};
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>7</small></li>
+    <li><a href="/tags/Java/">Java</a><small>9</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>6</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   
-    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
   
     <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
-    <li><a href="/tags/Python/">Python</a><small>1</small></li>
-  
-    <li><a href="/tags/python/">python</a><small>1</small></li>
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -268,7 +272,7 @@ var duoshuoQuery = {short_name:"zxc337"};
 
   <div class="trace-invest">
     <span>
-        <a href="http://weibo.com/zxc337" target="_blank">欢迎光临我的技术Blog网站 :</br>weibo.com</a>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
     </span>
 </div>
 
@@ -277,6 +281,14 @@ var duoshuoQuery = {short_name:"zxc337"};
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
@@ -316,14 +328,6 @@ var duoshuoQuery = {short_name:"zxc337"};
     
       <li>
         <a href="/2014/09/05/blog1/">REST风格的软件架构</a>
-      </li>
-    
-      <li>
-        <a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a>
-      </li>
-    
-      <li>
-        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>

@@ -93,6 +93,144 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
+<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
+<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
+<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
+<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>如果是jvm自身执行了System.exit比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
+
+<p>那么在跟踪的信息里，是看不到signal的:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近需要给一个现网server增加过载保护的功能，借此机会也思考了很多，简单谈谈我对这两个概念的理解和实现方法。</p>
+<p>一.负载均衡<br>简单来说，就是按照目标server的参数进行合理分配，这个参数可以是失败率，也可以是响应时间，也可以是请求量，甚至是随机数。<br>我们来按照从简单到复杂逐个看一下几种实现。</p>
+<p>1.轮询式<br>逻辑比较简单，直接看代码：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">vector&lt;Server*&gt; vecServer;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    Server* server = vecServer[curIndex % vecServer.size()];</div><div class="line">    curIndex ++;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>如上代码就是一个简单的轮询式分配方法，这种方法优点实现简单，cpu计算少，缺点就是无法动态判断server的状态，当后端有一台server挂掉的时候，会至少1/vecServer.size()的请求。（最为严重的情况是由于单台后端server的超时导致前段全部挂死）。而且这种分配方法有一个bug，就是当每次请求结束后就释放内存，那么curIndex永远都只会为0，即每次都请求第一个server。</p>
+<p>2.定死权重式<br>这种方式适用于那种需要实现就规定后端server的权重，比如A比Bserver的响应速度快，我们希望A接受的请求比B多。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">//假设A，B, C server的权重分别为 10 5 2</div><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    //server 指针</div><div class="line">    Server* server;</div><div class="line">    //权重</div><div class="line">    int weight;</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">vecServer.push_back(A);</div><div class="line">vecServer.push_back(B);</div><div class="line">vecServer.push_back(C);</div><div class="line"> </div><div class="line">vector&lt;int&gt; vecWeight;</div><div class="line">for (unsigned i = 0; i &lt; vecServer.size(); i++)</div><div class="line">{</div><div class="line">    vecWeight.insert(vecWeight.end(),vecServer[i]-&gt;weight,i);</div><div class="line">}</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    index = vecWeight[random() % vecWeight.size()];</div><div class="line">    Server* server = vecServer[index].server;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面的代码也比较好理解，一共有两个数组，一个是server信息数组vecServer，一个是权重数组vecWeight。在分配server时，先通过权重数组vecWeight获取到server信息数组的下标，然后分配server。<br>这样的做法在我1年半写的一个项目是有使用的，经过统计效果是很不错的，基本是访问量是严格按照权重比分配的。这样做的cpu消耗也不高，但是缺点也是显而易见的，就是还是没有办法动态调整权重，需要人为去修改。所以我们接下来看第三种。</p>
+<p>3.动态调整权重<br>要讨论这种方法前，我们先要明确几个希望使用他的原因：</p>
+<ul>
+<li>1.我们希望server能够自动按照运行状态进行按照权重的选择</li>
+<li>2.我们不希望手工去配置权重变化</li>
+</ul>
+<p>然后是我们实现方法，很明显，我们需要一个基准来告诉我们这台server是否是正常的。这个基准是什么，是历史累计的平均值。比如如果是按照响应时间分配权重，那么就是所有后端server历史累计的平均响应时间，如果是错误率也是如此。<br>那么一旦调整了权重，我们什么时候来调整权重呢，调整比例是怎样呢？按照我的经验，一般是隔一段固定时间才进行调整，如果正常但是权重过低，那么就按照20%的比例恢复；如果server不正常，那么直接按照当前server响应时间/历史平均响应时间进行降权。这里的逻辑之所以不一样是有原因的，因为服务出现问题的时候，我们是能够知道这坏的程度有多少的，就是当前server响应时间/历史平均响应时间进行降权；但是要恢复的时候，你并不能保证server能够支撑到多大的访问量，所以只能按照20%放量来试。也避免滚雪球效应的发生。<br>我们来看一下代码。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">int total_rsp_time = 0;</div><div class="line">int total_req_count = 0;</div><div class="line"> </div><div class="line">unsigned int comWeight = 100;</div><div class="line">unsigned int MaxWeight = 1000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    float total_rsp_avg_time = (float)total_rsp_time / (float)total_req_count;</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_rsp_avg_time = (float)it-&gt;_rsp_time / (float)it-&gt;_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt = int(comWeight*total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_wt = it-&gt;_cur_wt &lt; MaxWeight ? it-&gt;_cur_wt : MaxWeight;</div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>以上基本展示了动态调整的过程，代码可能只是起演示作用，很多比如越界的检测都没有做，大家参照就好~</p>
+<p>OK，到这里我们基本就结束了负载均衡的讨论了，但是还有一个话题：过载保护。</p>
+<p>二.过载保护<br>关于过载保护其实经常适合负载均衡结合在一起使用的，但有两个问题：</p>
+<ul>
+<li>1.过载参照的基准是谁。<br>  是上面代码中的total_rsp_avg_time吗？<br>  不是，因为除非所有机器的正常性能完全一样，<br>  否则不可以拿total_rsp_avg_time来作为某台机器的负载基准。<br>  而能拿来做参照的，只有这台server自身的历史累计值。</li>
+<li>2.怎么实现过载保护。其实很简单，我们定义两个值_cur_max_queue_cnt和_queue_req_cnt，<br>  意义分别是这个server上在一段时间内允许分配的最多次数和当前已经排队的个数。<br>  _cur_max_queue_cnt值是通过当前时间段响应时间和历史累计时间算出来的。<br>  每次使用分配的server前，都要判断一下_queue_req_cnt是否达到了_cur_max_queue_cnt，<br>  如果达到了，分配失败。否则分配成功并且_queue_req_cnt++。</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line"> </div><div class="line">    int             _total_req_count;           //总的请求数</div><div class="line">    float           _total_rsp_avg_time;        //总的请求平均响应时间</div><div class="line">    int             _total_rsp_error;           //总的请求错误数</div><div class="line">    float           _total_rsp_time;        //总的请求时间</div><div class="line"> </div><div class="line">    float           _cur_max_queue_cnt; //当前实际允许的最大排队请求数</div><div class="line">    int             _queue_req_cnt;         //当前排队请求数</div><div class="line"> </div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">float comxQueueSize = 1000;</div><div class="line">float maxQueueSize = 10000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line"> </div><div class="line">    if(serverInfo._queue_req_cnt &gt; serverInfo._cur_max_queue_cnt)</div><div class="line">    {</div><div class="line">        //分配失败</div><div class="line">        continue;</div><div class="line">    }</div><div class="line">    serverInfo._queue_req_cnt ++;</div><div class="line">    </div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    serverInfo._total_req_count++;</div><div class="line">    serverInfo._total_rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照第三种方法重新分配权重</div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line"> </div><div class="line">    //其实和上面的循环合并成一个</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_total_rsp_avg_time = (float)it-&gt;_total_rsp_time / (float)it-&gt;_total_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; it-&gt;_total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt = int(comxQueueSize*it-&gt;_total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_max_queue_cnt = it-&gt;_cur_max_queue_cnt &lt; maxQueueSize ? it-&gt;_cur_max_queue_cnt : maxQueueSize;</div><div class="line">        it-&gt;_queue_req_cnt = 0;</div><div class="line">    }</div><div class="line">    </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面的代码为了演示方便，所以把两个for循环拆开了，实际上是应该合到一个里面写的。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
       
       
@@ -105,7 +243,7 @@
       
         <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
 <p>js代码：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">   }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
 
 <p>java代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
@@ -455,11 +593,12 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </header>
     <div class="entry">
       
-        <h3 id="张兄才">张兄才</h3>
-<p>90后程序员，@上海，业余承接java/python项目，Blogger。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
-<h3 id="技术领域：">技术领域：</h3>
+        <p><br></p>
+<h3 id="张兄才"><em>张兄才</em></h3>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<h3 id="技术领域"><em>技术领域</em></h3>
 <p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
-<h3 id="足迹">足迹</h3>
+<h3 id="足迹"><em>足迹</em></h3>
 <ul>
 <li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
 <li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
@@ -472,11 +611,13 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
 <li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
 </ul>
-<h3 id="咖啡">咖啡</h3>
-<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对Jeck_Zhang进行无负担小额赞助(1元即可)：</p>
+<h3 id="咖啡"><em>咖啡</em></h3>
+<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对Jeck_Zhang进行无负担小额赞助(1元即可)</p>
 <ul>
 <li><strong>支付宝帐号</strong>: 407815772@qq.com</li>
 </ul>
+<h2><br></h2>
+<p><img src="/img/my-work.jpg"></p>
 
       
     </div>
@@ -568,154 +709,13 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
-<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
-<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
-<p>-集成了Lua模块的Nginx项目OpenResty</p>
-<p>-GraphicsMagick的安装和使用</p>
-<p>-具体使用方法</p>
-<p>原始图片地址：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
-
-<p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd_40x40.jpg</div></pre></td></tr></table></figure>
-
-<p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">location ~ <span class="string">'/images/([0-9a-z]+)_([0-9]+)x([0-9]+).jpg$'</span> {</div><div class="line">    root /home/images;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> =  <span class="string">'/home/images'</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> = ngx.arg[<span class="number">1</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> = ngx.arg[<span class="number">2</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> = ngx.arg[<span class="number">3</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName</span>.jpg</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName_</span><span class="variable">$widthx</span><span class="variable">$height</span>.jpg</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x"</div><div class="line">                            ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">         ';</div><div class="line"> }</div></pre></td></tr></table></figure>
-
-<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="extend next" rel="next" href="/archives/page/2/">Next</a></nav>
+    <nav id="page-list" class="page-list"><span class="page-number current">1</span><a class="page-number" href="/archives/page/2/">2</a><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/2/">Next</a></nav>
 
 <nav id="pagination">
   
@@ -739,25 +739,23 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>7</small></li>
+    <li><a href="/tags/Java/">Java</a><small>9</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>6</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   
-    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
   
     <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
-    <li><a href="/tags/Python/">Python</a><small>1</small></li>
-  
-    <li><a href="/tags/python/">python</a><small>1</small></li>
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -785,7 +783,7 @@ Stateless 无状态
 
   <div class="trace-invest">
     <span>
-        <a href="http://weibo.com/zxc337" target="_blank">欢迎光临我的技术Blog网站 :</br>weibo.com</a>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
     </span>
 </div>
 
@@ -794,6 +792,14 @@ Stateless 无状态
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
@@ -833,14 +839,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/09/05/blog1/">REST风格的软件架构</a>
-      </li>
-    
-      <li>
-        <a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a>
-      </li>
-    
-      <li>
-        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>

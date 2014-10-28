@@ -93,6 +93,304 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
+<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
+<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
+<p>-集成了Lua模块的Nginx项目OpenResty</p>
+<p>-GraphicsMagick的安装和使用</p>
+<p>-具体使用方法</p>
+<p>原始图片地址：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
+
+<p>自定义图片尺寸：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd_40x40.jpg</div></pre></td></tr></table></figure>
+
+<p>配置文件中可以写成这样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">location ~ <span class="string">'/images/([0-9a-z]+)_([0-9]+)x([0-9]+).jpg$'</span> {</div><div class="line">    root /home/images;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> =  <span class="string">'/home/images'</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> = ngx.arg[<span class="number">1</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> = ngx.arg[<span class="number">2</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> = ngx.arg[<span class="number">3</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName</span>.jpg</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName_</span><span class="variable">$widthx</span><span class="variable">$height</span>.jpg</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x"</div><div class="line">                            ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">         ';</div><div class="line"> }</div></pre></td></tr></table></figure>
+
+<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>REST风格的软件架构</p>
+<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
+<pre><code><span class="title">Resources</span> 一切都是资源
+</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
+<pre><code><span class="title">Representation</span> 表现层
+</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>JSON数据就这本书的表现层。</p>
+<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
+<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
+<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
+</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
+<pre><code>POST 创建或更新资源
+
+GET 获取资源
+
+PUT 更新资源
+
+<span class="keyword">DELETE</span> 删除资源
+</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
+<pre><code>POST 创建一本书
+
+GET 获取一本的信息
+
+PUT 更新书的信息
+
+<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
+
+Stateless 无状态
+</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
+<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
+</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-07-18T08:02:20.000Z"><a href="/2014/07/18/java-generics/">7月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/07/18/java-generics/">java泛型的理解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>这是自己java泛型的理解,心得体会!</p>
+<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程中，对于泛型一直没有特别深入的使用过，没有遇到那样的需求和场景。只需要了解Java中的泛型是编译期的，运行期被“擦拭”掉了；然后还有几种通配符的表示就足够了。</p>
+<p>直到一天我在查看Java5中Enum的源代码时，发现它是这么定义的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Enum</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">Enum</span>&lt;<span class="title">E</span>&gt;&gt; </span></div><div class="line">                <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">E</span>&gt;, <span class="title">Serializable</span> {</div></pre></td></tr></table></figure>
+
+<p>这个类似递归结构的 Enum<e extends="" enum<e="">&gt; 究竟表达什么意思？</e></p>
+<p>随后我又看到了在Collections工具类中的max 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
+
+<p>怎么TMD还会有这么复杂的泛型表达式!?（幸好的是这种情况在我们实际开发过程中不多见，甚至不应该见到，大概只有像JDK这种为了保留对老版本的兼容才会设计出这么复杂的泛型表达式出来。）</p>
+<p>上面的问题，你可以通过：<a href="http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf" target="_blank" rel="external">http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf</a> 来获取答案，中文版的在：<a href="http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx" target="_blank" rel="external">http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx</a><br>这篇泛型指南的文章，非常详细。</p>
+<p>或许你看了上面的文章，依然心存疑虑。我下面的内容则是对这篇文档的一些补充（会和这篇文档有点重合）<br>回到我之前抛出的问题上：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;? extends Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">}</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bar</span>(List&lt;? <span class="keyword">super</span> Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">    l.add(<span class="keyword">new</span> Float(<span class="number">2</span>));    <span class="comment">// ok?</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这里主要说说 &lt;? extends T&gt; 和 &lt;? super T&gt; 这两种通配符对于方法参数的使用原则。<br>即 PECS 原则 (producser-extends, consumer-super) 或者也叫 Get and Put 原则</p>
+<p>当没有使用通配符的情况下，我们定义一个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="keyword">void</span> <span class="title">test</span>(List&lt;E&gt; l){</div><div class="line">    E e = l.get(<span class="number">0</span>);</div><div class="line">    l.set(<span class="number">0</span>, e);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>我们从List中 get和set都没有问题，因为这个E 它的类型是某种明确的类型。</p>
+<p>而当使用通配符时来描述参数时，就有些不同了。</p>
+<p>我们先定义一下两种通配符： </p>
+<p>&lt;? extends E&gt; 是 Upper Bound（上限） 的通配符</p>
+<p>&lt;? super E&gt; 是 Lower Bound（下限） 的通配符</p>
+<p>1) 当使用 Upper Bound 通配符时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;?&gt; list){</div><div class="line">    Object e = list.get(<span class="number">0</span>); <span class="comment">// get OK</span></div><div class="line">    list.set(<span class="number">0</span>, e);         <span class="comment">// set 编译报错</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面代码中通配符&lt;?&gt; 是 &lt;? extends Object&gt; 的简写。(关于&lt;?&gt;是否和&lt;? extends Object&gt;完全等价，我遇到个小插曲，在结束的时候来描述)</p>
+<p>在eclipse里错误提示为：<br><em>The method set(int, capture#2-of ?) in the type List<capture#2-of ?=""> is not applicable for the arguments (int, Object)</capture#2-of></em></p>
+<p>注： <capture#2-of ?=""> 是一个占位符，表示编译器对通配符的捕获，更多见：</capture#2-of></p>
+<p><a href="http://www.ibm.com/developerworks/cn/java/j-jtp04298.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-jtp04298.html</a></p>
+<p>set报错的原因是因为此时方法中的类型是不可具体化的(reified)，你可以传递一个String，Number，Book，等任何继承自Object的类作为List的参数类型给test方法，而list要求集合中的类型必须是一致的，set的时候没有办法保证set进去的数据类型是否和list中原本的类型一致，比如你传给test方法的是 List<book>， 那么在方法中set进去一个Object显然类型就不一致了。这也是通配符带来灵活性的同时所要付出的代价。</book></p>
+<p>结论：使用了 &lt;? extends E&gt; 这样的通配符，test方法的参数list变成了只能get不能set（除了null） 或者不严谨的说它变成了只读参数了， 有些类似一个生产者，提供数据。</p>
+<p>2) 当使用 Lower Bound 的通配符时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;? <span class="keyword">super</span> Number&gt; list){</div><div class="line">    Number n = list.get(<span class="number">0</span>);             <span class="comment">// 编译错误</span></div><div class="line">    Object o = list.get(<span class="number">0</span>);             <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Object());          <span class="comment">// 编译错误</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Long(<span class="number">0</span>));           <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>));        <span class="comment">// OK</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这时get只能get出最宽泛的父类型，即Object。</p>
+<p>这时set的时候，必须是Number或Number的子类。</p>
+<p>原因和上面的get类似。</p>
+<p>结论： 使用了&lt;? super E&gt; 这种通配符，test方法的参数list的get受到了很大的制约，只能最宽泛的方式来获取list中的数据，相当于get只提供了数据最小级别的访问权限（想想，你可能原本是放进去了一个Book，却只能当作Object来访问）。它更多适合于set的使用场景，像是一个消费者，主要用来消费数据。</p>
+<p>上面便是对通配符的使用原则的说明，简单的说 PECS原则是指导我们在泛型方法中使用通配符的直接原则。参数作为生产者使用&lt;? extends E&gt;，作为消费者时使用&lt;? super E&gt; 。</p>
+<p>那么说完了PECS原则，我们再回过头来分析那两个复杂的泛型表达式是怎么含义</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class Enum&lt;E extends Enum&lt;E&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>它确实是一个 “递归类型限制”(recursive type bound)<br>要说明白这个问题，我们要先明白2点：</p>
+<p>a) Enum可以理解为一组同一类型的有限的数据集合；</p>
+<p>b) Java对Enum中的数据类型要求必须也是枚举类型（即必须是继承Enum类的）</p>
+<p>对于 a) 我们先定义一个 Enum<t> 表明定义了T这种类型作为它内部的数据类型，这么看它就像个普通的集合。</t></p>
+<p>再来根据 b) 定义类型E，要求E必须是继承自 Enum<t>，便成了 <e extends="" enum<t="">&gt;<br>实际上 E和T是一回事，它们是同一类型， 所以它就是 <e extends="" enum<e="">&gt;</e></e></t></p>
+<p>暂停，可能我上面的表达不太合理可能会误人子弟，递归类型限制是有些抽象，它应该有严谨的数学描述，我想不清楚怎么表达，我先用另一个简单些例子来说明吧</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;T&gt;&gt; T <span class="title">max</span>(List&lt;T&gt; list)</div></pre></td></tr></table></figure>
+
+<p>这个方法用来获取list 中的最大值，它定义了一个 <t extends="" comparable<t="">&gt; 的类型表达式</t></p>
+<p>这个递归类型限制的表达式容易理解一些，</p>
+<p><t extends="" comparable<t="">&gt; 表示的是：针对可以与自身进行比较的每个类型T。<br>或者说，每个实现了Comparable<t>接口的类型T，比如 String 实现了 Comparable<string> ， Long实现了Comparable<long>等等</long></string></t></t></p>
+<p>而Enum因为使用enum关键字的原因，让我们忽略了它底层的实现其实也是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class EnumSample extends Enum&lt;EnumSample&gt;</div></pre></td></tr></table></figure>
+
+<p>这一事实，比如我们定义了 BoundKind 这样的一个枚举：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> BoundKind{ }</div></pre></td></tr></table></figure>
+
+<p>编译器会转换为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BoundKind</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">Enum</span>&lt;<span class="title">BoundKind</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>看到了，这和 String implements Comparable<string> 类似</string></p>
+<p>这样我们套回到<e extends="" enum<e="">&gt; 就是 <boundkind extends="" enum<boundkind="">&gt;</boundkind></e></p>
+<p>这下好理解了， <e extends="" enum<e="">&gt; 直接按字面理解：每个继承自Enum<e>的类型E，比如</e></e></p>
+<p>BoundKind 继承了 Enum<boundkind></boundkind></p>
+<p>通过与<t extends="" comparable<t="">&gt;的对比，我们可以理解 <e extends="" enum<e="">&gt;了。</e></t></p>
+<p>那现在我们再回到Collections工具类中的max 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
+
+<p>我们先简化一下这个表达式，看看<t extends="" comparable<?="" super="" t="">&gt; 怎么理解？</t></p>
+<p>既然 <t extends="" comparable<t="">&gt; 我们都理解了，把Comparable<t>改为</t></t></p>
+<p>Comparable&lt;? super T&gt; 也没什么费解的</p>
+<p>在《Java1.5 Generics Tutorial》一文中的解释是：<br>T 精确的(exactly)和自己能比较是不需要的。所需要的 是 T能 够和它的父类中的一个进行比较。</p>
+<p>而《Effictive Java》第二版中对此是用 PECS原则来解释的：</p>
+<p>下面是修改过的使用通配符类型的声明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">               T <span class="title">max</span>(List&lt;? extends T&gt; list)</div></pre></td></tr></table></figure>
+
+<p><em>为了从初始声明中得到修改后的版本，要应用PECS转换两次，最直接的是运用到参数List。它产生T实例，因此将类型从List改为List&lt;? extends T&gt;。（ok好理解）<br>。。。。。。<br>更灵活的是运用到类型参数T。最初T 被指定用来扩展Comparable，但是T的comparable消费T实例（并产生表示顺序关系的整值）。因此，参数化类型Comparable被有限制通配符类型Comparable&lt;? super T&gt;取代。comparable始终是消费者，因此使用时始终应该是Comparable&lt;? super T&gt; 优先于 Comparable。</em></p>
+<p>蓝色粗体的那句翻译的不好。还是看一下代码来理解吧：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">            T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div><div class="line">    Iterator&lt;? extends T&gt; i = coll.iterator();</div><div class="line">    T candidate = i.next();</div><div class="line">    <span class="keyword">while</span> (i.hasNext()) {</div><div class="line">        T next = i.next();</div><div class="line">        <span class="keyword">if</span> (next.compareTo(candidate) &gt; <span class="number">0</span>) <span class="comment">// here comparaTo</span></div><div class="line">            candidate = next;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> candidate;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>第5行，Bloch认为 next.compareTo(cand) 是一句消费操作，在消费一个candidate对象时，根据PECS原则，candidate的类型应该使用 &lt;? super T&gt; 来提高它的灵活性。</p>
+<p>我觉得Bloch将第5行当作消费操作挺别扭的，我个人偏向《Java1.5 Generics Tutorial》中的解释。<br>但归根到底，都是降低限制，提高比较时的灵活性。</p>
+<p>最后，我们再来完整的理解：<t extends="" object="" &="" comparable<?="" super="" t="">&gt;<br>就只是比 &gt; 多了一个限制(bounds)。</t></p>
+<p>Object &amp; Comparable&lt;? super T&gt; 是一个多限定(multiple bounds)的用法，</p>
+<p>语法为： T1 &amp; T2 … &amp; Tn</p>
+<p>一个有多个界限的类型的参数是所有界限中列出来的类型的子类。当多个界限被使用的时候，界限中的第一个类型被用作这个类型参数的erasure。</p>
+<p>最终这个方法的返回值，按照第一个限定，擦拭为Object类型了。这是因为在以前版本中此方法就是返回的Object类型，需要兼容。</p>
+<p>因为多限定（multiple bounds）的存在，泛型方法中又对应的增加了一个很不优雅的调用方式。下面用一段代码来说明:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsTest</span> </span>{    </div><div class="line">    <span class="keyword">static</span> class Book {};</div><div class="line">    <span class="keyword">static</span> class StoryBook extends Book implements Comparable&lt;StoryBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(StoryBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line">    <span class="keyword">static</span> class TechBook extends Book implements Comparable&lt;TechBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(TechBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; Set&lt;E&gt; <span class="title">merge</span>(Set&lt;? extends E&gt; s1, Set&lt;? extends E&gt; s2) {</div><div class="line">        HashSet&lt;E&gt; newSet = <span class="keyword">new</span> HashSet&lt;E&gt;(s1);</div><div class="line">        newSet.addAll(s2);</div><div class="line">        <span class="keyword">return</span> newSet;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        HashSet&lt;StoryBook&gt; s1 = <span class="keyword">new</span> HashSet&lt;StoryBook&gt;();</div><div class="line">        HashSet&lt;TechBook&gt; s2 = <span class="keyword">new</span> HashSet&lt;TechBook&gt;();</div><div class="line">        Set&lt;Book&gt; sb = merge(s1, s2); <span class="comment">// 错误</span></div><div class="line">        <span class="comment">// 需通过显式的类型参数(explicit type parameter)来告诉它要使用哪种类型</span></div><div class="line">        Set&lt;Book&gt; bs = GenericsTest.&lt;Book&gt;merge(s1,s2); <span class="comment">//OK</span></div><div class="line">        <span class="comment">// 或者</span></div><div class="line">        Set&lt;Comparable&lt;?&gt;&gt; s = GenericsTest.&lt;Comparable&lt;?&gt;&gt;merge(s1,s2);</div><div class="line">     }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面直接调用merge(s1,s2) 那行代码错误的提示信息：<br>Type mismatch: cannot convert from Set<genericstest.book&comparable<?>&gt; to Set<genericstest.book><br>这归于泛型的类型推导(type inference)，当无法推导出明确的类型时，就需要显式的描述，如上面代码中红色粗体字。</genericstest.book></genericstest.book&comparable<?></p>
+<p>后注：<br>有关于 &lt;?&gt; 与 &lt;? extends Object&gt;是否是一回事<br>今天中午发现同事桌上有本《Java编程思想》第四版，随手翻了一下，发现泛型一章的介绍中，有句描述：“UnboundedWildcards.java 展示了编译器处理List&lt;?&gt;和List&lt;? Extends Object&gt;时是不同的。”<br>这让我奇怪，查看了一下它的代码，主要因为是对于Raw类型的造型为泛型时的警告信息不同。<br>将一个Raw的ArrayList造型给 List&lt;?&gt; 没有问题，而给List&lt;? Extends Object&gt;却会有警告。</p>
+<p>在网上查了一下，发现对于&lt;?&gt;与&lt;? extends Object&gt;是否等同，是有些不同意见的。</p>
+<p><a href="http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html" target="_blank" rel="external">http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html</a></p>
+<p><a href="http://bugs.sun.com/view_bug.do?bug_id=6559175" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6559175</a></p>
+<p>这个报告里，有两段代码反映了两者的不同：<br>（1）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args)  {</div><div class="line">    Object  customer  = <span class="keyword">null</span>;</div><div class="line">    foo((List&lt;? extends String&gt;) customer ); <span class="comment">//[1]</span></div><div class="line">    foo((List&lt;? extends Object&gt;) customer ); <span class="comment">//[2] 编译有警告</span></div><div class="line">    foo((List&lt;?&gt;) customer ); <span class="comment">//[3]  编译没有警告</span></div><div class="line">}</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;?&gt; list) {</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>（2）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object o2 = <span class="keyword">new</span> List&lt;?&gt;[<span class="number">3</span>];   <span class="comment">// 编译居然OK，估计直接当作Raw处理了</span></div><div class="line">Object o3 = <span class="keyword">new</span> List&lt;? extends Object&gt;[<span class="number">3</span>]; <span class="comment">// 报错</span></div></pre></td></tr></table></figure>
+
+<p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
+<p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
+<p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
+<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
+<p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
+<p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
+<p>我们暂从语义上认为两者相等。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
       
       
@@ -223,6 +521,56 @@
 
 <p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
 <p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-06-18T07:38:56.000Z"><a href="/2014/06/18/javaScript-muban/">6月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/18/javaScript-muban/">javascript中实现简单的模板替换</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">str_format</span><span class="params">(str, obj)</span> </span>{</div><div class="line">    <span class="keyword">return</span> str.replace(<span class="regexp">/\{\s*(\w+)\s*\}/g</span>, <span class="function"><span class="keyword">function</span><span class="params">(_i, _1)</span> </span>{</div><div class="line">        <span class="keyword">return</span> obj[_1] != <span class="literal">null</span> ? obj[_1] : <span class="string">''</span>;</div><div class="line">    });</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>很多朋友会说性能差一些，可能确实如此，不过对我来说，相比编写的舒适来说，这点性能差别实在无足轻重了。</p>
 
       
     </div>
@@ -670,53 +1018,86 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2013-11-13T02:15:01.000Z"><a href="/2013/11/13/hello-world/">11月 13 2013</a></time>
+        <time datetime="2014-04-28T05:45:35.000Z"><a href="/2014/04/28/python-mysql-restful/">4月 28 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2013/11/13/hello-world/">Hello World</a></h1>
+    <h1 class="title"><a href="/2014/04/28/python-mysql-restful/">python为mysql实现restful接口</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
-<h3 id="for_Java">for Java</h3>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">System.out.println(<span class="string">"Hello World!"</span>);</div></pre></td></tr></table></figure>
+        <p>最近在做游戏服务分层的时候，一直想把mysql的访问独立成一个单独的服务DBGate，原因如下:</p>
+<ul>
+<li>请求收拢到DBGate，可以使DBGate变为无状态的，方便横向扩展</li>
+<li>当请求量或者存储量变大时，mysql需要做分库分表，DBGate可以内部直接处理，外界无感知</li>
+<li>通过restful限制对数据请求的形式，仅支持简单的get/post/patch/put 进行增删改查，并不支持复杂查询。这个也是和游戏业务的特性有关，如果网站等需要复杂查询的业务，对此并不适合</li>
+<li>DBGate使用多进程模式，方便控制与mysql之间的链接数，进行mysql访问量阀值保护</li>
+<li>方便在DBGate上进行访问量统计，慢查询统计、权限控制等等一系列逻辑</li>
+<li>目前是使用python，以后要使用其他语言进行mysql操作时，只要进行标准的http请求即可，不会出现不兼容的情况<br>当然坏处也是有的：</li>
+<li>首当其冲就是单次请求的响应时间变长，毕竟中间加了一层服务，并且还是http格式</li>
+<li>部署上比原来复杂了一些，很多对mysql直接操作的思维需要进行转变，一开始可能会有些不适</li>
+</ul>
+<p>不过总的来说，还是利大于弊，所以最终还是决定搭建DBGate</p>
+<p>当然，我们不可能去手工挨个写每个库表对应的restful服务，值得庆幸的是django和flask都提供了对应的解决方案，我们一个个介绍.</p>
+<p>Flask<br>参考链接: flask-restless</p>
+<p>flask-restless使用方法比较简单，我直接贴一下代码即可:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"> </div><div class="line"><span class="keyword">import</span> datetime</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</div><div class="line"><span class="keyword">from</span> flask_sqlalchemy <span class="keyword">import</span> SQLAlchemy</div><div class="line"><span class="keyword">from</span> flask_restless <span class="keyword">import</span> APIManager</div><div class="line"> </div><div class="line"> </div><div class="line">app = Flask(__name__)</div><div class="line">db = SQLAlchemy(app)</div><div class="line">restless = APIManager(app, flask_sqlalchemy_db=db)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(db.Model)</span>:</span></div><div class="line">    <span class="string">"""</span></div><div class="line">    user</div><div class="line">    """</div><div class="line"> </div><div class="line">    id = db.Column(db.Integer, primary_key=<span class="keyword">True</span>)</div><div class="line">    username = db.Column(db.String(<span class="number">255</span>), unique=<span class="keyword">True</span>, nullable=<span class="keyword">False</span>)</div><div class="line">    password = db.Column(db.String(<span class="number">255</span>), nullable=<span class="keyword">False</span>)</div><div class="line">    create_time = db.Column(db.DateTime, nullable=<span class="keyword">False</span>, default=datetime.datetime.utcnow)</div><div class="line">    login_time = db.Column(db.DateTime)</div><div class="line"> </div><div class="line"> </div><div class="line">restless.create_api(User, methods=[<span class="string">'GET'</span>, <span class="string">'POST'</span>, <span class="string">'DELETE'</span>, <span class="string">'PATCH'</span>, <span class="string">'PUT'</span>], results_per_page=<span class="number">100</span>)</div><div class="line"> </div><div class="line">db.create_all()</div><div class="line"> </div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    app.run(port=<span class="number">25000</span>)</div></pre></td></tr></table></figure>
 
+<p>其对应的restful操作如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">获取用户列表:   GET /user</div><div class="line">添加用户:       POST /user</div><div class="line">获取单个用户:   GET /user/<span class="number">1</span></div><div class="line">覆盖单个用户:   PUT /user/<span class="number">1</span></div><div class="line">修改单个用户:   PATCH /user/<span class="number">1</span></div></pre></td></tr></table></figure>
 
+<p>注意:</p>
+<ul>
+<li>在http请求中，记得加入header: Content-Type: application/json</li>
+<li>flask-restless中，PUT和PATCH一样，都是传入什么字段，只修改什么字段，不会完全覆盖</li>
+</ul>
+<p>Django<br>参考链接: Django REST framework</p>
+<p>Django用起来要更复杂一些，也因为django版自带了一个可视化的操作页面，如下:<br><img src="/img/django1.png"></p>
+<ol>
+<li>在settings中添加:</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">REST_FRAMEWORK = {</div><div class="line">    <span class="comment"># Use hyperlinked styles by default.</span></div><div class="line">    <span class="comment"># Only used if the `serializer_class` attribute is not set on a view.</span></div><div class="line">    <span class="string">'DEFAULT_MODEL_SERIALIZER_CLASS'</span>:</div><div class="line">        <span class="string">'rest_framework.serializers.HyperlinkedModelSerializer'</span>,</div><div class="line"> </div><div class="line">    <span class="comment"># Use Django's standard `django.contrib.auth` permissions,</span></div><div class="line">    <span class="comment"># or allow read-only access for unauthenticated users.</span></div><div class="line">    <span class="string">'DEFAULT_PERMISSION_CLASSES'</span>: [</div><div class="line">        <span class="comment">#'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',</span></div><div class="line">        <span class="string">'rest_framework.permissions.IsAdminUser'</span>,</div><div class="line">    ]</div><div class="line">}</div></pre></td></tr></table></figure>
 
-<h3 id="for_Shell">for Shell</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"Hello World!"</span></div><div class="line"><span class="built_in">printf</span> <span class="string">"Hello world!"</span></div></pre></td></tr></table></figure>
+<ol>
+<li><p>通过startapp建立一个app: demo</p>
+</li>
+<li><p>修改demo的models:</p>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(models.Model)</span>:</span></div><div class="line">    <span class="comment"># key是保留字</span></div><div class="line">    password = models.IntegerField()</div><div class="line">    nick = models.CharField(max_length=<span class="number">255</span>)</div><div class="line">    create_time = models.DateTimeField(default=datetime.datetime.now)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在demo下新建serializers.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserSerializer</span><span class="params">(serializers.ModelSerializer)</span>:</span></div><div class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Meta</span>:</span></div><div class="line">        model = User</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在demo下修改views.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render</div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets</div><div class="line"> </div><div class="line"><span class="keyword">from</span> serializers <span class="keyword">import</span> UserSerializer</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserViewSet</span><span class="params">(viewsets.ModelViewSet)</span>:</span></div><div class="line">    queryset = User.objects.all()</div><div class="line">    serializer_class = UserSerializer</div></pre></td></tr></table></figure>
 
-<h3 id="for_JavaScript">for JavaScript</h3>
-<figure class="highlight JavaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">"Hello World!"</span>);</div><div class="line"><span class="built_in">document</span>.write(<span class="string">"Hello, world!"</span>);</div></pre></td></tr></table></figure>
+<ol>
+<li>在demo下新建urls.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> os.path</div><div class="line"><span class="keyword">from</span> django.conf.urls <span class="keyword">import</span> patterns, include, url</div><div class="line"><span class="keyword">from</span> django.conf.urls.static <span class="keyword">import</span> static</div><div class="line"><span class="keyword">from</span> django.conf <span class="keyword">import</span> settings</div><div class="line"><span class="keyword">import</span> views</div><div class="line"> </div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> routers</div><div class="line"> </div><div class="line">appname = os.path.basename(os.path.dirname(os.path.abspath(__file__)))</div><div class="line"> </div><div class="line">router = routers.DefaultRouter()</div><div class="line">router.register(<span class="string">'users'</span>, views.UserViewSet, appname)</div><div class="line"> </div><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">                       url(<span class="string">r'^'</span>, include(router.urls)),</div><div class="line">)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在mysite.urls下include demo.urls和rest_framework.urls</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">    url(<span class="string">r'^demo/'</span>, include(<span class="string">'demo.urls'</span>)),</div><div class="line">    url(<span class="string">r'^admin/'</span>, include(admin.site.urls)),</div><div class="line">    url(<span class="string">r'^api-auth/'</span>, include(<span class="string">'rest_framework.urls'</span>, namespace=<span class="string">'rest_framework'</span>))</div><div class="line">)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>执行初始化数据操作:</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py syncdb</div></pre></td></tr></table></figure>
 
-<h3 id="for_Css">for Css</h3>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*<span class="pseudo">:before</span>,</div><div class="line">*<span class="pseudo">:after</span> <span class="rules">{ <span class="rule"><span class="attribute">content</span>:<span class="value"><span class="string">'hello word!'</span> </span></span></span>}</div></pre></td></tr></table></figure>
+<p>之后访问: <a href="http://127.0.0.1:8000/demo" target="_blank" rel="external">http://127.0.0.1:8000/demo</a> 即可看到如下界面了:<br><img src="/img/django2.png"></p>
+<p>对应的测试代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> json</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">from</span> urlparse <span class="keyword">import</span> urljoin</div><div class="line"> </div><div class="line">BASE_URL = <span class="string">'http://127.0.0.1:16500/'</span></div><div class="line">AUTH = (<span class="string">'admin'</span>, <span class="string">'admin'</span>)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user_list</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span></div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_post_user_list</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">0</span>,</div><div class="line">        nick=<span class="string">'oo'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    rsp = requests.post(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    }, data=json.dumps(json_data))</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/1'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_put_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">100</span>,</div><div class="line">        nick=<span class="string">'xx'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    <span class="comment"># 注意最后的 /</span></div><div class="line">    rsp = requests.put(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_patch_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">300</span>,</div><div class="line">        )</div><div class="line">    rsp = requests.patch(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div></pre></td></tr></table></figure>
 
-
-
-<h3 id="for_Python">for Python</h3>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line">print(<span class="string">"hello world!"</span>)</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Ruby">for Ruby</h3>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">puts <span class="string">"Hello World!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_C">for C</h3>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main() {</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<h3 id="for_Perl">for Perl</h3>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">print</span> <span class="string">"Hello, World.\n"</span>;</div></pre></td></tr></table></figure>
-
+<p>Django REST framework 是严格区分PUT和PATCH的，这一点和flask-restless 不一样，需要注意。</p>
 
       
     </div>
@@ -742,12 +1123,14 @@
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/archives/">Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span></nav>
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/archives/">Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/3/">Next</a></nav>
 
 <nav id="pagination">
   
     <a href="/archives/" class="alignleft prev">上一页</a>
   
+  
+    <a href="/archives/page/3/" class="alignright next">下一页</a>
   
   <div class="clearfix"></div>
 </nav>
@@ -766,25 +1149,23 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>7</small></li>
+    <li><a href="/tags/Java/">Java</a><small>9</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>4</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>6</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   
-    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>2</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
   
     <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
-    <li><a href="/tags/Python/">Python</a><small>1</small></li>
-  
-    <li><a href="/tags/python/">python</a><small>1</small></li>
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -812,7 +1193,7 @@
 
   <div class="trace-invest">
     <span>
-        <a href="http://weibo.com/zxc337" target="_blank">欢迎光临我的技术Blog网站 :</br>weibo.com</a>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
     </span>
 </div>
 
@@ -821,6 +1202,14 @@
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
@@ -860,14 +1249,6 @@
     
       <li>
         <a href="/2014/09/05/blog1/">REST风格的软件架构</a>
-      </li>
-    
-      <li>
-        <a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a>
-      </li>
-    
-      <li>
-        <a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a>
       </li>
     
   </ul>

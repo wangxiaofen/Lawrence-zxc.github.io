@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2014-10-27T09:28:43.085Z</updated>
+  <updated>2014-10-28T08:37:19.466Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -15,14 +15,97 @@
   <generator uri="http://zespia.tw/hexo/">Hexo</generator>
   
   <entry>
+    <title><![CDATA[jvm退出的原因,使用strace定位]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/10/28/jvm-strace/"/>
+    <id>http://lawrence-zxc.github.io/2014/10/28/jvm-strace/</id>
+    <published>2014-10-28T08:33:28.000Z</published>
+    <updated>2014-10-28T08:36:10.000Z</updated>
+    <content type="html"><![CDATA[<p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
+<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
+<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
+<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
+<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>如果是jvm自身执行了System.exit比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
+
+<p>那么在跟踪的信息里，是看不到signal的:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>]]>
+    </summary>
+    
+      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[负载均衡和过载保护]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/10/28/load-balancing/"/>
+    <id>http://lawrence-zxc.github.io/2014/10/28/load-balancing/</id>
+    <published>2014-10-28T07:55:32.000Z</published>
+    <updated>2014-10-28T08:02:27.000Z</updated>
+    <content type="html"><![CDATA[<p>最近需要给一个现网server增加过载保护的功能，借此机会也思考了很多，简单谈谈我对这两个概念的理解和实现方法。</p>
+<p>一.负载均衡<br>简单来说，就是按照目标server的参数进行合理分配，这个参数可以是失败率，也可以是响应时间，也可以是请求量，甚至是随机数。<br>我们来按照从简单到复杂逐个看一下几种实现。</p>
+<p>1.轮询式<br>逻辑比较简单，直接看代码：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">vector&lt;Server*&gt; vecServer;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    Server* server = vecServer[curIndex % vecServer.size()];</div><div class="line">    curIndex ++;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>如上代码就是一个简单的轮询式分配方法，这种方法优点实现简单，cpu计算少，缺点就是无法动态判断server的状态，当后端有一台server挂掉的时候，会至少1/vecServer.size()的请求。（最为严重的情况是由于单台后端server的超时导致前段全部挂死）。而且这种分配方法有一个bug，就是当每次请求结束后就释放内存，那么curIndex永远都只会为0，即每次都请求第一个server。</p>
+<p>2.定死权重式<br>这种方式适用于那种需要实现就规定后端server的权重，比如A比Bserver的响应速度快，我们希望A接受的请求比B多。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">//假设A，B, C server的权重分别为 10 5 2</div><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    //server 指针</div><div class="line">    Server* server;</div><div class="line">    //权重</div><div class="line">    int weight;</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">vecServer.push_back(A);</div><div class="line">vecServer.push_back(B);</div><div class="line">vecServer.push_back(C);</div><div class="line"> </div><div class="line">vector&lt;int&gt; vecWeight;</div><div class="line">for (unsigned i = 0; i &lt; vecServer.size(); i++)</div><div class="line">{</div><div class="line">    vecWeight.insert(vecWeight.end(),vecServer[i]-&gt;weight,i);</div><div class="line">}</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    index = vecWeight[random() % vecWeight.size()];</div><div class="line">    Server* server = vecServer[index].server;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面的代码也比较好理解，一共有两个数组，一个是server信息数组vecServer，一个是权重数组vecWeight。在分配server时，先通过权重数组vecWeight获取到server信息数组的下标，然后分配server。<br>这样的做法在我1年半写的一个项目是有使用的，经过统计效果是很不错的，基本是访问量是严格按照权重比分配的。这样做的cpu消耗也不高，但是缺点也是显而易见的，就是还是没有办法动态调整权重，需要人为去修改。所以我们接下来看第三种。</p>
+<p>3.动态调整权重<br>要讨论这种方法前，我们先要明确几个希望使用他的原因：</p>
+<ul>
+<li>1.我们希望server能够自动按照运行状态进行按照权重的选择</li>
+<li>2.我们不希望手工去配置权重变化</li>
+</ul>
+<p>然后是我们实现方法，很明显，我们需要一个基准来告诉我们这台server是否是正常的。这个基准是什么，是历史累计的平均值。比如如果是按照响应时间分配权重，那么就是所有后端server历史累计的平均响应时间，如果是错误率也是如此。<br>那么一旦调整了权重，我们什么时候来调整权重呢，调整比例是怎样呢？按照我的经验，一般是隔一段固定时间才进行调整，如果正常但是权重过低，那么就按照20%的比例恢复；如果server不正常，那么直接按照当前server响应时间/历史平均响应时间进行降权。这里的逻辑之所以不一样是有原因的，因为服务出现问题的时候，我们是能够知道这坏的程度有多少的，就是当前server响应时间/历史平均响应时间进行降权；但是要恢复的时候，你并不能保证server能够支撑到多大的访问量，所以只能按照20%放量来试。也避免滚雪球效应的发生。<br>我们来看一下代码。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">int total_rsp_time = 0;</div><div class="line">int total_req_count = 0;</div><div class="line"> </div><div class="line">unsigned int comWeight = 100;</div><div class="line">unsigned int MaxWeight = 1000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    float total_rsp_avg_time = (float)total_rsp_time / (float)total_req_count;</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_rsp_avg_time = (float)it-&gt;_rsp_time / (float)it-&gt;_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt = int(comWeight*total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_wt = it-&gt;_cur_wt &lt; MaxWeight ? it-&gt;_cur_wt : MaxWeight;</div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>以上基本展示了动态调整的过程，代码可能只是起演示作用，很多比如越界的检测都没有做，大家参照就好~</p>
+<p>OK，到这里我们基本就结束了负载均衡的讨论了，但是还有一个话题：过载保护。</p>
+<p>二.过载保护<br>关于过载保护其实经常适合负载均衡结合在一起使用的，但有两个问题：</p>
+<ul>
+<li>1.过载参照的基准是谁。<br>  是上面代码中的total_rsp_avg_time吗？<br>  不是，因为除非所有机器的正常性能完全一样，<br>  否则不可以拿total_rsp_avg_time来作为某台机器的负载基准。<br>  而能拿来做参照的，只有这台server自身的历史累计值。</li>
+<li>2.怎么实现过载保护。其实很简单，我们定义两个值_cur_max_queue_cnt和_queue_req_cnt，<br>  意义分别是这个server上在一段时间内允许分配的最多次数和当前已经排队的个数。<br>  _cur_max_queue_cnt值是通过当前时间段响应时间和历史累计时间算出来的。<br>  每次使用分配的server前，都要判断一下_queue_req_cnt是否达到了_cur_max_queue_cnt，<br>  如果达到了，分配失败。否则分配成功并且_queue_req_cnt++。</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line"> </div><div class="line">    int             _total_req_count;           //总的请求数</div><div class="line">    float           _total_rsp_avg_time;        //总的请求平均响应时间</div><div class="line">    int             _total_rsp_error;           //总的请求错误数</div><div class="line">    float           _total_rsp_time;        //总的请求时间</div><div class="line"> </div><div class="line">    float           _cur_max_queue_cnt; //当前实际允许的最大排队请求数</div><div class="line">    int             _queue_req_cnt;         //当前排队请求数</div><div class="line"> </div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">float comxQueueSize = 1000;</div><div class="line">float maxQueueSize = 10000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line"> </div><div class="line">    if(serverInfo._queue_req_cnt &gt; serverInfo._cur_max_queue_cnt)</div><div class="line">    {</div><div class="line">        //分配失败</div><div class="line">        continue;</div><div class="line">    }</div><div class="line">    serverInfo._queue_req_cnt ++;</div><div class="line">    </div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    serverInfo._total_req_count++;</div><div class="line">    serverInfo._total_rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照第三种方法重新分配权重</div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line"> </div><div class="line">    //其实和上面的循环合并成一个</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_total_rsp_avg_time = (float)it-&gt;_total_rsp_time / (float)it-&gt;_total_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; it-&gt;_total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt = int(comxQueueSize*it-&gt;_total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_max_queue_cnt = it-&gt;_cur_max_queue_cnt &lt; maxQueueSize ? it-&gt;_cur_max_queue_cnt : maxQueueSize;</div><div class="line">        it-&gt;_queue_req_cnt = 0;</div><div class="line">    }</div><div class="line">    </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面的代码为了演示方便，所以把两个for循环拆开了，实际上是应该合到一个里面写的。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>最近需要给一个现网server增加过载保护的功能，借此机会也思考了很多，简单谈谈我对这两个概念的理解和实现方法。</p>
+<p>一.负载均衡<br>简单来说，就是按照目标server的参数进行合理分配，这个参数可以是失败率，也可以是响应时间，也可以是请求量，甚至是随机数。<]]>
+    </summary>
+    
+      <category term="Nginx" scheme="http://lawrence-zxc.github.io/tags/Nginx/"/>
+    
+      <category term="Linux" scheme="http://lawrence-zxc.github.io/tags/Linux/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[正则表达式匹配中文]]></title>
     <link href="http://lawrence-zxc.github.io/2014/10/24/java-regex/"/>
     <id>http://lawrence-zxc.github.io/2014/10/24/java-regex/</id>
     <published>2014-10-24T08:58:25.000Z</published>
-    <updated>2014-10-27T09:01:24.000Z</updated>
+    <updated>2014-10-28T08:31:32.000Z</updated>
     <content type="html"><![CDATA[<p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
 <p>js代码：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">   }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
 
 <p>java代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
@@ -243,12 +326,13 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     <link href="http://lawrence-zxc.github.io/2014/10/01/aboutMe/"/>
     <id>http://lawrence-zxc.github.io/2014/10/01/aboutMe/</id>
     <published>2014-10-01T06:55:13.000Z</published>
-    <updated>2014-10-27T08:41:38.000Z</updated>
-    <content type="html"><![CDATA[<h3 id="张兄才">张兄才</h3>
-<p>90后程序员，@上海，业余承接java/python项目，Blogger。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
-<h3 id="技术领域：">技术领域：</h3>
+    <updated>2014-10-28T03:18:19.000Z</updated>
+    <content type="html"><![CDATA[<p><br></p>
+<h3 id="张兄才"><em>张兄才</em></h3>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<h3 id="技术领域"><em>技术领域</em></h3>
 <p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
-<h3 id="足迹">足迹</h3>
+<h3 id="足迹"><em>足迹</em></h3>
 <ul>
 <li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
 <li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
@@ -261,15 +345,18 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
 <li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
 </ul>
-<h3 id="咖啡">咖啡</h3>
-<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对Jeck_Zhang进行无负担小额赞助(1元即可)：</p>
+<h3 id="咖啡"><em>咖啡</em></h3>
+<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对Jeck_Zhang进行无负担小额赞助(1元即可)</p>
 <ul>
 <li><strong>支付宝帐号</strong>: 407815772@qq.com</li>
 </ul>
+<h2><br></h2>
+<p><img src="/img/my-work.jpg"></p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<h3 id="张兄才">张兄才</h3>
-<p>90后程序员，@上海，业余承接java/python项目，Blogger。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="exter]]>
+    <![CDATA[<p><br></p>
+<h3 id="张兄才"><em>张兄才</em></h3>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" targe]]>
     </summary>
     
       <category term="开始" scheme="http://lawrence-zxc.github.io/tags/%E5%BC%80%E5%A7%8B/"/>
@@ -412,6 +499,135 @@ Stateless 无状态
   </entry>
   
   <entry>
+    <title><![CDATA[java泛型的理解]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/07/18/java-generics/"/>
+    <id>http://lawrence-zxc.github.io/2014/07/18/java-generics/</id>
+    <published>2014-07-18T08:02:20.000Z</published>
+    <updated>2014-10-28T08:36:35.000Z</updated>
+    <content type="html"><![CDATA[<p>这是自己java泛型的理解,心得体会!</p>
+<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程中，对于泛型一直没有特别深入的使用过，没有遇到那样的需求和场景。只需要了解Java中的泛型是编译期的，运行期被“擦拭”掉了；然后还有几种通配符的表示就足够了。</p>
+<p>直到一天我在查看Java5中Enum的源代码时，发现它是这么定义的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Enum</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">Enum</span>&lt;<span class="title">E</span>&gt;&gt; </span></div><div class="line">                <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">E</span>&gt;, <span class="title">Serializable</span> {</div></pre></td></tr></table></figure>
+
+<p>这个类似递归结构的 Enum<e extends="" enum<e="">&gt; 究竟表达什么意思？</e></p>
+<p>随后我又看到了在Collections工具类中的max 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
+
+<p>怎么TMD还会有这么复杂的泛型表达式!?（幸好的是这种情况在我们实际开发过程中不多见，甚至不应该见到，大概只有像JDK这种为了保留对老版本的兼容才会设计出这么复杂的泛型表达式出来。）</p>
+<p>上面的问题，你可以通过：<a href="http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf" target="_blank" rel="external">http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf</a> 来获取答案，中文版的在：<a href="http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx" target="_blank" rel="external">http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx</a><br>这篇泛型指南的文章，非常详细。</p>
+<p>或许你看了上面的文章，依然心存疑虑。我下面的内容则是对这篇文档的一些补充（会和这篇文档有点重合）<br>回到我之前抛出的问题上：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;? extends Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">}</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bar</span>(List&lt;? <span class="keyword">super</span> Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">    l.add(<span class="keyword">new</span> Float(<span class="number">2</span>));    <span class="comment">// ok?</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这里主要说说 &lt;? extends T&gt; 和 &lt;? super T&gt; 这两种通配符对于方法参数的使用原则。<br>即 PECS 原则 (producser-extends, consumer-super) 或者也叫 Get and Put 原则</p>
+<p>当没有使用通配符的情况下，我们定义一个方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="keyword">void</span> <span class="title">test</span>(List&lt;E&gt; l){</div><div class="line">    E e = l.get(<span class="number">0</span>);</div><div class="line">    l.set(<span class="number">0</span>, e);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>我们从List中 get和set都没有问题，因为这个E 它的类型是某种明确的类型。</p>
+<p>而当使用通配符时来描述参数时，就有些不同了。</p>
+<p>我们先定义一下两种通配符： </p>
+<p>&lt;? extends E&gt; 是 Upper Bound（上限） 的通配符</p>
+<p>&lt;? super E&gt; 是 Lower Bound（下限） 的通配符</p>
+<p>1) 当使用 Upper Bound 通配符时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;?&gt; list){</div><div class="line">    Object e = list.get(<span class="number">0</span>); <span class="comment">// get OK</span></div><div class="line">    list.set(<span class="number">0</span>, e);         <span class="comment">// set 编译报错</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面代码中通配符&lt;?&gt; 是 &lt;? extends Object&gt; 的简写。(关于&lt;?&gt;是否和&lt;? extends Object&gt;完全等价，我遇到个小插曲，在结束的时候来描述)</p>
+<p>在eclipse里错误提示为：<br><em>The method set(int, capture#2-of ?) in the type List<capture#2-of ?=""> is not applicable for the arguments (int, Object)</capture#2-of></em></p>
+<p>注： <capture#2-of ?=""> 是一个占位符，表示编译器对通配符的捕获，更多见：</capture#2-of></p>
+<p><a href="http://www.ibm.com/developerworks/cn/java/j-jtp04298.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-jtp04298.html</a></p>
+<p>set报错的原因是因为此时方法中的类型是不可具体化的(reified)，你可以传递一个String，Number，Book，等任何继承自Object的类作为List的参数类型给test方法，而list要求集合中的类型必须是一致的，set的时候没有办法保证set进去的数据类型是否和list中原本的类型一致，比如你传给test方法的是 List<book>， 那么在方法中set进去一个Object显然类型就不一致了。这也是通配符带来灵活性的同时所要付出的代价。</book></p>
+<p>结论：使用了 &lt;? extends E&gt; 这样的通配符，test方法的参数list变成了只能get不能set（除了null） 或者不严谨的说它变成了只读参数了， 有些类似一个生产者，提供数据。</p>
+<p>2) 当使用 Lower Bound 的通配符时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;? <span class="keyword">super</span> Number&gt; list){</div><div class="line">    Number n = list.get(<span class="number">0</span>);             <span class="comment">// 编译错误</span></div><div class="line">    Object o = list.get(<span class="number">0</span>);             <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Object());          <span class="comment">// 编译错误</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Long(<span class="number">0</span>));           <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>));        <span class="comment">// OK</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这时get只能get出最宽泛的父类型，即Object。</p>
+<p>这时set的时候，必须是Number或Number的子类。</p>
+<p>原因和上面的get类似。</p>
+<p>结论： 使用了&lt;? super E&gt; 这种通配符，test方法的参数list的get受到了很大的制约，只能最宽泛的方式来获取list中的数据，相当于get只提供了数据最小级别的访问权限（想想，你可能原本是放进去了一个Book，却只能当作Object来访问）。它更多适合于set的使用场景，像是一个消费者，主要用来消费数据。</p>
+<p>上面便是对通配符的使用原则的说明，简单的说 PECS原则是指导我们在泛型方法中使用通配符的直接原则。参数作为生产者使用&lt;? extends E&gt;，作为消费者时使用&lt;? super E&gt; 。</p>
+<p>那么说完了PECS原则，我们再回过头来分析那两个复杂的泛型表达式是怎么含义</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class Enum&lt;E extends Enum&lt;E&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>它确实是一个 “递归类型限制”(recursive type bound)<br>要说明白这个问题，我们要先明白2点：</p>
+<p>a) Enum可以理解为一组同一类型的有限的数据集合；</p>
+<p>b) Java对Enum中的数据类型要求必须也是枚举类型（即必须是继承Enum类的）</p>
+<p>对于 a) 我们先定义一个 Enum<t> 表明定义了T这种类型作为它内部的数据类型，这么看它就像个普通的集合。</t></p>
+<p>再来根据 b) 定义类型E，要求E必须是继承自 Enum<t>，便成了 <e extends="" enum<t="">&gt;<br>实际上 E和T是一回事，它们是同一类型， 所以它就是 <e extends="" enum<e="">&gt;</e></e></t></p>
+<p>暂停，可能我上面的表达不太合理可能会误人子弟，递归类型限制是有些抽象，它应该有严谨的数学描述，我想不清楚怎么表达，我先用另一个简单些例子来说明吧</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;T&gt;&gt; T <span class="title">max</span>(List&lt;T&gt; list)</div></pre></td></tr></table></figure>
+
+<p>这个方法用来获取list 中的最大值，它定义了一个 <t extends="" comparable<t="">&gt; 的类型表达式</t></p>
+<p>这个递归类型限制的表达式容易理解一些，</p>
+<p><t extends="" comparable<t="">&gt; 表示的是：针对可以与自身进行比较的每个类型T。<br>或者说，每个实现了Comparable<t>接口的类型T，比如 String 实现了 Comparable<string> ， Long实现了Comparable<long>等等</long></string></t></t></p>
+<p>而Enum因为使用enum关键字的原因，让我们忽略了它底层的实现其实也是</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class EnumSample extends Enum&lt;EnumSample&gt;</div></pre></td></tr></table></figure>
+
+<p>这一事实，比如我们定义了 BoundKind 这样的一个枚举：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> BoundKind{ }</div></pre></td></tr></table></figure>
+
+<p>编译器会转换为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BoundKind</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">Enum</span>&lt;<span class="title">BoundKind</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>看到了，这和 String implements Comparable<string> 类似</string></p>
+<p>这样我们套回到<e extends="" enum<e="">&gt; 就是 <boundkind extends="" enum<boundkind="">&gt;</boundkind></e></p>
+<p>这下好理解了， <e extends="" enum<e="">&gt; 直接按字面理解：每个继承自Enum<e>的类型E，比如</e></e></p>
+<p>BoundKind 继承了 Enum<boundkind></boundkind></p>
+<p>通过与<t extends="" comparable<t="">&gt;的对比，我们可以理解 <e extends="" enum<e="">&gt;了。</e></t></p>
+<p>那现在我们再回到Collections工具类中的max 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
+
+<p>我们先简化一下这个表达式，看看<t extends="" comparable<?="" super="" t="">&gt; 怎么理解？</t></p>
+<p>既然 <t extends="" comparable<t="">&gt; 我们都理解了，把Comparable<t>改为</t></t></p>
+<p>Comparable&lt;? super T&gt; 也没什么费解的</p>
+<p>在《Java1.5 Generics Tutorial》一文中的解释是：<br>T 精确的(exactly)和自己能比较是不需要的。所需要的 是 T能 够和它的父类中的一个进行比较。</p>
+<p>而《Effictive Java》第二版中对此是用 PECS原则来解释的：</p>
+<p>下面是修改过的使用通配符类型的声明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">               T <span class="title">max</span>(List&lt;? extends T&gt; list)</div></pre></td></tr></table></figure>
+
+<p><em>为了从初始声明中得到修改后的版本，要应用PECS转换两次，最直接的是运用到参数List。它产生T实例，因此将类型从List改为List&lt;? extends T&gt;。（ok好理解）<br>。。。。。。<br>更灵活的是运用到类型参数T。最初T 被指定用来扩展Comparable，但是T的comparable消费T实例（并产生表示顺序关系的整值）。因此，参数化类型Comparable被有限制通配符类型Comparable&lt;? super T&gt;取代。comparable始终是消费者，因此使用时始终应该是Comparable&lt;? super T&gt; 优先于 Comparable。</em></p>
+<p>蓝色粗体的那句翻译的不好。还是看一下代码来理解吧：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">            T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div><div class="line">    Iterator&lt;? extends T&gt; i = coll.iterator();</div><div class="line">    T candidate = i.next();</div><div class="line">    <span class="keyword">while</span> (i.hasNext()) {</div><div class="line">        T next = i.next();</div><div class="line">        <span class="keyword">if</span> (next.compareTo(candidate) &gt; <span class="number">0</span>) <span class="comment">// here comparaTo</span></div><div class="line">            candidate = next;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> candidate;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>第5行，Bloch认为 next.compareTo(cand) 是一句消费操作，在消费一个candidate对象时，根据PECS原则，candidate的类型应该使用 &lt;? super T&gt; 来提高它的灵活性。</p>
+<p>我觉得Bloch将第5行当作消费操作挺别扭的，我个人偏向《Java1.5 Generics Tutorial》中的解释。<br>但归根到底，都是降低限制，提高比较时的灵活性。</p>
+<p>最后，我们再来完整的理解：<t extends="" object="" &="" comparable<?="" super="" t="">&gt;<br>就只是比 &gt; 多了一个限制(bounds)。</t></p>
+<p>Object &amp; Comparable&lt;? super T&gt; 是一个多限定(multiple bounds)的用法，</p>
+<p>语法为： T1 &amp; T2 … &amp; Tn</p>
+<p>一个有多个界限的类型的参数是所有界限中列出来的类型的子类。当多个界限被使用的时候，界限中的第一个类型被用作这个类型参数的erasure。</p>
+<p>最终这个方法的返回值，按照第一个限定，擦拭为Object类型了。这是因为在以前版本中此方法就是返回的Object类型，需要兼容。</p>
+<p>因为多限定（multiple bounds）的存在，泛型方法中又对应的增加了一个很不优雅的调用方式。下面用一段代码来说明:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsTest</span> </span>{    </div><div class="line">    <span class="keyword">static</span> class Book {};</div><div class="line">    <span class="keyword">static</span> class StoryBook extends Book implements Comparable&lt;StoryBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(StoryBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line">    <span class="keyword">static</span> class TechBook extends Book implements Comparable&lt;TechBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(TechBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; Set&lt;E&gt; <span class="title">merge</span>(Set&lt;? extends E&gt; s1, Set&lt;? extends E&gt; s2) {</div><div class="line">        HashSet&lt;E&gt; newSet = <span class="keyword">new</span> HashSet&lt;E&gt;(s1);</div><div class="line">        newSet.addAll(s2);</div><div class="line">        <span class="keyword">return</span> newSet;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        HashSet&lt;StoryBook&gt; s1 = <span class="keyword">new</span> HashSet&lt;StoryBook&gt;();</div><div class="line">        HashSet&lt;TechBook&gt; s2 = <span class="keyword">new</span> HashSet&lt;TechBook&gt;();</div><div class="line">        Set&lt;Book&gt; sb = merge(s1, s2); <span class="comment">// 错误</span></div><div class="line">        <span class="comment">// 需通过显式的类型参数(explicit type parameter)来告诉它要使用哪种类型</span></div><div class="line">        Set&lt;Book&gt; bs = GenericsTest.&lt;Book&gt;merge(s1,s2); <span class="comment">//OK</span></div><div class="line">        <span class="comment">// 或者</span></div><div class="line">        Set&lt;Comparable&lt;?&gt;&gt; s = GenericsTest.&lt;Comparable&lt;?&gt;&gt;merge(s1,s2);</div><div class="line">     }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面直接调用merge(s1,s2) 那行代码错误的提示信息：<br>Type mismatch: cannot convert from Set<genericstest.book&comparable<?>&gt; to Set<genericstest.book><br>这归于泛型的类型推导(type inference)，当无法推导出明确的类型时，就需要显式的描述，如上面代码中红色粗体字。</genericstest.book></genericstest.book&comparable<?></p>
+<p>后注：<br>有关于 &lt;?&gt; 与 &lt;? extends Object&gt;是否是一回事<br>今天中午发现同事桌上有本《Java编程思想》第四版，随手翻了一下，发现泛型一章的介绍中，有句描述：“UnboundedWildcards.java 展示了编译器处理List&lt;?&gt;和List&lt;? Extends Object&gt;时是不同的。”<br>这让我奇怪，查看了一下它的代码，主要因为是对于Raw类型的造型为泛型时的警告信息不同。<br>将一个Raw的ArrayList造型给 List&lt;?&gt; 没有问题，而给List&lt;? Extends Object&gt;却会有警告。</p>
+<p>在网上查了一下，发现对于&lt;?&gt;与&lt;? extends Object&gt;是否等同，是有些不同意见的。</p>
+<p><a href="http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html" target="_blank" rel="external">http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html</a></p>
+<p><a href="http://bugs.sun.com/view_bug.do?bug_id=6559175" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6559175</a></p>
+<p>这个报告里，有两段代码反映了两者的不同：<br>（1）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args)  {</div><div class="line">    Object  customer  = <span class="keyword">null</span>;</div><div class="line">    foo((List&lt;? extends String&gt;) customer ); <span class="comment">//[1]</span></div><div class="line">    foo((List&lt;? extends Object&gt;) customer ); <span class="comment">//[2] 编译有警告</span></div><div class="line">    foo((List&lt;?&gt;) customer ); <span class="comment">//[3]  编译没有警告</span></div><div class="line">}</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;?&gt; list) {</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>（2）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object o2 = <span class="keyword">new</span> List&lt;?&gt;[<span class="number">3</span>];   <span class="comment">// 编译居然OK，估计直接当作Raw处理了</span></div><div class="line">Object o3 = <span class="keyword">new</span> List&lt;? extends Object&gt;[<span class="number">3</span>]; <span class="comment">// 报错</span></div></pre></td></tr></table></figure>
+
+<p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
+<p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
+<p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
+<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
+<p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
+<p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
+<p>我们暂从语义上认为两者相等。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>这是自己java泛型的理解,心得体会!</p>
+<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程]]>
+    </summary>
+    
+      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[java中使HttpDelete可以发送body信息]]></title>
     <link href="http://lawrence-zxc.github.io/2014/07/11/java-http/"/>
     <id>http://lawrence-zxc.github.io/2014/07/11/java-http/</id>
@@ -494,11 +710,33 @@ Stateless 无状态
   </entry>
   
   <entry>
+    <title><![CDATA[javascript中实现简单的模板替换]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/06/18/javaScript-muban/"/>
+    <id>http://lawrence-zxc.github.io/2014/06/18/javaScript-muban/</id>
+    <published>2014-06-18T07:38:56.000Z</published>
+    <updated>2014-10-28T07:41:38.000Z</updated>
+    <content type="html"><![CDATA[<p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">str_format</span><span class="params">(str, obj)</span> </span>{</div><div class="line">    <span class="keyword">return</span> str.replace(<span class="regexp">/\{\s*(\w+)\s*\}/g</span>, <span class="function"><span class="keyword">function</span><span class="params">(_i, _1)</span> </span>{</div><div class="line">        <span class="keyword">return</span> obj[_1] != <span class="literal">null</span> ? obj[_1] : <span class="string">''</span>;</div><div class="line">    });</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>很多朋友会说性能差一些，可能确实如此，不过对我来说，相比编写的舒适来说，这点性能差别实在无足轻重了。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><]]>
+    </summary>
+    
+      <category term="JavaScript" scheme="http://lawrence-zxc.github.io/tags/JavaScript/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
     <title><![CDATA[Python常见问题]]></title>
     <link href="http://lawrence-zxc.github.io/2014/05/19/python1/"/>
     <id>http://lawrence-zxc.github.io/2014/05/19/python1/</id>
     <published>2014-05-19T06:34:24.000Z</published>
-    <updated>2014-10-27T08:56:04.000Z</updated>
+    <updated>2014-10-28T02:40:54.000Z</updated>
     <content type="html"><![CDATA[<h3 id="is_和_==_的区别_与_列表的赋值问题">is 和 == 的区别 与 列表的赋值问题</h3>
 <p>is 与 == 所代表的含义不同，is 表示“是”，说明里那个对象所引用的区域是相同的，而 == 表示“值相等”。两者区别可以通过下面的代码看出来：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names= [<span class="string">"Daniel"</span>,<span class="string">"Jackie"</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n = names</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n <span class="keyword">is</span> names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m = names[:]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m <span class="keyword">is</span> names</div><div class="line"><span class="keyword">False</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n[<span class="number">0</span>] = <span class="string">'Json'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
@@ -538,7 +776,7 @@ Stateless 无状态
 ]]>
     </summary>
     
-      <category term="python" scheme="http://lawrence-zxc.github.io/tags/python/"/>
+      <category term="Python" scheme="http://lawrence-zxc.github.io/tags/Python/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
@@ -851,60 +1089,92 @@ Stateless 无状态
   </entry>
   
   <entry>
-    <title><![CDATA[Hello World]]></title>
-    <link href="http://lawrence-zxc.github.io/2013/11/13/hello-world/"/>
-    <id>http://lawrence-zxc.github.io/2013/11/13/hello-world/</id>
-    <published>2013-11-13T02:15:01.000Z</published>
-    <updated>2014-10-27T03:03:42.000Z</updated>
-    <content type="html"><![CDATA[<p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
-<h3 id="for_Java">for Java</h3>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">System.out.println(<span class="string">"Hello World!"</span>);</div></pre></td></tr></table></figure>
+    <title><![CDATA[python为mysql实现restful接口]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/04/28/python-mysql-restful/"/>
+    <id>http://lawrence-zxc.github.io/2014/04/28/python-mysql-restful/</id>
+    <published>2014-04-28T05:45:35.000Z</published>
+    <updated>2014-10-28T07:41:46.000Z</updated>
+    <content type="html"><![CDATA[<p>最近在做游戏服务分层的时候，一直想把mysql的访问独立成一个单独的服务DBGate，原因如下:</p>
+<ul>
+<li>请求收拢到DBGate，可以使DBGate变为无状态的，方便横向扩展</li>
+<li>当请求量或者存储量变大时，mysql需要做分库分表，DBGate可以内部直接处理，外界无感知</li>
+<li>通过restful限制对数据请求的形式，仅支持简单的get/post/patch/put 进行增删改查，并不支持复杂查询。这个也是和游戏业务的特性有关，如果网站等需要复杂查询的业务，对此并不适合</li>
+<li>DBGate使用多进程模式，方便控制与mysql之间的链接数，进行mysql访问量阀值保护</li>
+<li>方便在DBGate上进行访问量统计，慢查询统计、权限控制等等一系列逻辑</li>
+<li>目前是使用python，以后要使用其他语言进行mysql操作时，只要进行标准的http请求即可，不会出现不兼容的情况<br>当然坏处也是有的：</li>
+<li>首当其冲就是单次请求的响应时间变长，毕竟中间加了一层服务，并且还是http格式</li>
+<li>部署上比原来复杂了一些，很多对mysql直接操作的思维需要进行转变，一开始可能会有些不适</li>
+</ul>
+<p>不过总的来说，还是利大于弊，所以最终还是决定搭建DBGate</p>
+<p>当然，我们不可能去手工挨个写每个库表对应的restful服务，值得庆幸的是django和flask都提供了对应的解决方案，我们一个个介绍.</p>
+<p>Flask<br>参考链接: flask-restless</p>
+<p>flask-restless使用方法比较简单，我直接贴一下代码即可:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"> </div><div class="line"><span class="keyword">import</span> datetime</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</div><div class="line"><span class="keyword">from</span> flask_sqlalchemy <span class="keyword">import</span> SQLAlchemy</div><div class="line"><span class="keyword">from</span> flask_restless <span class="keyword">import</span> APIManager</div><div class="line"> </div><div class="line"> </div><div class="line">app = Flask(__name__)</div><div class="line">db = SQLAlchemy(app)</div><div class="line">restless = APIManager(app, flask_sqlalchemy_db=db)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(db.Model)</span>:</span></div><div class="line">    <span class="string">"""</span></div><div class="line">    user</div><div class="line">    """</div><div class="line"> </div><div class="line">    id = db.Column(db.Integer, primary_key=<span class="keyword">True</span>)</div><div class="line">    username = db.Column(db.String(<span class="number">255</span>), unique=<span class="keyword">True</span>, nullable=<span class="keyword">False</span>)</div><div class="line">    password = db.Column(db.String(<span class="number">255</span>), nullable=<span class="keyword">False</span>)</div><div class="line">    create_time = db.Column(db.DateTime, nullable=<span class="keyword">False</span>, default=datetime.datetime.utcnow)</div><div class="line">    login_time = db.Column(db.DateTime)</div><div class="line"> </div><div class="line"> </div><div class="line">restless.create_api(User, methods=[<span class="string">'GET'</span>, <span class="string">'POST'</span>, <span class="string">'DELETE'</span>, <span class="string">'PATCH'</span>, <span class="string">'PUT'</span>], results_per_page=<span class="number">100</span>)</div><div class="line"> </div><div class="line">db.create_all()</div><div class="line"> </div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    app.run(port=<span class="number">25000</span>)</div></pre></td></tr></table></figure>
 
+<p>其对应的restful操作如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">获取用户列表:   GET /user</div><div class="line">添加用户:       POST /user</div><div class="line">获取单个用户:   GET /user/<span class="number">1</span></div><div class="line">覆盖单个用户:   PUT /user/<span class="number">1</span></div><div class="line">修改单个用户:   PATCH /user/<span class="number">1</span></div></pre></td></tr></table></figure>
 
+<p>注意:</p>
+<ul>
+<li>在http请求中，记得加入header: Content-Type: application/json</li>
+<li>flask-restless中，PUT和PATCH一样，都是传入什么字段，只修改什么字段，不会完全覆盖</li>
+</ul>
+<p>Django<br>参考链接: Django REST framework</p>
+<p>Django用起来要更复杂一些，也因为django版自带了一个可视化的操作页面，如下:<br><img src="/img/django1.png"></p>
+<ol>
+<li>在settings中添加:</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">REST_FRAMEWORK = {</div><div class="line">    <span class="comment"># Use hyperlinked styles by default.</span></div><div class="line">    <span class="comment"># Only used if the `serializer_class` attribute is not set on a view.</span></div><div class="line">    <span class="string">'DEFAULT_MODEL_SERIALIZER_CLASS'</span>:</div><div class="line">        <span class="string">'rest_framework.serializers.HyperlinkedModelSerializer'</span>,</div><div class="line"> </div><div class="line">    <span class="comment"># Use Django's standard `django.contrib.auth` permissions,</span></div><div class="line">    <span class="comment"># or allow read-only access for unauthenticated users.</span></div><div class="line">    <span class="string">'DEFAULT_PERMISSION_CLASSES'</span>: [</div><div class="line">        <span class="comment">#'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',</span></div><div class="line">        <span class="string">'rest_framework.permissions.IsAdminUser'</span>,</div><div class="line">    ]</div><div class="line">}</div></pre></td></tr></table></figure>
 
-<h3 id="for_Shell">for Shell</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"Hello World!"</span></div><div class="line"><span class="built_in">printf</span> <span class="string">"Hello world!"</span></div></pre></td></tr></table></figure>
+<ol>
+<li><p>通过startapp建立一个app: demo</p>
+</li>
+<li><p>修改demo的models:</p>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(models.Model)</span>:</span></div><div class="line">    <span class="comment"># key是保留字</span></div><div class="line">    password = models.IntegerField()</div><div class="line">    nick = models.CharField(max_length=<span class="number">255</span>)</div><div class="line">    create_time = models.DateTimeField(default=datetime.datetime.now)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在demo下新建serializers.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserSerializer</span><span class="params">(serializers.ModelSerializer)</span>:</span></div><div class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Meta</span>:</span></div><div class="line">        model = User</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在demo下修改views.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render</div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets</div><div class="line"> </div><div class="line"><span class="keyword">from</span> serializers <span class="keyword">import</span> UserSerializer</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserViewSet</span><span class="params">(viewsets.ModelViewSet)</span>:</span></div><div class="line">    queryset = User.objects.all()</div><div class="line">    serializer_class = UserSerializer</div></pre></td></tr></table></figure>
 
-<h3 id="for_JavaScript">for JavaScript</h3>
-<figure class="highlight JavaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">"Hello World!"</span>);</div><div class="line"><span class="built_in">document</span>.write(<span class="string">"Hello, world!"</span>);</div></pre></td></tr></table></figure>
+<ol>
+<li>在demo下新建urls.py</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> os.path</div><div class="line"><span class="keyword">from</span> django.conf.urls <span class="keyword">import</span> patterns, include, url</div><div class="line"><span class="keyword">from</span> django.conf.urls.static <span class="keyword">import</span> static</div><div class="line"><span class="keyword">from</span> django.conf <span class="keyword">import</span> settings</div><div class="line"><span class="keyword">import</span> views</div><div class="line"> </div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> routers</div><div class="line"> </div><div class="line">appname = os.path.basename(os.path.dirname(os.path.abspath(__file__)))</div><div class="line"> </div><div class="line">router = routers.DefaultRouter()</div><div class="line">router.register(<span class="string">'users'</span>, views.UserViewSet, appname)</div><div class="line"> </div><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">                       url(<span class="string">r'^'</span>, include(router.urls)),</div><div class="line">)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>在mysite.urls下include demo.urls和rest_framework.urls</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">    url(<span class="string">r'^demo/'</span>, include(<span class="string">'demo.urls'</span>)),</div><div class="line">    url(<span class="string">r'^admin/'</span>, include(admin.site.urls)),</div><div class="line">    url(<span class="string">r'^api-auth/'</span>, include(<span class="string">'rest_framework.urls'</span>, namespace=<span class="string">'rest_framework'</span>))</div><div class="line">)</div></pre></td></tr></table></figure>
 
+<ol>
+<li>执行初始化数据操作:</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py syncdb</div></pre></td></tr></table></figure>
 
-<h3 id="for_Css">for Css</h3>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*<span class="pseudo">:before</span>,</div><div class="line">*<span class="pseudo">:after</span> <span class="rules">{ <span class="rule"><span class="attribute">content</span>:<span class="value"><span class="string">'hello word!'</span> </span></span></span>}</div></pre></td></tr></table></figure>
+<p>之后访问: <a href="http://127.0.0.1:8000/demo" target="_blank" rel="external">http://127.0.0.1:8000/demo</a> 即可看到如下界面了:<br><img src="/img/django2.png"></p>
+<p>对应的测试代码如下:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> json</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">from</span> urlparse <span class="keyword">import</span> urljoin</div><div class="line"> </div><div class="line">BASE_URL = <span class="string">'http://127.0.0.1:16500/'</span></div><div class="line">AUTH = (<span class="string">'admin'</span>, <span class="string">'admin'</span>)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user_list</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span></div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_post_user_list</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">0</span>,</div><div class="line">        nick=<span class="string">'oo'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    rsp = requests.post(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    }, data=json.dumps(json_data))</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/1'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_put_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">100</span>,</div><div class="line">        nick=<span class="string">'xx'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    <span class="comment"># 注意最后的 /</span></div><div class="line">    rsp = requests.put(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_patch_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">300</span>,</div><div class="line">        )</div><div class="line">    rsp = requests.patch(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div></pre></td></tr></table></figure>
 
-
-
-<h3 id="for_Python">for Python</h3>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line">print(<span class="string">"hello world!"</span>)</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Ruby">for Ruby</h3>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">puts <span class="string">"Hello World!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_C">for C</h3>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main() {</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<h3 id="for_Perl">for Perl</h3>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">print</span> <span class="string">"Hello, World.\n"</span>;</div></pre></td></tr></table></figure>
-
+<p>Django REST framework 是严格区分PUT和PATCH的，这一点和flask-restless 不一样，需要注意。</p>
 ]]></content>
     <summary type="html">
-    <![CDATA[<p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
-<h3 id="for_Java">for Java</h3>
-<figure class="highlight java"><table><tr><td class="gutte]]>
+    <![CDATA[<p>最近在做游戏服务分层的时候，一直想把mysql的访问独立成一个单独的服务DBGate，原因如下:</p>
+<ul>
+<li>请求收拢到DBGate，可以使DBGate变为无状态的，方便横向扩展</li>
+<li>当请求量或者存储量变大时，mysql需要做分库分表，DBGat]]>
     </summary>
     
-      <category term="开始" scheme="http://lawrence-zxc.github.io/tags/%E5%BC%80%E5%A7%8B/"/>
+      <category term="Python" scheme="http://lawrence-zxc.github.io/tags/Python/"/>
     
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
-    
-      <category term="JavaScript" scheme="http://lawrence-zxc.github.io/tags/JavaScript/"/>
+      <category term="Mysql" scheme="http://lawrence-zxc.github.io/tags/Mysql/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
