@@ -2,6 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://lawrence-zxc.github.io/2014/10/24/java-regex/</loc>
+    <lastmod>2014-10-29T09:44:16.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://lawrence-zxc.github.io/2014/10/29/nginx-upstream/</loc>
+    <lastmod>2014-10-29T09:23:39.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://lawrence-zxc.github.io/2014/01/16/java-object-init/</loc>
+    <lastmod>2014-10-29T09:12:10.000Z</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://lawrence-zxc.github.io/2014/02/11/git-help/</loc>
+    <lastmod>2014-10-29T08:18:11.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://lawrence-zxc.github.io/2014/10/01/aboutMe/</loc>
     <lastmod>2014-10-29T05:09:19.000Z</lastmod>
   </url>
@@ -19,11 +39,6 @@
   <url>
     <loc>http://lawrence-zxc.github.io/2014/10/28/jvm-strace/</loc>
     <lastmod>2014-10-28T08:36:10.000Z</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://lawrence-zxc.github.io/2014/10/24/java-regex/</loc>
-    <lastmod>2014-10-28T08:31:32.000Z</lastmod>
   </url>
   
   <url>

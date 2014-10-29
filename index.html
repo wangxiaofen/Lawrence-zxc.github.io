@@ -89,6 +89,78 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>在需要使用负载均衡的server中增加</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
+
+<p>每个设备的状态设置为:</p>
+<ul>
+<li>1.down 表示单前的server暂时不参与负载</li>
+<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
+<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
+<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
+<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
       
       
@@ -244,6 +316,122 @@
 <p>java代码：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
 
+<p><br></p>
+<h3 id="常用正则表达式">常用正则表达式</h3>
+<p>说明：正则表达式通常用于两种任务：1.验证，2.搜索/替换。用于验证时，通常需要在前后分别加上^和$，以匹配整个待验证字符串；搜索/替换时是否加上此限定则根据搜索的要求而定，此外，也有可能要在前后加上\b而不是^和$。此表所列的常用正则表达式，除个别外均未在前后加上任何限定，请根据需要，自行处理。</p>
+<table>
+<thead>
+<tr>
+<th>说明</th>
+<th>正则表达式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网址（URL）</td>
+<td>[a-zA-z]+://[^\s]* </td>
+</tr>
+<tr>
+<td>IP地址(IP Address)</td>
+<td>((2[0-4]\d</td>
+<td>25[0-5]</td>
+<td>[01]?\d\d?).){3}(2[0-4]\d</td>
+<td>25[0-5]</td>
+<td>[01]?\d\d?) </td>
+</tr>
+<tr>
+<td>电子邮件(Email)</td>
+<td>\w+([-+.]\w+)<em>@\w+([-.]\w+)</em>.\w+([-.]\w+)* </td>
+</tr>
+<tr>
+<td>QQ号码</td>
+<td>[1-9]\d{4,} </td>
+</tr>
+<tr>
+<td>HTML标记(包含内容或自闭合)</td>
+<td>&lt;(.<em>)(.</em>)&gt;.*&lt;\/\1&gt;</td>
+<td>&lt;(.*) \/&gt; </td>
+</tr>
+<tr>
+<td>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)</td>
+<td>(?=^.{8,}$)(?=.<em>\d)(?=.</em>\W+)(?=.<em>[A-Z])(?=.</em>[a-z])(?!.<em>\n).</em>$ </td>
+</tr>
+<tr>
+<td>日期(年-月-日)</td>
+<td>(\d{4}</td>
+<td>\d{2})-((1[0-2])</td>
+<td>(0?[1-9]))-(([12][0-9])</td>
+<td>(3[01])</td>
+<td>(0?[1-9])) </td>
+</tr>
+<tr>
+<td>日期(月/日/年)</td>
+<td>((1[0-2])</td>
+<td>(0?[1-9]))/(([12][0-9])</td>
+<td>(3[01])</td>
+<td>(0?[1-9]))/(\d{4}</td>
+<td>\d{2}) </td>
+</tr>
+<tr>
+<td>时间(小时:分钟, 24小时制)</td>
+<td>((1</td>
+<td>0?)[0-9]</td>
+<td>2[0-3]):([0-5][0-9]) </td>
+</tr>
+<tr>
+<td>汉字(字符)</td>
+<td>[\u4e00-\u9fa5] </td>
+</tr>
+<tr>
+<td>中文及全角标点符号(字符)</td>
+<td>[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee] </td>
+</tr>
+<tr>
+<td>中国大陆固定电话号码</td>
+<td>(\d{4}-</td>
+<td>\d{3}-)?(\d{8}</td>
+<td>\d{7}) </td>
+</tr>
+<tr>
+<td>中国大陆手机号码</td>
+<td>1\d{10} </td>
+</tr>
+<tr>
+<td>中国大陆邮政编码</td>
+<td>[1-9]\d{5} </td>
+</tr>
+<tr>
+<td>中国大陆身份证号(15位或18位)</td>
+<td>\d{15}(\d\d[0-9xX])? </td>
+</tr>
+<tr>
+<td>非负整数(正整数或零)</td>
+<td>\d+ </td>
+</tr>
+<tr>
+<td>正整数</td>
+<td>[0-9]<em>[1-9][0-9]</em> </td>
+</tr>
+<tr>
+<td>负整数</td>
+<td>-[0-9]<em>[1-9][0-9]</em> </td>
+</tr>
+<tr>
+<td>整数</td>
+<td>-?\d+</td>
+<td></td>
+</tr>
+<tr>
+<td>小数</td>
+<td>(-?\d+)(.\d+)? </td>
+</tr>
+<tr>
+<td>不包含abc的单词</td>
+<td>\b((?!abc)\w)+\b </td>
+</tr>
+</tbody>
+</table>
+<p>以上正则表达式均经过多次测试，如果你发现有错误，请通过微博联系我．</p>
 
       
     </div>
@@ -635,78 +823,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -736,11 +852,13 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Java/">Java</a><small>10</small></li>
+    <li><a href="/tags/Git/">Git</a><small>1</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>11</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>6</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>8</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -748,7 +866,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
     <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
   
@@ -789,6 +907,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
+      </li>
     
       <li>
         <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
@@ -832,10 +954,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     
       <li>
         <a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/05/blog1/">REST风格的软件架构</a>
       </li>
     
   </ul>
