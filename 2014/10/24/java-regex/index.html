@@ -6,7 +6,7 @@
   <title>正则表达式匹配中文 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
-  <meta name="description" content="zxc&#39;s blog">
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
   
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -108,118 +108,77 @@
 <p><br></p>
 <h3 id="常用正则表达式">常用正则表达式</h3>
 <p>说明：正则表达式通常用于两种任务：1.验证，2.搜索/替换。用于验证时，通常需要在前后分别加上^和$，以匹配整个待验证字符串；搜索/替换时是否加上此限定则根据搜索的要求而定，此外，也有可能要在前后加上\b而不是^和$。此表所列的常用正则表达式，除个别外均未在前后加上任何限定，请根据需要，自行处理。</p>
-<table>
-<thead>
-<tr>
-<th>说明</th>
-<th>正则表达式</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>网址（URL）</td>
-<td>[a-zA-z]+://[^\s]* </td>
-</tr>
-<tr>
-<td>IP地址(IP Address)</td>
-<td>((2[0-4]\d</td>
-<td>25[0-5]</td>
-<td>[01]?\d\d?).){3}(2[0-4]\d</td>
-<td>25[0-5]</td>
-<td>[01]?\d\d?) </td>
-</tr>
-<tr>
-<td>电子邮件(Email)</td>
-<td>\w+([-+.]\w+)<em>@\w+([-.]\w+)</em>.\w+([-.]\w+)* </td>
-</tr>
-<tr>
-<td>QQ号码</td>
-<td>[1-9]\d{4,} </td>
-</tr>
-<tr>
-<td>HTML标记(包含内容或自闭合)</td>
-<td>&lt;(.<em>)(.</em>)&gt;.*&lt;\/\1&gt;</td>
-<td>&lt;(.*) \/&gt; </td>
-</tr>
-<tr>
-<td>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)</td>
-<td>(?=^.{8,}$)(?=.<em>\d)(?=.</em>\W+)(?=.<em>[A-Z])(?=.</em>[a-z])(?!.<em>\n).</em>$ </td>
-</tr>
-<tr>
-<td>日期(年-月-日)</td>
-<td>(\d{4}</td>
-<td>\d{2})-((1[0-2])</td>
-<td>(0?[1-9]))-(([12][0-9])</td>
-<td>(3[01])</td>
-<td>(0?[1-9])) </td>
-</tr>
-<tr>
-<td>日期(月/日/年)</td>
-<td>((1[0-2])</td>
-<td>(0?[1-9]))/(([12][0-9])</td>
-<td>(3[01])</td>
-<td>(0?[1-9]))/(\d{4}</td>
-<td>\d{2}) </td>
-</tr>
-<tr>
-<td>时间(小时:分钟, 24小时制)</td>
-<td>((1</td>
-<td>0?)[0-9]</td>
-<td>2[0-3]):([0-5][0-9]) </td>
-</tr>
-<tr>
-<td>汉字(字符)</td>
-<td>[\u4e00-\u9fa5] </td>
-</tr>
-<tr>
-<td>中文及全角标点符号(字符)</td>
-<td>[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee] </td>
-</tr>
-<tr>
-<td>中国大陆固定电话号码</td>
-<td>(\d{4}-</td>
-<td>\d{3}-)?(\d{8}</td>
-<td>\d{7}) </td>
-</tr>
-<tr>
-<td>中国大陆手机号码</td>
-<td>1\d{10} </td>
-</tr>
-<tr>
-<td>中国大陆邮政编码</td>
-<td>[1-9]\d{5} </td>
-</tr>
-<tr>
-<td>中国大陆身份证号(15位或18位)</td>
-<td>\d{15}(\d\d[0-9xX])? </td>
-</tr>
-<tr>
-<td>非负整数(正整数或零)</td>
-<td>\d+ </td>
-</tr>
-<tr>
-<td>正整数</td>
-<td>[0-9]<em>[1-9][0-9]</em> </td>
-</tr>
-<tr>
-<td>负整数</td>
-<td>-[0-9]<em>[1-9][0-9]</em> </td>
-</tr>
-<tr>
-<td>整数</td>
-<td>-?\d+</td>
-<td></td>
-</tr>
-<tr>
-<td>小数</td>
-<td>(-?\d+)(.\d+)? </td>
-</tr>
-<tr>
-<td>不包含abc的单词</td>
-<td>\b((?!abc)\w)+\b </td>
-</tr>
-</tbody>
-</table>
+<p>说明     | 正则表达式<br>网址（URL）</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[a-zA-z]+://[^\s]*</div></pre></td></tr></table></figure>
+
+<p>IP地址(IP Address)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)</div></pre></td></tr></table></figure>
+
+<p>电子邮件(Email)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*</div></pre></td></tr></table></figure>
+
+<p>QQ号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{4,}</div></pre></td></tr></table></figure>
+
+<p>HTML标记(包含内容或自闭合)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">(.*)(.*)</span>&gt;</span>.*<span class="tag">&lt;<span class="title">\</span>/\<span class="attribute">1</span>&gt;</span>|<span class="tag">&lt;<span class="title">(.*)</span> \/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(?=^.{8,}$)(?=.*\d)(?=.*\W+)(?=.*[A-Z])(?=.*[a-z])(?!.*\n).*$</div></pre></td></tr></table></figure>
+
+<p>日期(年-月-日)</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}|\d{2})-((1[0-2])|(0?[1-9]))-(([12][0-9])|(3[01])|(0?[1-9]))</div></pre></td></tr></table></figure>
+
+<p>日期(月/日/年)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1[0-2])|(0?[1-9]))/(([12][0-9])|(3[01])|(0?[1-9]))/(\d{4}|\d{2})</div></pre></td></tr></table></figure>
+
+
+<p>时间(小时:分钟, 24小时制)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1|0?)[0-9]|2[0-3]):([0-5][0-9])</div></pre></td></tr></table></figure>
+
+<p>汉字(字符)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u4e00-\u9fa5]</div></pre></td></tr></table></figure>
+
+
+<p>中文及全角标点符号(字符)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee]</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆固定电话号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}-|\d{3}-)?(\d{8}|\d{7})</div></pre></td></tr></table></figure>
+
+<p>中国大陆手机号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">1\d{10}</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆邮政编码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{5}</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆身份证号(15位或18位)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d{15}(\d\d[0-9xX])?</div></pre></td></tr></table></figure>
+
+<p>非负整数(正整数或零)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d+</div></pre></td></tr></table></figure>
+
+<p>正整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
+
+
+<p>负整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
+
+<p>整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-?\d+</div></pre></td></tr></table></figure>
+
+<p>小数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(-?\d+)(\.\d+)?</div></pre></td></tr></table></figure>
+
+<p>不包含abc的单词    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\b((?!abc)\w)+\b</div></pre></td></tr></table></figure>
+
+
+
 <p>以上正则表达式均经过多次测试，如果你发现有错误，请通过微博联系我．</p>
 
       
