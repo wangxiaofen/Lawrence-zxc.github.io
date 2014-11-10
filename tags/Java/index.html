@@ -93,6 +93,103 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>我发现很多人没办法高效地解决问题的关键原因是不熟悉工具，不熟悉工具也还罢了，甚至还不知道怎么去找工具，这个问题就大条了。我想列下我能想到的一个Java程序员会用到的常用工具。</p>
+<p>一、编码工具</p>
+<p>1.IDE：<a href="http://www.eclipse.org/" target="_blank" rel="external">Eclipse</a>或者<a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">IDEA</a>，熟悉尽可能多的快捷键，《<a href="https://www.google.com/#hl=zh-CN&amp;site=&amp;source=hp&amp;q=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;oq=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;aq=f&amp;aqi=g-l1&amp;aql=&amp;gs_l=hp.3..0i13.449l7739l0l7948l53l49l9l4l4l9l278l4511l14j15j7l36l0.&amp;bav=on.2,or.r_gc.r_pw.r_cp.,cf.osb&amp;fp=eef1a08d3fa904e4&amp;biw=1594&amp;bih=858" target="_blank" rel="external">Eclipse常见快捷键列表</a>》<br>2.插件：<br>(1) <a href="http://findbugs.sourceforge.net/" target="_blank" rel="external">Findbugs</a>，在release之前进行一次静态代码检查是必须的<br>(2) <a href="http://www.atlassian.com/software/clover/overview" target="_blank" rel="external">Clover</a>，关心你的单元测试覆盖率<br>(3) <a href="http://checkstyle.sourceforge.net/" target="_blank" rel="external">Checkstyle</a> 代码风格检查</p>
+<p>3.构建和部署工具:ant或者maven，现在主流都是maven了吧，使用<a href="http://www.sonatype.org/nexus/" target="_blank" rel="external">nexus搭建maven私服</a>，再加上持续集成<a href="http://jenkins-ci.org/" target="_blank" rel="external">jenkins</a>。代码质量不用愁。</p>
+<p>4.版本管理工具： svn或者git</p>
+<p>5.<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">diff</a>和<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">patch</a></p>
+<p>6.设置你的eclipse或者IDEA，如formatter,save actions以及code template等。代码风格，直接用google的也可以啊。《<a href="http://code.google.com/p/google-styleguide/" target="_blank" rel="external">Google style guide</a>》</p>
+<p>7.掌握一个文本编辑器，Emacs或者VIM，熟悉常用快捷键。这在你需要在线编辑代码，或者编写其他语言代码时候特别有用。《<a href="http://linuxtoy.org/archives/why-emacs-vim-good.html" target="_blank" rel="external">神器圣战</a>》</p>
+<p>二、JDK相关</p>
+<p>1.jstat : 观察GC情况，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstat -gcutil pid <span class="number">3078</span></div></pre></td></tr></table></figure>
+
+<p>2.jmap，查看heap情况，如查看存活对象列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -histo:live pid |grep com.company |less</div></pre></td></tr></table></figure>
+
+<p>或者dump内存用来分析：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -dump:file=test.bin pid</div></pre></td></tr></table></figure>
+
+<p>3.分析dump的堆文件，可以用jhat:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jhat test.bin</div></pre></td></tr></table></figure>
+
+<p>  分析完成后可以用浏览器查看堆的情况。这个工具的分析结果还比较原始，你还可以用Eclipse MAT插件进行图形化分析，或者IBM的<a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=4544bafe-c7a2-455f-9d43-eb866ea60091" target="_blank" rel="external">Heap Analyzer</a>.</p>
+<p>4.jvisualvm和jconsole： JVM自带的性能分析和监控工具，怎么用？请自己看<a href="http://docs.oracle.com/javase/6/docs/technotes/guides/visualvm/index.html" target="_blank" rel="external">文档</a>。</p>
+<p>5.jstack：分析线程堆栈，如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstack pid &gt; thread_dump</div></pre></td></tr></table></figure>
+
+<p>查看CPU最高的线程在干什么的方法结合top和jstack：<a href="http://www.iteye.com/topic/1114219" target="_blank" rel="external">http://www.iteye.com/topic/1114219</a></p>
+<p>6.更多JVM工具，参见官方文档：<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/" target="_blank" rel="external">http://docs.oracle.com/javase/6/docs/technotes/tools/</a></p>
+<p>7.学习使用btrace分析java运行时问题。《(Btrace使用简介)[<a href="http://rdc.taobao.com/team/jm/archives/509]》" target="_blank" rel="external">http://rdc.taobao.com/team/jm/archives/509]》</a></p>
+<p>8.GC日志分析工具：GC viewer、GC-console或者自己挑<a href="http://stackoverflow.com/questions/1839599/analyze-gc-logs-for-sun-hotspots-jvm-6" target="_blank" rel="external">这里</a>。</p>
+<p>9.性能分析工具，除了自带的jvisualvm外，还可以用商业的jprofiler。</p>
+<p>10.<a href="http://kenwublog.com/docs/java6-jvm-options-chinese-edition.htm" target="_blank" rel="external">JVM参数大全</a></p>
+<p>11.《<a href="http://hllvm.group.iteye.com/group/topic/27945" target="_blank" rel="external">JVM调优标准参数陷阱</a>》，iteye神贴。</p>
+<p>三、Linux工具<br>1.熟悉<a href="http://www.commandlinefu.com/commands/browse/sort-by-votes" target="_blank" rel="external">常用的shell命令</a>，</p>
+<p>2.设置<a href="http://paulkeck.com/ssh/" target="_blank" rel="external">ssh免登陆</a></p>
+<p>3.使用htop替换top。</p>
+<p>4.熟悉下strace,gdb甚至systemtap来分析问题。</p>
+<p>5.熟悉vmstat,iostat,sar等性能统计工具。</p>
+<p>5.自动化部署脚本，<a href="http://docs.fabfile.org/en/1.4.1/index.html" target="_blank" rel="external">py-fabric</a>或者自荐下这个<a href="https://github.com/killme2008/clojure-control" target="_blank" rel="external">clojure-control</a>。</p>
+<p>四、其他</p>
+<p>1.掌握一门脚本语言，<a href="http://python.org/" target="_blank" rel="external">Python</a>或者<a href="http://www.ruby-lang.org/" target="_blank" rel="external">Ruby</a>，高效解决一些需要quick and dirty的任务：比如读写文件、导入导出数据库、网页爬虫等。注意不是python.com，咔咔。</p>
+<p><code>Python</code>推荐<a href="http://woodpecker.org.cn/" target="_blank" rel="external">啄木鸟社区</a>,<code>Ruby</code>推荐<a href="https://ruby-china.org/" target="_blank" rel="external">Ruby China</a></p>
+<p>2.使用Linux或者Mac os系统作为你的开发环境。</p>
+<p>3.升级你的“硬件工具”，双屏大屏显示器、SSD、8G内存甚至更多。</p>
+<p>4.你懂的：<a href="https://code.google.com/p/goagent/" target="_blank" rel="external">https://code.google.com/p/goagent/</a> ; <a href="https://github.com/justjavac/Google-IPs/blob/master/README.md" target="_blank" rel="external">https://github.com/justjavac/Google-IPs/blob/master/README.md</a></p>
+<p>五、如何查找工具？</p>
+<p>1.搜索引擎，google或者baidu，《<a href="http://www.williamlong.info/archives/728.html" target="_blank" rel="external">搜索技巧</a>》</p>
+<p>2.万能的stack overflow：<a href="http://stackoverflow.com/" target="_blank" rel="external">http://stackoverflow.com/</a></p>
+<p>3.虚心问牛人。</p>
+<p>六、最重要的是⋯⋯</p>
+<p>一颗永不停止学习的心。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
       
       
@@ -1311,71 +1408,6 @@ Stateless 无状态
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-01-16T09:05:42.000Z"><a href="/2014/01/16/java-object-init/">1月 16 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/01/16/java-object-init/">java对象初始化顺序问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>今天我在Dzone阅读了一篇关于<a href="http://java.dzone.com/articles/java-object-initialization?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+javalobby%2Ffrontpage+%28Javalobby+%2F+Java+Zone%29&amp;utm_content=" target="_blank" rel="external">java对象实例初始化顺序</a>的有趣文章。说它有趣，是因为作者使用了一种并不太推荐的编码风格，只有用这种编码风格才能触发这个极为少见的 Java object initialization order 问题。</p>
-<p>其实java对象初始化顺序算是一个比较基础的java知识点。但是网上的文章多半描述不清，使用上一不小心就容易出问题。<br>所以在本文中，我想结合JLS和自己的理解，举例剖析问题的所在。</p>
-<p>OK，我们先来看个模仿Dzone作者原意的简单例子:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zxc.tmp;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">extends</span> <span class="title">B</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> a = <span class="number">100</span>;</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="title">A</span>() {</div><div class="line">		<span class="keyword">super</span>();</div><div class="line">		System.out.println(a);</div><div class="line">		a = <span class="number">200</span>;</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">		System.out.println(<span class="keyword">new</span> A().a);</div><div class="line">	}</div><div class="line">}</div><div class="line"></div><div class="line">class B {</div><div class="line">	<span class="keyword">public</span> <span class="title">B</span>() {</div><div class="line">		System.out.println(((A) <span class="keyword">this</span>).a);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>例子代码很简单，不多做解释了，直接看输出:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="number">0</span></div><div class="line"><span class="number">100</span></div><div class="line"><span class="number">200</span></div></pre></td></tr></table></figure>
-
-<p>对照这个输出，我们来详细分析一下对象的初始化顺序：<br>1，为A类分配内存空间，初始化所有成员变量为默认值，包括primitive类型(int=0,boolean=false,…)和Reference类型。<br>2，调用A类构造函数。<br>3，调用B类构造函数。<br>4，调用Object空构造函数。（java编译器会默认加此构造函数，且object构造函数是个空函数，所以立即返回）<br>5，<strong>初始化B类成员变量，因为B类没有成员变量，跳过。</strong><br>6，执行sysout输出子类A的成员变量小a。// 此时为0<br>7，<strong>初始化A类成员变量，将A类成员变量小a赋值100。</strong><br>8，执行sysout输出当前A类的成员变量小a。// 此时为100<br>9，赋值当前A类的成员变量小a为200。<br>10，main函数中执行sysout，输出A类实例的成员变量小a。// 此时为200</p>
-<p>加粗的那两行描述是重点，结论是<strong>成员变量初始化是在父类构造函数调用完后，在此之前，成员变量的值均是默认值。</strong><br>Dzone作者就是栽在这里，没有仔细分析成员变量初始化在对象初始化中的顺序，造成了程序未按原意执行。<br>其实这类问题，熟悉原理是一方面，本质上只要不在构造函数中插入过多的业务逻辑，出问题的概率也会低很多。</p>
-<p>最后，我们再来看看JLS中给出的Java类对象初始化顺序定义，这是一个带条件分支的流程描述：</p>
-<ul>
-<li>Assign the arguments for the constructor to newly created parameter variables for this constructor invocation.</li>
-<li>If this constructor begins with an explicit constructor invocation of another constructor in the same class (using this), then evaluate the arguments and process that constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason; otherwise, continue with step 5.</li>
-<li>This constructor does not begin with an explicit constructor invocation of another constructor in the same class (using this). If this constructor is for a class other than Object, then this constructor will begin with an explicit or implicit invocation of a superclass constructor (using super). Evaluate the arguments and process that superclass constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, continue with step 4.</li>
-<li>Execute the instance initializers and instance variable initializers for this class, assigning the values of instance variable initializers to the corresponding instance variables, in the left-to-right order in which they appear textually in the source code for the class. If execution of any of these initializers results in an exception, then no further initializers are processed and this procedure completes abruptly with that same exception. Otherwise, continue with step 5. (In some early implementations, the compiler incorrectly omitted the code to initialize a field if the field initializer expression was a constant expression whose value was equal to the default initialization value for its type.)</li>
-<li>Execute the rest of the body of this constructor. If that execution completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, this procedure completes normally.</li>
-</ul>
-<p>引用自 <a href="http://java.sun.com/docs/books/jls/second_edition/html/execution.doc.html#44670" target="_blank" rel="external">section 12.5 of the Java Language Spec</a></p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1406,13 +1438,13 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Git/">Git</a><small>1</small></li>
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>11</small></li>
+    <li><a href="/tags/Java/">Java</a><small>12</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>8</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -1422,7 +1454,7 @@ Stateless 无状态
   
     <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -1463,6 +1495,22 @@ Stateless 无状态
   <ul class="entry">
     
       <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -1492,22 +1540,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/05/rizhi/">琐忆</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/01/aboutMe/">关于我</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
       </li>
     
   </ul>

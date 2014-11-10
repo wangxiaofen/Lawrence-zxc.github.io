@@ -93,6 +93,241 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python</span></div><div class="line"></div><div class="line"><span class="comment">#################################################</span></div><div class="line"><span class="comment">#         左边网开发环境SwitchHosts Tools</span></div><div class="line"><span class="comment">#   (初始化开发环境,安装相关开发软件,服务器）</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#    V1.0      Writen by: zxc       Date:2014-10-11</span></div><div class="line"><span class="comment">##################################################</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> re</div><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span></div><div class="line">    hostsmap = {}</div><div class="line">    envlist = []</div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)</div><div class="line">    current_env = <span class="string">''</span></div><div class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> hosts:</div><div class="line">        line = line.strip()</div><div class="line">        env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)</div><div class="line">        <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            current_env = env_p.group(<span class="number">1</span>)</div><div class="line">            <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:</div><div class="line">                <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env</div><div class="line">            envlist.append(current_env)</div><div class="line">            hostsmap[current_env] = [] </div><div class="line">            <span class="keyword">continue</span></div><div class="line">        <span class="keyword">if</span> current_env == <span class="string">''</span>:</div><div class="line">            <span class="keyword">continue</span></div><div class="line">        hostsmap[current_env].append(line)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line">    iter_idx = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)</div><div class="line">        iter_idx = iter_idx+<span class="number">1</span></div><div class="line">    hostsmapCount = {}</div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:</div><div class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):</div><div class="line">                <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">                    hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span></div><div class="line">                <span class="keyword">else</span>:</div><div class="line">                    hostsmapCount[env] = <span class="number">1</span></div><div class="line">    current_env = <span class="keyword">None</span></div><div class="line">    max_count = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">        <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:</div><div class="line">            current_env = env </div><div class="line">            max_count = hostsmapCount[env]</div><div class="line">    <span class="keyword">if</span> max_count == <span class="number">0</span>:</div><div class="line">        current_env = <span class="string">'base'</span></div><div class="line">    <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env</div><div class="line">    env = envlist[int(sys.stdin.readline().strip())]</div><div class="line">    writehosts(env, envlist, hostsmap)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span></div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)</div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        hosts.write(<span class="string">'### %s ###'</span> % env_iter)</div><div class="line">        hosts.write(<span class="string">'\n'</span>)</div><div class="line">        desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)</div><div class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:</div><div class="line">            <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):</div><div class="line">                item = item[<span class="number">1</span> : len(item)]</div><div class="line">            <span class="keyword">if</span> desc:</div><div class="line">                hosts.write(<span class="string">'%s'</span> % item.strip())</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                hosts.write(<span class="string">'# %s'</span> % item.strip())</div><div class="line">            hosts.write(<span class="string">'\n'</span>)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span></div><div class="line">    example = <span class="string">"""&gt; cat /etc/hosts</span></div><div class="line">### base ###</div><div class="line">127.0.0.1 localhost</div><div class="line">127.0.0.1 zxc-rMBP</div><div class="line">255.255.255.255    broadcasthost</div><div class="line">::1             localhost</div><div class="line">fe80::1%lo0    localhost</div><div class="line">91.213.30.151   www.google.com</div><div class="line">91.213.30.151   www.google.com.hk</div><div class="line">91.213.30.151   accounts.google.com</div><div class="line">91.213.30.151   accounts.google.com.hk</div><div class="line">91.213.30.151   mail.google.com</div><div class="line">91.213.30.151   mail.google.com.hk</div><div class="line">91.213.30.151   plus.google.com</div><div class="line">91.213.30.151   plus.google.com.hk</div><div class="line">### server190 ###</div><div class="line">192.168.0.190  web.zuobian.com</div><div class="line">### server150 ###</div><div class="line">192.168.0.150  web.zuobian.com</div><div class="line">### localdev ###</div><div class="line">127.0.0.1   web.zuobian.com</div><div class="line">### run ###</div><div class="line">"""</div><div class="line">    <span class="keyword">print</span> example</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):</div><div class="line">        <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span></div><div class="line">        print_example()</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    switchhosts()</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-09T06:48:10.000Z"><a href="/2014/10/09/blog4/">10月 9 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/09/blog4/">mysql多列索引详解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>创建多列索引</p>
+<p>在t_user表id，userName，email字段上创建多列索引（该表只有此索引）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">alter table t_user add index USER_INDEX(id, userName, email);</div></pre></td></tr></table></figure>
+
+<p>能够利用该索引的查询</p>
+<p>符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span>;</div><div class="line">select * from t_user where id between <span class="number">10</span> and <span class="number">50</span>;</div><div class="line">select * from t_user where id <span class="keyword">in</span> (<span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>);</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div><div class="line">select * from t_user where id &gt; <span class="number">40</span> and userName &gt; <span class="string">'t'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能利用以上索引的查询</p>
+<p>不符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">select * from t_user where userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div></pre></td></tr></table></figure>
+
+<p>or查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span> or userName = <span class="string">'zxc'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能使用索引的解决方案</p>
+<p>在where语句后面的查询字段建立单个索引及多列索引，注意leftmost index prefixes原则，避免建立重复索引</p>
+<p>or查询使用union来连接查询结果，并在对应的字段上建立索引</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-01T06:55:13.000Z"><a href="/2014/10/01/aboutMe/">10月 1 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/01/aboutMe/">关于我</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="张兄才"><em>张兄才</em></h3>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<h3 id="技术领域"><em>技术领域</em></h3>
+<p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
+<h3 id="足迹"><em>足迹</em></h3>
+<ul>
+<li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
+<li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/yahoo.png">邮箱：xiongcaizhang@yahoo.com</li>
+<li><img src="/img/qq.png">QQ：407815772</li>
+<li><img src="/img/twitter.png">Twitter: <a href="http://twitter.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/facebook.png">Facebook: <a href="https://www.facebook.com/zxc337" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/quora.png">Quora: <a href="http://quora.com/Jeck-Zhang" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/gmail.png">Gmail: zhangxiongcai337#gmail.com(把#换成@)</li>
+<li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
+<li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+</ul>
+<h3 id="情怀"><em>情怀</em></h3>
+<p><code>爱狗</code>、<code>完美主义</code>、<code>Apple控</code>、<code>Google控</code>、<code>旅行</code>、<code>电影</code>、<code>吃货</code>、<code>游戏</code>、<code>豆瓣</code></p>
+<h3 id="咖啡"><em>咖啡</em></h3>
+<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对『Jeck_Zhang』进行无负担小额赞助(1元即可)</p>
+<ul>
+<li><strong>支付宝帐号</strong>  407815772@qq.com</li>
+</ul>
+<ul>
+<li><strong>手机扫码</strong>  <img src="/img/zxc_Alipay.png" width="150" height="150"></li>
+</ul>
+<p><br></p>
+<h2><br></h2>
+<p><img src="/img/my-work.jpg"></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
       
       
@@ -552,755 +787,6 @@ Stateless 无状态
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-18T08:15:01.000Z"><a href="/2014/06/18/hello/">6月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在apache-tomcat托管的应用里如果使用了dubbo的消费端，关闭tomcat时，会无法退出进程，应用会被关闭，connector端口也关闭了，但dubbo相关的一些线程仍存在，导致java进程并不会消失。</p>
-<p>这其实是由非daemon线程引起的，jvm里当前main线程在退出时，只要存在非daemon的子线程，就不会退出jvm，哪怕这个非daemon的线程是在一个daemon线程里启动的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonTest</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">static</span> class MyThread extends Thread {</div><div class="line">        <span class="keyword">public</span> <span class="title">MyThread</span>(<span class="keyword">boolean</span> isDaemon){</div><div class="line">            <span class="keyword">this</span>.setDaemon(isDaemon);</div><div class="line">        }</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                Thread.sleep(<span class="number">1000</span>*<span class="number">10000</span>);;</div><div class="line">            } <span class="keyword">catch</span> (Exception e) {</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception{</div><div class="line">        Thread t1 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t2 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t3 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t4 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    <span class="keyword">new</span> MyThread(<span class="keyword">false</span>).start(); <span class="comment">//非daemon</span></div><div class="line">                    Thread.sleep(<span class="number">1000</span> * <span class="number">10000</span>);</div><div class="line">                } <span class="keyword">catch</span> (Exception e) {</div><div class="line">                }</div><div class="line">            }</div><div class="line">        };</div><div class="line"></div><div class="line"></div><div class="line">        t1.start();</div><div class="line">        t2.start();</div><div class="line">        t3.start();</div><div class="line">        t4.start();</div><div class="line"></div><div class="line">        Thread.sleep(<span class="number">2000</span>);</div><div class="line">        System.out.println(<span class="string">"main thread quit"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面启动了4个子线程，都是daemon的，其中有一个子线程又启动了一个非daemon线程，结果主线程退出时，jvm进程并不会退出，并且其他daemon线程也继续运行。</p>
-<p>Dubbo的线程都是daemon的，不过它使用的netty框架却有一个非daemon的“Hashed wheel timer”线程：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="string">"Hashed wheel timer #1"</span> #<span class="number">1582</span> prio=<span class="number">5</span> os_prio=<span class="number">0</span> tid=<span class="number">0x00002aaac5054800</span> nid=<span class="number">0x7fd3</span> waiting on condition [<span class="number">0x0000000041262000</span>]</div><div class="line">   java.lang.Thread.State: TIMED_WAITING (sleeping)</div><div class="line">    at java.lang.Thread.sleep(Native Method)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.waitForNextTick(HashedWheelTimer.java:<span class="number">459</span>)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:<span class="number">376</span>)</div><div class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</div></pre></td></tr></table></figure>
-
-<p>正是这个非daemon线程，导致tomcat的主线程退出后，jvm进程没能退出。类似的问题以前在HSF2里也存在，后来已经解决了。dubbo的这个问题可以通过kill来结束。</p>
-<p>在tomcat的脚本里，先使用正常的方式(viaport)停止tomcat，在不成功之后会尝试”kill”方式：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"># stop failed. Shutdown port disabled? Try a normal kill.</div><div class="line"><span class="keyword">if</span> [ $? != <span class="number">0</span> ]; then</div><div class="line">    <span class="keyword">if</span> [ ! -z <span class="string">"$CATALINA_PID"</span> ]; then</div><div class="line">      echo <span class="string">"The stop command failed. Attempting to signal the process to stop through OS signal."</span></div><div class="line">      kill -<span class="number">15</span> `cat <span class="string">"$CATALINA_PID"</span>` &gt;/dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&<span class="number">1</span></div><div class="line">    fi</div><div class="line">fi</div></pre></td></tr></table></figure>
-
-<p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
-<p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-18T07:38:56.000Z"><a href="/2014/06/18/javaScript-muban/">6月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/18/javaScript-muban/">javascript中实现简单的模板替换</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">str_format</span><span class="params">(str, obj)</span> </span>{</div><div class="line">    <span class="keyword">return</span> str.replace(<span class="regexp">/\{\s*(\w+)\s*\}/g</span>, <span class="function"><span class="keyword">function</span><span class="params">(_i, _1)</span> </span>{</div><div class="line">        <span class="keyword">return</span> obj[_1] != <span class="literal">null</span> ? obj[_1] : <span class="string">''</span>;</div><div class="line">    });</div><div class="line">};</div></pre></td></tr></table></figure>
-
-<p>很多朋友会说性能差一些，可能确实如此，不过对我来说，相比编写的舒适来说，这点性能差别实在无足轻重了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-15T09:06:46.000Z"><a href="/2014/06/15/java-mybatis/">6月 15 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/15/java-mybatis/">分享一个java对mybatis封装</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<p>写了一个对mybatis封装code,源码</p>
-<p>BaseDao是一个基础类,对Mapper中方法的实现</p>
-<pre><code><span class="comment">/*
- * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
- * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
- * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
- */</span>
-<span class="keyword">package</span> com.zb.app.biz.base;
-
-<span class="keyword">import</span> java.io.Serializable;
-<span class="keyword">import</span> java.lang.reflect.Method;
-<span class="keyword">import</span> java.lang.reflect.ParameterizedType;
-<span class="keyword">import</span> java.lang.reflect.Type;
-<span class="keyword">import</span> java.util.Arrays;
-<span class="keyword">import</span> java.util.Collection;
-<span class="keyword">import</span> java.util.Collections;
-<span class="keyword">import</span> java.util.HashMap;
-<span class="keyword">import</span> java.util.List;
-<span class="keyword">import</span> java.util.Map;
-
-<span class="keyword">import</span> org.apache.commons.lang.StringUtils;
-<span class="keyword">import</span> org.apache.ibatis.session.SqlSession;
-<span class="keyword">import</span> org.mybatis.spring.SqlSessionTemplate;
-<span class="keyword">import</span> org.mybatis.spring.support.SqlSessionDaoSupport;
-<span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;
-
-<span class="keyword">import</span> com.zb.app.common.core.lang.Argument;
-<span class="keyword">import</span> com.zb.app.common.core.lang.ArrayUtils;
-<span class="keyword">import</span> com.zb.app.common.core.lang.Assert;
-<span class="keyword">import</span> com.zb.app.common.exception.UnSupportBaseDaoException;
-<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationList;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser.IPageUrl;
-
-<span class="javadoc">/**
- * 分页可以不注入SqlSessionTemplate对象,用Mapper方式实现,在BaseDao封装
- * 
- *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:10:41 PM
- */</span>
-<span class="annotation">@SuppressWarnings</span>({ <span class="string">"rawtypes"</span>, <span class="string">"unchecked"</span> })
-<span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseDao</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>, <span class="title">M</span>, <span class="title">Q</span>&gt; <span class="keyword">extends</span> <span class="title">SqlSessionDaoSupport</span> <span class="keyword">implements</span> <span class="title">IBase</span> </span>{
-
-    <span class="annotation">@Autowired</span>
-    <span class="keyword">protected</span> M      m;
-
-    <span class="keyword">private</span> Class&lt;T&gt; entityClass;
-
-    <span class="keyword">private</span> Class&lt;M&gt; mapperClass;
-
-    <span class="annotation">@Autowired</span>
-    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setSqlSessionTemplate</span>(SqlSessionTemplate sqlSessionTemplate) {
-        <span class="keyword">super</span>.setSqlSessionTemplate(sqlSessionTemplate);
-    }
-
-    <span class="javadoc">/**
-     * 创建默认构造方法，以取得真正的泛型类型
-     */</span>
-    <span class="keyword">public</span> <span class="title">BaseDao</span>() {
-        Class&lt;?&gt; c = getClass();
-        Type type = c.getGenericSuperclass();
-        <span class="keyword">if</span> (type <span class="keyword">instanceof</span> ParameterizedType) {
-            Type[] parameterizedType = ((ParameterizedType) type).getActualTypeArguments();
-            <span class="keyword">if</span> (Argument.isEmptyArray(parameterizedType)) {
-                <span class="keyword">throw</span> <span class="keyword">new</span> UnSupportBaseDaoException(<span class="string">"init entityClass mapperClass failed!"</span>);
-            }
-            <span class="keyword">this</span>.entityClass = (Class&lt;T&gt;) parameterizedType[<span class="number">0</span>];
-            <span class="keyword">this</span>.mapperClass = (Class&lt;M&gt;) parameterizedType[<span class="number">1</span>];
-        } <span class="keyword">else</span> {
-            <span class="keyword">throw</span> <span class="keyword">new</span> UnSupportBaseDaoException(String.format(<span class="string">"没有找到【%s】的动态参数T"</span>, getClass().getSimpleName()));
-        }
-    }
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> Class&lt;T&gt; <span class="title">getEntityClass</span>() {
-        <span class="keyword">return</span> entityClass;
-    }
-
-    <span class="javadoc">/**
-     * 命名空间
-     * 
-     *<span class="javadoctag"> @return</span> String
-     */</span>
-    <span class="keyword">public</span> String <span class="title">getNameSpace</span>() {
-        <span class="keyword">return</span> mapperClass.getName();
-    }
-
-    <span class="javadoc">/**
-     * 根据ID查询对象
-     */</span>
-    <span class="keyword">public</span> &lt;D extends Number&gt; T <span class="title">getById</span>(D id) {
-        Assert.assertNotNull(id);
-        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Integer) {
-            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).getById((Integer) id);
-        }
-        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Long) {
-            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).getById(((Long) id).intValue());
-        }
-        <span class="keyword">return</span> <span class="keyword">null</span>;
-    }
-
-    <span class="javadoc">/**
-     * 分页查询,已废弃，请使用paginationList
-     * 
-     *<span class="javadoctag"> @param</span> map
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="annotation">@Deprecated</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listPagination</span>(Pagination pagination) {
-        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).listPagination(pagination);
-    }
-
-    <span class="javadoc">/**
-     * 查询所有或limit 的几条数据
-     * 
-     *<span class="javadoctag"> @param</span> map
-     *<span class="javadoctag"> @param</span> limitSize == null 则查所有
-     */</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listAll</span>(Integer limitSize) {
-        Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();
-        map.put(<span class="string">"limitSize"</span>, limitSize);
-        map.put(<span class="string">"endRecordIndex"</span>, limitSize);
-        map.put(<span class="string">"startRecordIndex"</span>, <span class="number">0</span>);
-        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).list(map);
-    }
-
-    <span class="javadoc">/**
-     * 查询所有数据
-     */</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>() {
-        <span class="keyword">return</span> <span class="keyword">this</span>.listAll(<span class="keyword">null</span>);
-    }
-
-    <span class="javadoc">/**
-     * Find 查询所有数据,mapper.xml中必须有find等SQL语句
-     * 
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> T <span class="title">find</span>(Q q) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> (T) <span class="keyword">this</span>.getSqlSession().selectOne(_getNameSpace() + <span class="string">"find"</span>, (Pagination) q);
-    }
-
-    <span class="javadoc">/**
-     * Find 查询所有数据,mapper.xml中必须有自定义queryStatementName等SQL语句
-     * 
-     *<span class="javadoctag"> @param</span> queryStatementName 查询操作语句
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> T <span class="title">find</span>(Q q, String queryStatementName) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> (T) <span class="keyword">this</span>.getSqlSession().selectOne(_getNameSpace() + queryStatementName, (Pagination) q);
-    }
-
-    <span class="javadoc">/**
-     * List 查询数据,mapper.xml中必须有listQuery等SQL语句
-     * 
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Q q) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> <span class="keyword">this</span>.getSqlSession().selectList(_getNameSpace() + <span class="string">"listQuery"</span>, (Pagination) q);
-    }
-
-    <span class="javadoc">/**
-     * List 查询数据,mapper.xml中必须有自定义queryStatementName等SQL语句
-     * 
-     *<span class="javadoctag"> @param</span> queryStatementName 查询操作语句
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Q q, String queryStatementName) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> <span class="keyword">this</span>.getSqlSession().selectList(_getNameSpace() + queryStatementName, (Pagination) q);
-    }
-
-    <span class="javadoc">/**
-     * PaginationList 查询数据
-     * 
-     * &lt;pre&gt;
-     *      1.默认COUNT查询语句为'count',
-     *      2.默认PAGINATION查询语句为'listPagination',
-     *      3.请实现getNameSpace()方法
-     *      4.mapper.xml中必须有count，listPagination等SQL语句
-     * &lt;/pre&gt;
-     * 
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(Q q, IPageUrl... iPages) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.paginationList(<span class="string">"listPagination"</span>, q), iPages);
-    }
-
-    <span class="javadoc">/**
-     * 已过时,请使用带有IPageUrl的同名方法
-     * 
-     *<span class="javadoctag"> @param</span> q
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="annotation">@Deprecated</span>
-    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(Q q) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> <span class="keyword">this</span>.paginationList(<span class="string">"listPagination"</span>, q);
-    }
-
-    <span class="javadoc">/**
-     * 分页查询 默认COUNT查询语句为'count',请实现getNameSpace()方法
-     * 
-     *<span class="javadoctag"> @param</span> queryStatementName
-     *<span class="javadoctag"> @param</span> query
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(String queryStatementName, Q q, IPageUrl... iPages) {
-        <span class="keyword">if</span> (StringUtils.isEmpty(queryStatementName)) {
-            log.error(<span class="string">"BaseDao paginationList: queryStatementName is null,please check!"</span>);
-            <span class="keyword">return</span> (PaginationList) Collections.&lt;Object&gt; emptyList();
-        }
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.paginationList(<span class="string">"count"</span>, queryStatementName, q), iPages);
-    }
-
-    <span class="javadoc">/**
-     * PaginationList 查询数据
-     * 
-     *<span class="javadoctag"> @param</span> countStatementName count操作语句
-     *<span class="javadoctag"> @param</span> queryStatementName 分页操作语句
-     *<span class="javadoctag"> @param</span> q
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">public</span> PaginationList <span class="title">paginationList</span>(String countStatementName, String queryStatementName, Q q, IPageUrl... iPages) {
-        <span class="keyword">if</span> (StringUtils.isEmpty(countStatementName) || StringUtils.isEmpty(queryStatementName)) {
-            log.error(<span class="string">"BaseDao paginationList:countStatementName or queryStatementName is null,please check!"</span>);
-            <span class="keyword">return</span> (PaginationList) Collections.&lt;Object&gt; emptyList();
-        }
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> parsePages(q, <span class="keyword">this</span>.queryForPagination(_getNameSpace() + countStatementName, _getNameSpace()
-                                                                                           + queryStatementName,
-                                                     (Pagination) q), iPages);
-    }
-
-    <span class="javadoc">/**
-     * count Query 数据:默认COUNT查询语句为'count',请实现getNameSpace()方法
-     * 
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">count</span>(Q q) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> (Integer) getSqlSession().selectOne(_getNameSpace() + <span class="string">"count"</span>, q);
-    }
-
-    <span class="javadoc">/**
-     * count Query 数据:COUNT查询语句自定义queryStatementName等SQL语句,请实现getNameSpace()方法
-     * 
-     *<span class="javadoctag"> @param</span> queryStatementName 分页操作语句
-     *<span class="javadoctag"> @param</span> q
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">count</span>(Q q, String queryStatementName) {
-        Assert.assertNotNull(q);
-        <span class="keyword">return</span> (Integer) getSqlSession().selectOne(_getNameSpace() + queryStatementName, q);
-    }
-
-    <span class="javadoc">/**
-     * 根据主键ID删除
-     */</span>
-    <span class="keyword">public</span> &lt;D extends Number&gt; <span class="keyword">boolean</span> <span class="title">deleteById</span>(D id) {
-        Assert.assertNotNull(id);
-        Integer count = <span class="number">0</span>;
-        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Integer) {
-            count = ((BaseMapper&lt;T&gt;) m).deleteById((Integer) id);
-        }
-        <span class="keyword">if</span> (id <span class="keyword">instanceof</span> Long) {
-            count = ((BaseMapper&lt;T&gt;) m).deleteById(((Long) id).intValue());
-        }
-        <span class="keyword">return</span> count == <span class="number">0</span> ? <span class="keyword">false</span> : <span class="keyword">true</span>;
-    }
-
-    <span class="javadoc">/**
-     * 插入 T
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">insert</span>(T t) {
-        Assert.assertNotNull(t);
-        <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).insert(t);
-    }
-
-    <span class="javadoc">/**
-     * 插入 Arrays
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">insert</span>(T... t) {
-        ArrayUtils.removeNullElement(t);
-        <span class="keyword">if</span> (Argument.isEmptyArray(t)) {
-            <span class="keyword">return</span> <span class="number">0</span>;
-        }
-        Assert.assertNotNull(t);
-        <span class="keyword">if</span> (t.length == <span class="number">1</span> &amp;&amp; t[<span class="number">0</span>] != <span class="keyword">null</span>) {
-            <span class="keyword">return</span> ((BaseMapper&lt;T&gt;) m).insert(t[<span class="number">0</span>]);
-        }
-        <span class="keyword">return</span> <span class="keyword">this</span>.batchInsertByMapper(Arrays.asList(t));
-    }
-
-    <span class="javadoc">/**
-     * 插入 List
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">insert</span>(List&lt;T&gt; list) {
-        Assert.assertNotNull(list);
-        Integer lastInsertId = <span class="keyword">new</span> Integer(<span class="number">0</span>);
-        <span class="keyword">for</span> (T t : list) {
-            <span class="keyword">if</span> (t != <span class="keyword">null</span>) {
-                lastInsertId = ((BaseMapper&lt;T&gt;) m).insert(t);
-            }
-        }
-        <span class="keyword">return</span> lastInsertId;
-    }
-
-    <span class="javadoc">/**
-     * 根据主键ID更新
-     */</span>
-    <span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">updateById</span>(T... t) {
-        Assert.assertNotNull(t);
-        ArrayUtils.removeNullElement(t);
-        <span class="keyword">if</span> (Argument.isEmptyArray(t)) {
-            <span class="keyword">return</span> <span class="keyword">false</span>;
-        }
-        Assert.assertNotNull(t);
-        Integer count = <span class="number">0</span>;
-        <span class="keyword">if</span> (t.length == <span class="number">1</span> &amp;&amp; t[<span class="number">0</span>] != <span class="keyword">null</span>) {
-            count = ((BaseMapper&lt;T&gt;) m).updateById(t[<span class="number">0</span>]);
-        } <span class="keyword">else</span> {
-            count = <span class="keyword">this</span>.batchUpdateByMapper(Arrays.asList(t));
-        }
-        <span class="keyword">return</span> count == <span class="keyword">null</span> ? <span class="keyword">false</span> : count == <span class="number">0</span> ? <span class="keyword">false</span> : <span class="keyword">true</span>;
-    }
-
-    <span class="javadoc">/**
-     * 批量插入
-     * 
-     *<span class="javadoctag"> @param</span> sqlSessionFactory
-     *<span class="javadoctag"> @param</span> mapperClass 要使用的Mapper的Class
-     *<span class="javadoctag"> @param</span> pojoClass 列表中POJO对象的Class
-     *<span class="javadoctag"> @param</span> methodName 要执行的Mapper类中的方法名 默认insert
-     *<span class="javadoctag"> @param</span> objList 要入库的数据列表
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">batchInsertByMapper</span>(Collection&lt;T&gt; objList) {
-        <span class="keyword">return</span> batchOptByMapper(objList, <span class="string">"insert"</span>);
-    }
-
-    <span class="javadoc">/**
-     * 批量更新
-     * 
-     *<span class="javadoctag"> @param</span> sqlSessionFactory
-     *<span class="javadoctag"> @param</span> mapperClass 要使用的Mapper的Class
-     *<span class="javadoctag"> @param</span> pojoClass 列表中POJO对象的Class
-     *<span class="javadoctag"> @param</span> methodName 要执行的Mapper类中的方法名 默认"updateById"
-     *<span class="javadoctag"> @param</span> objList 要入库的数据列表
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">batchUpdateByMapper</span>(Collection&lt;T&gt; objList) {
-        <span class="keyword">return</span> batchOptByMapper(objList, <span class="string">"updateById"</span>);
-    }
-
-    <span class="keyword">private</span> PaginationList <span class="title">parsePages</span>(Q q, PaginationList paginationList, IPageUrl... iPages) {
-        ArrayUtils.removeNullElement(iPages);
-        <span class="keyword">if</span> (Argument.isEmptyArray(iPages)) {
-            <span class="keyword">return</span> paginationList;
-        }
-        <span class="keyword">if</span> (q <span class="keyword">instanceof</span> Pagination) {
-            paginationList.setQuery(PaginationParser.getPaginationList(((Pagination) q).getNowPageIndex(),
-                                                                       ((Pagination) q).getPageSize(),
-                                                                       ((Pagination) q).getAllRecordNum(), iPages[<span class="number">0</span>]));
-        }
-        <span class="keyword">return</span> paginationList;
-    }
-
-    <span class="keyword">private</span> Integer <span class="title">batchOptByMapper</span>(Collection&lt;T&gt; objList, String methodName) {
-        SqlSession session = getSqlSession();
-        Class[] paramTypes = <span class="keyword">new</span> Class[<span class="number">1</span>];
-        M mapper = (M) session.getMapper(mapperClass);
-
-        <span class="keyword">try</span> {
-            paramTypes[<span class="number">0</span>] = Class.forName(entityClass.getName());
-            Method method = mapperClass.getMethod(methodName, Serializable.class);
-            <span class="keyword">for</span> (Object obj : objList) {
-                method.invoke(mapper, obj);
-            }
-        } <span class="keyword">catch</span> (Exception e) {
-            log.error(<span class="string">"BaseDao batchOptByMapper:error()"</span>);
-        }
-        session.flushStatements();
-        <span class="keyword">return</span> <span class="keyword">new</span> Integer(<span class="number">1</span>);
-    }
-
-    <span class="javadoc">/**
-     * 分页查询
-     * 
-     *<span class="javadoctag"> @param</span> countStatementName 如果countStatementName==null，表示不查询Count()语句
-     *<span class="javadoctag"> @param</span> queryStatementName 查询记录的StatementName
-     *<span class="javadoctag"> @param</span> query 查询条件（需要设置currentPage和PageSize值，或是startRow和endRow值）
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">private</span> PaginationList <span class="title">queryForPagination</span>(String countStatementName, String queryStatementName, Pagination query) {
-        PaginationList paginationList = <span class="keyword">new</span> PaginationList(query);
-        <span class="keyword">if</span> (countStatementName != <span class="keyword">null</span>) {
-            Integer obj = (Integer) getSqlSession().selectOne(countStatementName, query);
-            <span class="keyword">int</span> totalCount = obj == <span class="keyword">null</span> ? <span class="number">0</span> : obj;
-            query.init(totalCount);
-
-            <span class="keyword">if</span> (totalCount &gt; <span class="number">0</span>) {
-                List items = getSqlSession().selectList(queryStatementName, query);
-                <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
-                    paginationList.addAll(items);
-                }
-            }
-        } <span class="keyword">else</span> {
-            List items = getSqlSession().selectList(queryStatementName, query);
-            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
-                paginationList.addAll(items);
-            }
-        }
-        <span class="keyword">return</span> paginationList;
-    }
-
-    <span class="keyword">private</span> PaginationList <span class="title">queryForPagination</span>(<span class="keyword">int</span> count, String queryStatementName, Pagination query) {
-        PaginationList paginationList = <span class="keyword">new</span> PaginationList(query);
-        <span class="keyword">if</span> (count &gt; <span class="number">0</span>) {
-            query.init(count);
-            List&lt;?&gt; items = getSqlSession().selectList(queryStatementName, query);
-            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
-                paginationList.addAll(items);
-            }
-        } <span class="keyword">else</span> {
-            List items = getSqlSession().selectList(queryStatementName, query);
-            <span class="keyword">if</span> (items != <span class="keyword">null</span>) {
-                paginationList.addAll(items);
-            }
-        }
-        <span class="keyword">return</span> paginationList;
-    }
-
-    <span class="keyword">private</span> String <span class="title">_getNameSpace</span>() {
-        <span class="keyword">if</span> (StringUtils.isEmpty(getNameSpace())) {
-            log.error(<span class="string">"BaseDao getNameSpace is null,please check!"</span>);
-            <span class="keyword">return</span> StringUtils.EMPTY;
-        }
-        <span class="keyword">return</span> getNameSpace() + POINT;
-    }
-}
-</code></pre><p><br></p>
-<p>BaseMapper类</p>
-<pre><code><span class="comment">/*
- * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
- * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
- * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
- */</span>
-<span class="keyword">package</span> com.zb.app.biz.base;
-
-<span class="keyword">import</span> java.io.Serializable;
-<span class="keyword">import</span> java.util.List;
-<span class="keyword">import</span> java.util.Map;
-
-<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
-
-<span class="javadoc">/**
- * &lt;pre&gt;
- *      可以在BaseMapper中加入Q查询对象 BaseMapper&lt;T,Q&gt;,分页可以用BaseMapper实现然后在BaseDao中封装掉
- * &lt;/pre&gt;
- * 
- *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:11:48 PM
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BaseMapper</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>&gt; </span>{
-
-    <span class="javadoc">/**
-     * 根据ID查找
-     * 
-     *<span class="javadoctag"> @param</span> id
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">public</span> T <span class="title">getById</span>(Integer id);
-
-    <span class="javadoc">/**
-     * 分页查询返回第一页
-     * 
-     *<span class="javadoctag"> @param</span> map
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="annotation">@Deprecated</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">listPagination</span>(Pagination pagination);
-
-    <span class="javadoc">/**
-     * 查询所有或limit 的几条数据
-     * 
-     *<span class="javadoctag"> @param</span> map
-     *<span class="javadoctag"> @param</span> limitSize == null 则查所有
-     */</span>
-    <span class="keyword">public</span> List&lt;T&gt; <span class="title">list</span>(Map&lt;String, Object&gt; map);
-
-    <span class="javadoc">/**
-     * 删除
-     * 
-     *<span class="javadoctag"> @param</span> id
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">deleteById</span>(Integer id);
-
-    <span class="javadoc">/**
-     * 插入新数据
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">insert</span>(T t);
-
-    <span class="javadoc">/**
-     * 根据Id更新对象
-     * 
-     *<span class="javadoctag"> @param</span> t
-     *<span class="javadoctag"> @return</span>
-     */</span>
-    <span class="keyword">public</span> Integer <span class="title">updateById</span>(T t);
-}
-</code></pre><p>Pagination类源码就不放了吧。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-05-19T06:34:24.000Z"><a href="/2014/05/19/python1/">5月 19 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/05/19/python1/">Python常见问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="is_和_==_的区别_与_列表的赋值问题">is 和 == 的区别 与 列表的赋值问题</h3>
-<p>is 与 == 所代表的含义不同，is 表示“是”，说明里那个对象所引用的区域是相同的，而 == 表示“值相等”。两者区别可以通过下面的代码看出来：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names= [<span class="string">"Daniel"</span>,<span class="string">"Jackie"</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n = names</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n <span class="keyword">is</span> names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m = names[:]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m <span class="keyword">is</span> names</div><div class="line"><span class="keyword">False</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n[<span class="number">0</span>] = <span class="string">'Json'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>当用 = 赋值时，names 与 n 引用同一块内存区域，所以names 与 n 是完全相同的，== 和 is 均返回True。所以改变 n[0] 会同时改变 names[0]的值，如代码最后一部分显示的一样。如果既想对列表进行改变值的操作，同时又希望保存旧版本供其他操作，这时候怎么办呢？这就需要复制整个列表的切片。如 m = names[ : ]   这样会产生一个names的副本，但是不是同一块内存区域，用 is 和 == 检查发现， is 返回 False ， == 返回 True 也可以说明这一点。</p>
-<h3 id="字符串的格式化">字符串的格式化</h3>
-<p>简单的字符串格式化</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; format = "Hello, %s. %s enough for ya?"</div><div class="line">&gt;&gt;&gt; values = ('world', 'Hot')</div><div class="line">&gt;&gt;&gt; print format % values</div><div class="line">Hello, world. Hot enough for ya?</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>%s 为转换说明符，标记需要在此位置插入字符。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%10.8f'</span> % pi</div><div class="line"><span class="string">'3.14159265'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%.5s'</span> % <span class="string">'Daniel Hou'</span></div><div class="line"><span class="string">'Danie'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%.*s'</span> % (<span class="number">5</span>, <span class="string">'Daniel Hou'</span>)</div><div class="line"><span class="string">'Danie'</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>%10.8f 10为宽度，不足时前面为空格，8为精度。 %.5s 则为从后面取出前5位，%.<em>s 中 </em>代表精度从后面的元组中读取。</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>phonebook = { <span class="string">'Hou'</span> : <span class="number">1234</span>, <span class="string">'Daniel'</span>:<span class="number">5678</span>}</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">"Hou's phone is %(Hou)s."</span> % phonebook</div><div class="line"><span class="string">"Hou's phone is 1234."</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>可以通过以上的方式来访问字典中的对应字段。括号中为字典的key     </p>
-<h3 id="Python中的惰性求值">Python中的惰性求值</h3>
-<p>在逻辑运算存在。例如， a and b ，当 a 为 False 时，直接返回 False ，不再运算 b； a or b，当为 a 为 True 时，直接返回 a 的值， 否则返回 b 的值。避免了代码的无用计算。运用以上的特性可以实现 java 中的三元运算符的功能。例如：a if b or c当 b 为 真时，返回 a，否则返回 c     </p>
-<p>range的边界问题与xrange</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>range(<span class="number">0</span>,<span class="number">10</span>)</div><div class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>可以看出，range不包含上界，相当于集合中的 [ a, b )xrang 函数作用类似于 range ，不同的地方在不 range 函数一次创建整个序列，而 xrange 一次只创建一个数，因此，需要迭代一个巨大的序列的时候， xrange 更加高效。</p>
-<h3 id="递归">递归</h3>
-<p>实现 n 的阶乘，一般实现：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">factorial</span><span class="params">(n)</span>:</span></div><div class="line">	result = n</div><div class="line">	<span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>,n):</div><div class="line">		result *= i</div><div class="line">	<span class="keyword">return</span> result</div><div class="line"></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>factorial(<span class="number">10</span>)</div><div class="line"><span class="number">3628800</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>递归实现：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">factorial</span><span class="params">(n)</span>:</span></div><div class="line">	<span class="keyword">if</span> n == <span class="number">1</span>:</div><div class="line">		<span class="keyword">return</span> <span class="number">1</span></div><div class="line">	<span class="keyword">else</span>:</div><div class="line">		<span class="keyword">return</span> n*factorial(n-<span class="number">1</span>)</div><div class="line"></div><div class="line">	</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>factorial(<span class="number">10</span>)</div><div class="line"><span class="number">3628800</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>使用递归实现二分法查找（binary search）</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">search</span><span class="params">(seq, num, lower=<span class="number">0</span>, upper=None)</span>:</span></div><div class="line">    upper = len(seq) - <span class="number">1</span></div><div class="line">    <span class="keyword">if</span> lower == upper :</div><div class="line">        <span class="keyword">return</span> lower</div><div class="line">    <span class="keyword">else</span>:</div><div class="line">        middle = (lower + upper) // <span class="number">2</span></div><div class="line">        <span class="keyword">if</span> num &gt; seq[middle]:</div><div class="line">            <span class="keyword">return</span> search(seq, num, middle + <span class="number">1</span>, upper)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            <span class="keyword">return</span> search(seq, num, lower, middle)</div><div class="line"></div><div class="line">seq = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</div><div class="line"><span class="keyword">print</span> search(seq, <span class="number">7</span>)</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1333,13 +819,13 @@ Stateless 无状态
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Git/">Git</a><small>1</small></li>
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>11</small></li>
+    <li><a href="/tags/Java/">Java</a><small>12</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>8</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -1349,7 +835,7 @@ Stateless 无状态
   
     <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -1390,6 +876,22 @@ Stateless 无状态
   <ul class="entry">
     
       <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -1419,22 +921,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/05/rizhi/">琐忆</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/01/aboutMe/">关于我</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
       </li>
     
   </ul>

@@ -93,6 +93,105 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>更新索引字段会触发索引重建，如果是要大批量修改大数据表的索引字段，速度会很慢，时间大多花在重建索引上了。<br>高效的办法是将索引先unusable，待批次更新修改后再重建（rebuild）索引。<br>整理語法如下,需要注意：</p>
+<pre><code><span class="bullet">1. </span>通过索引判断一个table是否大数据表（大于50M）。
+<span class="bullet">2. </span>对于分区表的索引，需用对不同分区进行重建。
+</code></pre><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">DECLARE</span></span></div><div class="line">    <span class="keyword">CURSOR</span> c1 <span class="keyword">IS</span></div><div class="line">    <span class="keyword">SELECT</span> index_name,PARTITIONED</div><div class="line">    <span class="keyword">FROM</span> user_indexes</div><div class="line">    <span class="keyword">WHERE</span> index_name <span class="keyword">IN</span> (</div><div class="line">            <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> INDEX_NAME</div><div class="line">            <span class="keyword">FROM</span> user_ind_columns</div><div class="line">            <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                <span class="keyword">AND</span> column_name = <span class="string">'COLUMN_NAME'</span> <span class="comment">--更新字段</span></div><div class="line">                <span class="keyword">AND</span> TABLE_NAME <span class="keyword">IN</span> (</div><div class="line">                    <span class="keyword">SELECT</span> segment_name</div><div class="line">                    <span class="keyword">FROM</span> (</div><div class="line">                        <span class="keyword">SELECT</span> segment_name</div><div class="line">                            ,<span class="keyword">SUM</span>(siz_M) <span class="keyword">AS</span> siz_M</div><div class="line">                        <span class="keyword">FROM</span> (</div><div class="line">                            <span class="keyword">SELECT</span> segment_name</div><div class="line">                                ,segment_type</div><div class="line">                                ,bytes / <span class="number">1024</span> / <span class="number">1024</span> <span class="keyword">AS</span> siz_M</div><div class="line">                            <span class="keyword">FROM</span> user_segments</div><div class="line">                            <span class="keyword">WHERE</span> segment_type <span class="keyword">LIKE</span> <span class="string">'TABLE%'</span></div><div class="line">                                <span class="keyword">AND</span> segment_name = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                            )</div><div class="line">                        <span class="keyword">GROUP</span> <span class="keyword">BY</span> segment_name</div><div class="line">                        )</div><div class="line">                    <span class="keyword">WHERE</span> siz_M &gt;= <span class="number">50</span>  <span class="comment">--定义达到50M的表为大数据表</span></div><div class="line">                    )</div><div class="line">            );</div><div class="line">    </div><div class="line">    TYPE IDXINFOREC </div><div class="line">    IS TABLE OF c1%ROWTYPE INDEX BY BINARY_INTEGER; </div><div class="line"></div><div class="line">    idxinfo    c1%ROWTYPE; </div><div class="line">    idxinfolist IDXINFOREC; </div><div class="line">    counter INTEGER; </div><div class="line">    </div><div class="line"><span class="operator"><span class="keyword">BEGIN</span></span></div><div class="line">    counter := <span class="number">0</span>; </div><div class="line"></div><div class="line">    OPEN c1;</div><div class="line">    </div><div class="line">    LOOP </div><div class="line">        FETCH c1 INTO idxinfo; </div><div class="line"></div><div class="line">        IF c1%FOUND THEN </div><div class="line">          counter := counter + 1; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line"></div><div class="line">        idxinfolist(counter) := idxinfo; </div><div class="line"></div><div class="line">        IF c1%NOTFOUND THEN </div><div class="line">          EXIT; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span> </div><div class="line"></div><div class="line">    CLOSE c1; </div><div class="line">    </div><div class="line">    <span class="comment">--1.unusable索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' unusable'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">        </div><div class="line">    <span class="comment">--2.中间执行更新任务</span></div><div class="line">    <span class="comment">-- update something</span></div><div class="line">    <span class="operator"><span class="keyword">COMMIT</span>;</span></div><div class="line">    </div><div class="line">    <span class="comment">--3.重建索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        IF idxinfolist(i).PARTITIONED = 'NO' THEN</div><div class="line">            <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild parallel nologging'</span>;</span></div><div class="line">            </div><div class="line">        ELSE </div><div class="line">            IF idxinfolist(i).PARTITIONED = 'YES' THEN</div><div class="line">                FOR x IN (</div><div class="line">                            <span class="operator"><span class="keyword">SELECT</span> PARTITION_NAME</span></div><div class="line">                            <span class="keyword">FROM</span> user_IND_PARTITIONS</div><div class="line">                            <span class="keyword">WHERE</span> index_name = idxinfolist(i).index_name</div><div class="line">                            <span class="keyword">ORDER</span> <span class="keyword">BY</span> PARTITION_POSITION</div><div class="line">                            ) LOOP</div><div class="line"></div><div class="line">                        <span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild PARTITION '</span> || x.PARTITION_NAME || <span class="string">' parallel nologging'</span>;</div><div class="line">                <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">            <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' noparallel'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line"><span class="operator"><span class="keyword">END</span>;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-10T08:35:30.000Z"><a href="/2014/11/10/oracle-partition/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--create tablespaces</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_1 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_1.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_2 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_2.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_3 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_3.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"></div><div class="line"><span class="comment">--create table with partition declaration</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> CUSTOMER</span></div><div class="line">(</div><div class="line">  CUSTOMER_ID <span class="built_in">NUMBER</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span>,</div><div class="line">  CUST_AREA <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  FIRST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  LAST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  PHONE VARCHAR2(<span class="number">15</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  EMAIL VARCHAR2(<span class="number">80</span>),</div><div class="line">  SEX VARCHAR2(<span class="number">10</span>),</div><div class="line">  <span class="keyword">STATUS</span> VARCHAR2(<span class="number">10</span>),</div><div class="line">  CREATE_DATE <span class="built_in">DATE</span></div><div class="line">)</div><div class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> LIST (CUST_AREA) <span class="comment">--partition declaration</span></div><div class="line">(</div><div class="line">  <span class="keyword">PARTITION</span> area_1 <span class="keyword">VALUES</span>(<span class="number">1</span>) <span class="keyword">TABLESPACE</span> cus_area_1,</div><div class="line">  <span class="keyword">PARTITION</span> area_2 <span class="keyword">VALUES</span>(<span class="number">2</span>) <span class="keyword">TABLESPACE</span> cus_area_2,</div><div class="line">  <span class="keyword">PARTITION</span> area_3 <span class="keyword">VALUES</span>(<span class="number">3</span>) <span class="keyword">TABLESPACE</span> cus_area_3</div><div class="line">);</div><div class="line"></div><div class="line"><span class="comment">-- test data</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="string">'geln'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="number">2</span>,<span class="string">'eric'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="string">'tom'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">4</span>,<span class="number">3</span>,<span class="string">'tony'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">commit</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- query by partition</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER <span class="keyword">partition</span> (area_1) ;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="comment">/*+rowid(CUSTOMER)*/</span> ROWID,LAST_NAME,FIRST_NAME,PHONE <span class="keyword">FROM</span> CUSTOMER  <span class="keyword">partition</span> (AREA_1)  <span class="keyword">WHERE</span>  ROWID&gt;=<span class="string">'AAASrfAAIAAAACAAAA'</span> <span class="keyword">AND</span>  ROWID&lt;=<span class="string">'AAASrfAAIAAAACHCcQ'</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- find all partitioin data for a table</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> e.owner,e.segment_name,e.partition_name,o.data_object_id,</span></div><div class="line">    e.RELATIVE_FNO,</div><div class="line">    e.BLOCK_ID MIN_BLOCK,</div><div class="line">    e.BLOCK_ID + e.BLOCKS - <span class="number">1</span> MAX_BLOCK</div><div class="line"><span class="keyword">FROM</span> dba_extents e, dba_objects o</div><div class="line"><span class="keyword">WHERE</span>     e.segment_name = <span class="string">'CUSTOMER'</span>  <span class="comment">-- table name</span></div><div class="line">    <span class="keyword">AND</span> o.object_name = e.segment_name</div><div class="line">    <span class="keyword">AND</span> e.owner = <span class="string">'MASK'</span> <span class="comment">-- schema name</span></div><div class="line">    <span class="keyword">AND</span> o.OWNER = e.owner</div><div class="line">    <span class="keyword">AND</span> NVL (e.partition_name, <span class="number">0</span>) = NVL (o.SUBOBJECT_NAME, <span class="number">0</span>)</div><div class="line">    <span class="keyword">AND</span> o.data_object_id <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>;</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
       
       
@@ -220,13 +319,13 @@
   <h3 class="title">标签</h3>
   <ul class="entry">
   
-    <li><a href="/tags/Git/">Git</a><small>1</small></li>
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>11</small></li>
+    <li><a href="/tags/Java/">Java</a><small>12</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>8</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -236,7 +335,7 @@
   
     <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>2</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -277,6 +376,22 @@
   <ul class="entry">
     
       <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -306,22 +421,6 @@
     
       <li>
         <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/05/rizhi/">琐忆</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/01/aboutMe/">关于我</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a>
-      </li>
-    
-      <li>
-        <a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
       </li>
     
   </ul>
