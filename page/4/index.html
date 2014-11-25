@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>REST风格的软件架构 | Jeck_Zhang</title>
+  <title>第 4 页 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="REST风格的软件架构"/>
+  
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -71,7 +71,8 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article class="post">
   
     <div class="gallery">
   <div class="photoset">
@@ -88,114 +89,60 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
+        <time datetime="2013-11-13T02:15:01.000Z"><a href="/2013/11/13/hello-world/">11月 13 2013</a></time>
       
       
   
-    <h1 class="title">REST风格的软件架构</h1>
+    <h1 class="title"><a href="/2013/11/13/hello-world/">Hello World</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
+        <p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
+<h3 id="for_Java">for Java</h3>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">System.out.println(<span class="string">"Hello World!"</span>);</div></pre></td></tr></table></figure>
 
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
 
-GET 获取资源
 
-PUT 更新资源
+<h3 id="for_Shell">for Shell</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"Hello World!"</span></div><div class="line"><span class="built_in">printf</span> <span class="string">"Hello world!"</span></div></pre></td></tr></table></figure>
 
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
 
-GET 获取一本的信息
 
-PUT 更新书的信息
+<h3 id="for_JavaScript">for JavaScript</h3>
+<figure class="highlight JavaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">"Hello World!"</span>);</div><div class="line"><span class="built_in">document</span>.write(<span class="string">"Hello, world!"</span>);</div></pre></td></tr></table></figure>
 
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
 
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
+
+<h3 id="for_Css">for Css</h3>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*<span class="pseudo">:before</span>,</div><div class="line">*<span class="pseudo">:after</span> <span class="rules">{ <span class="rule"><span class="attribute">content</span>:<span class="value"><span class="string">'hello word!'</span> </span></span></span>}</div></pre></td></tr></table></figure>
+
+
+
+<h3 id="for_Python">for Python</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line">print(<span class="string">"hello world!"</span>)</div></pre></td></tr></table></figure>
+
+
+
+<h3 id="for_Ruby">for Ruby</h3>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">puts <span class="string">"Hello World!"</span></div></pre></td></tr></table></figure>
+
+
+
+<h3 id="for_C">for C</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main() {</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="for_Perl">for Perl</h3>
+<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">print</span> <span class="string">"Hello, World.\n"</span>;</div></pre></td></tr></table></figure>
+
 
       
     </div>
     <footer>
       
-
-        
-          <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a>
-          </div>
         
         
-          <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2014/07/18/java-generics/">java泛型的理解</a>
-          </div>
-          <div class="clearfix"></div>
-        
-
-        
-          <div class="copyright">
-            
-              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
-            
-            
-              <span class="from-link">
-                <em>本文链接地址:</em>
-                <a href="/2014/09/05/blog1/">
-                  http://lawrence-zxc.github.io/2014/09/05/blog1/
-                </a>
-              </span>
-            
-          </div>
-        
-        
-  
-  <div class="categories">
-    <a href="/categories/日志/">日志</a>
-  </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/Java/">Java</a>, <a href="/tags/架构/">架构</a>
-  </div>
-
-        
-  <div class="addthis addthis_toolbox addthis_default_style">
-    
-      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
-    
-    
-      <a class="addthis_button_tweet"></a>
-    
-    
-      <a class="addthis_button_sinaweibo_like"></a>
-    
-    
-      <a class="addthis_button_linkedin"></a>
-    
-    
-    
-    <a class="addthis_counter addthis_pill_style"></a>
-  </div>
-  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
-
       
       <div class="clearfix"></div>
     </footer>
@@ -205,41 +152,24 @@ Stateless 无状态
 
 
 
-<nav id="pagination" >
-    
-    <a href="/2014/09/18/blog3/" class="alignleft prev" >上一页</a>
-    
-    
-    <a href="/2014/07/18/java-generics/" class="alignright next" >下一页</a>
-    
-    <div class="clearfix"></div>
-</nav>
-
-<section id="comment">
-    <h1 class="title">留言</h1>
-    <div id="disqus_thread">
-    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    </div>
-<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2014/09/05/blog1/" data-title="REST风格的软件架构" data-url="http://lawrence-zxc.github.io/2014/09/05/blog1/"></div>
-<!-- 多说评论框 end -->
-<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-<script type="text/javascript">
-var duoshuoQuery = {short_name:"zxc337"};
-	(function() {
-		var ds = document.createElement('script');
-		ds.type = 'text/javascript';ds.async = true;
-		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-		ds.charset = 'UTF-8';
-		(document.getElementsByTagName('head')[0] 
-		 || document.getElementsByTagName('body')[0]).appendChild(ds);
-	})();
-	</script>
-<!-- 多说公共JS代码 end -->
-</section>
 
 
-</div></div>
+
+
+<ul class="page-direction" id="page-direction">
+    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
+    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
+</ul>
+
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/3/">Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span></nav>
+
+<nav id="pagination">
+  
+    <a href="/page/3/" class="alignleft prev">上一页</a>
+  
+  
+  <div class="clearfix"></div>
+</nav></div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">

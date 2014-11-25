@@ -93,6 +93,60 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-06-27T01:52:00.000Z"><a href="/2014/06/27/linux-ps/">6月 27 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ps -eo rss,pmem,pcpu,vsize,args |  sort -k <span class="number">1</span> -r -n | less</div></pre></td></tr></table></figure>
+
+<p>解析一下：<br><code>ps</code> 都知道，是linux,unix显示进程信息的,<br><code>-e</code> 是显示所有进程,<br><code>-o</code>是定制显示信息的格式</p>
+<p> <code>rss</code>: resident set size, 表示进程占用RAM(内存)的大小，单位是KB<br> <code>pmem</code>: %M, 占用内存的百分比 </p>
+<p> <code>pcpu</code>：%C，占用cpu的百分比<br> <code>vsize</code>: 表示进程占用的虚拟内存的大小，KB</p>
+<p> <code>args</code>：进程名（command） </p>
+<p> <code>sort</code>命令对ps结果进行排序<br>   <code>-k 1</code>:按第一个参数 rss进行排序</p>
+<p>   <code>-r</code>：逆序<br>   <code>-n</code>：numeric，按数字来排序</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-06-18T08:15:01.000Z"><a href="/2014/06/18/hello/">6月 18 2014</a></time>
       
       
@@ -1559,7 +1613,7 @@
   
     <li><a href="/tags/前端/">前端</a><small>1</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>2</small></li>
   
@@ -1590,6 +1644,10 @@
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
     
       <li>
         <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
@@ -1633,10 +1691,6 @@
     
       <li>
         <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/09/blog4/">mysql多列索引详解</a>
       </li>
     
   </ul>
