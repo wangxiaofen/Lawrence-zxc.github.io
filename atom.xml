@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2014-11-25T05:06:23.087Z</updated>
+  <updated>2014-12-30T09:24:21.188Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -32,6 +32,94 @@
     </summary>
     
       <category term="开始" scheme="http://lawrence-zxc.github.io/tags/%E5%BC%80%E5%A7%8B/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[Openfire服务端错误解决]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/11/20/openfire/"/>
+    <id>http://lawrence-zxc.github.io/2014/11/20/openfire/</id>
+    <published>2014-11-20T04:24:18.000Z</published>
+    <updated>2014-12-30T04:31:49.000Z</updated>
+    <content type="html"><![CDATA[<p>最近发现Openfire服务端隔段时间就会报这样的错：<br><img src="/img/openfire1.png"><br>有时候是这样：<br><img src="/img/openfire2.png"></p>
+<p>决定处理一下这个“黑盒”，从异常信息看，这个异常有关socket连接超时或者是连接被重置。查了一下相关问题出现原因：（引）</p>
+<p>常出现的Connection reset by peer: 原因可能是多方面的，不过更常见的原因是:</p>
+<p>服务器的并发连接数超过了其承载量，服务器会将其中一些连接Down掉；<br>客户端断掉连接，而服务器还在给客户端发送数据；<br>该异常在客户端和服务器端均有可能发生，引起该异常的原因有两个，一个是如果一端的Socket被关闭（或主动关闭或者因为异常退出而引起的关闭），另一端仍发送数据，发送的第一个数据包引发该异常(Connect reset by peer)。另一个是一端退出，但退出时并未关闭该连接，另一端如果在从连接中读数据则抛出该异常（Connection reset）。简单的说就是由连接断开后的读和写操作引起的。</p>
+<p>如果频繁出现，就表示很多客户端连接到Apache服务器的响应时间太长了，可能是网络的问题或者服务器性能问题。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Connection timed out:</div></pre></td></tr></table></figure>
+
+<p>连接超时，其实还是找不到已连接的客户端。可能出现原因：客户端网络问题导致连接没断开。</p>
+<p>由于Openfire是基于mina做的socket连接，mina本身封装了socket的各种异常，只剩下ProtocolCodecException、ProtocolEncoderException、ProtocolDecoderException、RecoverableProtocolDecoderException 四种异常，其他都作为运行时异常抛出。</p>
+<p>Openfire的连接管理类是ConnectionHandler，继承了mina的IoHandlerAdapter。通过exceptionCaught方法实现连接过程中的异常处理。</p>
+<p>源码如下(Openfire 3.7.2版本)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exceptionCaught</span>(IoSession session, Throwable cause) <span class="keyword">throws</span> Exception {</div><div class="line">  	<span class="keyword">if</span> (cause <span class="keyword">instanceof</span> IOException) {</div><div class="line">      	<span class="comment">// TODO Verify if there were packets pending to be sent and decide what to do with them</span></div><div class="line">      	Log.info(<span class="string">"ConnectionHandler reports IOException for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> <span class="keyword">if</span> (cause <span class="keyword">instanceof</span> ProtocolDecoderException) {</div><div class="line">      	Log.warn(<span class="string">"Closing session due to exception: "</span> + session, cause);</div><div class="line">      </div><div class="line">      	<span class="comment">// PIO-524: Determine stream:error message.</span></div><div class="line">      	<span class="keyword">final</span> StreamError error;</div><div class="line">      	<span class="keyword">if</span> (cause.getCause() != <span class="keyword">null</span> && cause.getCause() <span class="keyword">instanceof</span> XMLNotWellFormedException) {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.xml_not_well_formed);</div><div class="line">      	} <span class="keyword">else</span> {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.internal_server_error);</div><div class="line">      	}</div><div class="line">      </div><div class="line">      	<span class="keyword">final</span> Connection connection = (Connection) session.getAttribute(CONNECTION);</div><div class="line">      	connection.deliverRawText(error.toXML());</div><div class="line">      	session.close();</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> {</div><div class="line">      	Log.error(<span class="string">"ConnectionHandler reports unexpected exception for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>可以看出，openfire本身没有处理IO异常，只是打了一下log。这会导致断开的链接发生没断干净的情况。这种情况下面再讨论。</p>
+<p>编写网络程序时需要注意的问题:（引）</p>
+<p>是要正确区分长、短连接。所谓的长连接是指一经建立就永久保持。短连接的情况是，准备数据—&gt;建立连接—&gt;发送数据—&gt;关闭连接。很多的程序员写了多年的网络程序，居然不知道什么是长连接，什么是短连接。</p>
+<p>是对长连接的维护。所谓维护包括两个方面，首先是检测对方的主动断连（即调用 Socket的close方法），其次是检测对方的宕机、异常退出及网络不通。这是一个健壮的通信程序必须具备的。检测对方的主动断连很简单，主要一方主动断连，另一方如果在进行读操作，则此时的返回值只-1，一旦检测到对方断连，则应该主动关闭本端的连接（调用Socket的close方法）。而检测对方的宕机、异常退出及网络不通，常用方法是用“心跳”，也就是双方周期性的发送数据给对方，同时也从对方接收“心跳”，如果连续几个周期都没有收到对方心跳，则可以判断对方宕机、异常退出或者网络不通，此时也需要主动关闭本端连接，如果是客户端可在延迟一定时间后重新发起连接。虽然Socket有一个keep alive选项来维护连接，如果用该选项，一般需要两个小时才能发现对方的宕机、异常退出及网络不通。</p>
+<p>是处理效率问题。不管是客户端还是服务器，如果是长连接一个程序至少需要两个线程，一个用于接收数据，一个用于发送心跳，写数据不需要专门的线程，当然另外还需要一类线程（俗称Worker线程）用于进行消息的处理，也就是说接收线程仅仅负责接收数据，然后再分发给Worker进行数据的处理。如果是短连接，则不需要发送心跳的线程，如果是服务器还需要一个专门的线程负责进行连接请求的监听。这些是一个通信程序的整体要求，具体到你的程序中，就看你如何对程序进行优化了。</p>
+<p>openfire自带了心跳机制，是通过在服务端设置Client Connections –&gt; Idle Connections Policy中的：</p>
+<p>Disconnect  client after they have been idle for [<em>*</em>] seconds<br>mina框架提供了空闲检测功能，这项功能可检测客户端口建立了TCP/IP连接、却不发送任何消息的情况。</p>
+<p>当我们设置了选项时长，openfire会调用mina的session.setIdleTime()方法，在客户端口连接经过指定时长未发送任何消息的情况下触发sessionIdle事件，由sessionIdle()方法处理。</p>
+<p>Openfire can send an XMPP Ping request to clients that are idle, before they are disconnected. Clients must respond to such a request, which allows Openfire to determine if the client connection has indeed been lost. The XMPP specification requires all clients to respond to request. If a client does not support the XMPP Ping request, it must return an error (which in itself is a response too).<br>选项中 Send an XMPP Ping request to idle clients对ConnectionHandler进行了再一次封装，在第一次触发sessionIdle时发送一次ping 消息，迫使客户端进行响应。</p>
+<p>在ConnectionHandler 的sessionIdle()方法中判断当前的idle次数大于1次时将关闭客户端连接。我们设置了idle Time 之后这个idle的检测发生在达到一半时间和达到指定时间，每次检测都会将idle 的次数加1 。 例如我们设置了120s，则mina会在这个时长的一半时间内，60s，发送一个ping包，等待客户端响应，然后在到达指定时长后，客户端仍未发送消息时再发一次。如果两次都没有收到回复，则认为连接断掉了，触发sessionIdle()事件，关闭连接。</p>
+<p>但是两次心跳中间的消息包就会丢失，并且不会抛出异常，因此选择通过消息回执的方式，保证消息的稳定性XEP-0184。</p>
+<p>考虑解决方案：</p>
+<p>在发生Exception后主动关闭连接。<br>心跳机制的设置与优化<br>由于服务端没有断开异常连接，会产生大量的CLOSE_WAIT和FIN_WAIT2状态。可以通过</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -na|grep <span class="number">9090</span>|grep FIN_WAIT2|wc <span class="operator">-l</span></div></pre></td></tr></table></figure>
+
+<p>或者：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -n | awk <span class="string">'/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'</span></div></pre></td></tr></table></figure>
+
+<p>命令查看。</p>
+<p>返回结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">TIME_WAIT <span class="number">1</span></div><div class="line">CLOSE_WAIT <span class="number">87</span></div><div class="line">FIN_WAIT1 <span class="number">4</span></div><div class="line">ESTABLISHED <span class="number">377</span></div><div class="line">FIN_WAIT2 <span class="number">3305</span></div></pre></td></tr></table></figure>
+
+<p>解决方案：<br>为 FIN_WAIT2 增加超时机制<br>CLOSE_WAIT缩短keepAlive时间<br>修改linux系统内核参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/sysctl.conf</div></pre></td></tr></table></figure>
+
+<p>加入以下数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">net.ipv4.tcp_keepalive_time = <span class="number">30</span></div><div class="line">net.ipv4.tcp_keepalive_probes = <span class="number">2</span></div><div class="line">net.ipv4.tcp_keepalive_intvl = <span class="number">2</span></div><div class="line">net.ipv4.tcp_fin_timeout = <span class="number">30</span></div></pre></td></tr></table></figure>
+
+<p>设置fin的连接超时时间为30s</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>最近发现Openfire服务端隔段时间就会报这样的错：<br><img src="/img/openfire1.png"><br>有时候是这样：<br><img src="/img/openfire2.png"></p>
+<p>决定处理一下这个“黑盒”，从异常信息看，这个异]]>
+    </summary>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[ibatis中传参$与#区别以及对List的排序]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/11/12/ibatis1/"/>
+    <id>http://lawrence-zxc.github.io/2014/11/12/ibatis1/</id>
+    <published>2014-11-12T04:19:34.000Z</published>
+    <updated>2014-12-30T04:22:59.000Z</updated>
+    <content type="html"><![CDATA[<p>开发中ibatis会用到： $ 和 # 符号。</p>
+<p>一、区别</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$aaa$ 输出参数是以字符串方式直接输出 123</div><div class="line"></div><div class="line">#aaa# 输出参数是以Parameter方式输出 @aaa</div></pre></td></tr></table></figure>
+
+<p>二、实例</p>
+<p>SQL :</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">&lt;select id="selectMetaMandao"  parameterClass="java.util.HashMap" resultMap="WaasmetaMandaoMap" &gt;  </div><div class="line">    SELECT $subCategory$ rchannel,sum(mandao) mandao from</div><div class="line">    ( SELECT nvl(channel,'-') channel,ROUND(count(1)*0.1131) mandao  FROM WAAS_VIEW_USER_RESULT a </div><div class="line">    AND not EXISTS (</div><div class="line">    SELECT msgid</div><div class="line">      FROM DT_XMS_MT b</div><div class="line">     WHERE EXISTS</div><div class="line">           (SELECT MSGID FROM WAAS_VIEW_USER_RESULT WHERE STATUS = 'SUCCESS' AND msgid = b.msgid)</div><div class="line">    AND msgid = a.msgid)</div><div class="line">       GROUP BY channel) d LEFT JOIN waas_channel_summary c ON d.channel = c.original_channel </div><div class="line">    &lt;isNotEmpty property="channel"&gt;</div><div class="line">            WHERE c.original_channel LIKE '%'||#channel#||'%' </div><div class="line">     &lt;/isNotEmpty&gt;</div><div class="line">       GROUP BY $subCategory$</div><div class="line">&lt;/select&gt;</div></pre></td></tr></table></figure>
+
+<p>代码 :</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"queryMeta"</span>)</div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">selectMeta</span>(HttpServletRequest request, HttpServletResponse response) {</div><div class="line">    String channel = request.getParameter(<span class="string">"channel"</span>);</div><div class="line">    Map&lt;String, Object&gt; param = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();</div><div class="line">    <span class="comment">//以参数方式输出, 相当于一个变量 (活的)</span></div><div class="line">    param.put(<span class="string">"channel"</span>, channel); </div><div class="line">    <span class="comment">//以字符串方式输出, 直接输出(死的)</span></div><div class="line">    param.put(<span class="string">"subCategory"</span>, channel == <span class="keyword">null</span> ? <span class="string">"primary_category"</span> : <span class="string">"ORIGINAL_CHANNEL"</span>); </div><div class="line">    List&lt;WAASUserMOTypeResult&gt; data = wumtService.selectMeta(param);</div><div class="line">    <span class="comment">//因为楼上这个List查完之后重新封装的, 所以无序, 要对List里面的对象进行排序, 如下</span></div><div class="line">    Collections.sort(data, <span class="keyword">new</span> Comparator&lt;WAASUserMOTypeResult&gt;() {</div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span>(WAASUserMOTypeResult o1, WAASUserMOTypeResult o2) {</div><div class="line">            <span class="keyword">return</span> o2.getShijia() - o1.getShijia(); <span class="comment">//排序字段, 倒序</span></div><div class="line">        }</div><div class="line">    });</div><div class="line">	</div><div class="line">    ......</div><div class="line">	</div><div class="line">    renderJson(response, resultJson.toString());</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>实现效果:</p>
+<p>如果传channel参数, 则根据原始媒体(ORIGINAL_CHANNEL)分组, 不传则根据合并后的大媒体(primary_category) 分组.</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>开发中ibatis会用到： $ 和 # 符号。</p>
+<p>一、区别</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div c]]>
+    </summary>
+    
+      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
@@ -243,6 +331,139 @@
       <category term="Linux" scheme="http://lawrence-zxc.github.io/tags/Linux/"/>
     
       <category term="Git" scheme="http://lawrence-zxc.github.io/tags/Git/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[xmpp通信过程分析]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/11/10/xmpp/"/>
+    <id>http://lawrence-zxc.github.io/2014/11/10/xmpp/</id>
+    <published>2014-11-10T03:38:10.000Z</published>
+    <updated>2014-12-30T04:18:41.000Z</updated>
+    <content type="html"><![CDATA[<h2 id="XMPP消息格式">XMPP消息格式</h2>
+<p>Jabber/XMPP系统使用XML流在不同实体之间相互传输数据。在两个实体的连接期间，XML流将从一个实体传送到另一个实体。在实体间，有三个顶层的XML元素:，和。每一个都包含属性和子节点。下面将分别描述这些元素。</p>
+<p>1)消息(message)元素：</p>
+<p>一个即时消息系统最基本的功能就是能够在两个用户之间实时交换消息，元素就提供了这个功能。每条消息都有一个或多个属性和子元素。属性“from”和“to”分别表示了消息发送者和接收者的地址。也可以包含一个“type”属性，这给接收者一个提示，这个消息是什么样的消息。表3-1给出了“type”属性的可能取值。中也可以包含“id”属性，用来唯一的标识一个输出消息的响应。</p>
+<p>2)状态(presence)元素:</p>
+<p>元素用来传递一个用户的存在状态的感知信息。用户可以是“available”，要么是“unavailable”，“Hide”等。当用户连接到即时消息服务器后，好友发给他的消息就立即被传递。如果用户没有连接到服务器，好友发给他的消息将被服务器存储起来直到用户连接到服务器。用户通过即时消息客户端自己控制可用性。但是，如果用户断开了同服务器的连接，服务器将发送给订阅了这个用户的存在信息的用户通知他们用户已经不可用。还包含了两个子元素：和。包含了一个对的文本描述。</p>
+<p>3)IQ(Info&lt;Query)元素</p>
+<p>IQ元素是Jabber/XMPP消息协议的第三个顶层元素。IQ代表”Info/Query”，用来发送和获取实体之间的信息。IQ消息是通过“请求/响应”机制在实体间进行交换的。IQ元素用于不同的目的，它们之间通过不同的命名空间来加以区分。在Jabber/XMPP消息协议里有许多的命名空间，但最常用的命名空间是：”jabber:iq:register”,”jabber:iq:auth”,”jabber:iq:roster”。</p>
+<p>上面描述了Jabber协议的三个顶层节点。通过这种格式Jabber消息不仅可以是简单的文本（text），而且可以携带复杂的数据和各种格式的文件，也就是说Jabber不仅可以用在人与人之间的交流，而且可以实现软件与软件或软件与人之间的交流。Jabber的这种功能大大扩展了即时通信的应用范围。</p>
+<h2 id="XMPP通信过程">XMPP通信过程</h2>
+<p>XMPP被设计为能够异步并能快速交换短文的协议，为此客户端和服务器之间存在两条XML流，用于异步通信，流传输的是XML文档。TCP是XMPP的默认承载协议，在客户端到服务器的通信模型下，需要一条TCP链路；在服务器到服务器的通信模式下，需要两条TCP链路以传输两个对端数据。</p>
+<p>XMPP流以<stream>标记开始，以</stream>结束。XMPP流可以视为一个well-form的XML文档，每次传输的是文档的片段，而片段则是well-form的XML标签。</p>
+<p>stream标记的属性如下：<br>to只能用于从客户端到服务器的XML流中。<br>from只能用于从服务器到客户端的XML流中。<br>id只能用于从接收实体到发送实体的XML流中，id必须唯一，用于标记会话。<br>xml:lang只能用于发起方，用于约定语言。如发起方没有携带xml:lang属性，接收方应使用默认语言。<br>version至少在“1.0”以上。</p>
+<p>可以看到客户端和服务器双方都以<stream>标记开始会话，即双方都在传输一个完整的XML文档。以<stream>发起会话后，双方建立TLS安全链路，然后用SASL（稍后说明）认证对方身份，最后绑定资源并开始传输消息报文。</stream></stream></p>
+<p>TLS是SSL的后继者，TLS1.0和SSL3.0非常相似。TLS建立在传输层上，通信双方先用不对称加密算法传输对称加密算法的密钥，然后用对称加密算法加密传输内容。  </p>
+<h3 id="TLS">TLS</h3>
+<p>第1步: 客户端发起连接:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第2步: 服务器向客户端返回一个<stream>标记: </stream></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">id</span>=<span class="value">'c2s_123'</span> <span class="attribute">from</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第3步: 服务器向客户端发送STARTTLS扩展，并携带认证机制和流特性:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>&gt;</span><span class="tag">&lt;<span class="title">required</span>/&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第4步: 客户端发送STARTTLS给服务器:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第5步: 服务器提示客户端可以继续:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">proceed</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第6步: 客户端和服务器尝试在已有的TCP链路上完成TLS握手过程。<br>第7步: 如果TLS握手成功，客户端向服务器发起一个新流:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>第8步: 服务器以一个stream头响应，同时携带可能的流特性: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"3f857b69"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第9步: 客户端继续SASL握手。</p>
+<h3 id="SASL(Simple_Authentication_and_Security_Layer_protocol)">SASL(Simple Authentication and Security Layer protocol)</h3>
+<p>第1步: 客户端向服务器发起流请求: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>第2步: 服务器向客户端响应stream标记: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"9a7eced8"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第3步: 服务器向客户端提示可用的认证方法: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第4步: 客户端选择一种认证方法:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span> <span class="attribute">mechanism</span>=<span class="value">'DIGEST-MD5'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第5步: 服务器发送以BASE64编码的验证码给客户端:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cmVhbG09InNvbWVyZWFsbSIsbm9uY2U9Ik9BNk1HOXRFUUdtMmhoIixxb3A9ImF1dGgiLGNoYXJzZXQ9dXRmLTgsYWxnb3JpdGhtPW1kNS1zZXNzCg==<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line">验证码解码后如下:</div><div class="line">realm="somerealm",nonce="OA6MG9tEQGm2hh",qop="auth",charset=utf-8,algorithm=md5-sess</div></pre></td></tr></table></figure>
+
+<p>第6步: 客户端发送以BASE64编码的响应码:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>dXNlcm5hbWU9InNvbWVub2RlIixyZWFsbT0ic29tZXJlYWxtIixub25jZT0iT0E2TUc5dEVRR20yaGgiLGNub25jZT0iT0E2TUhYaDZWcVRyUmsiLG5jPTAwMDAwMDAxLHFvcD1hdXRoLGRpZ2VzdC11cmk9InhtcHAvZXhhbXBsZS5jb20iLHJlc3BvbnNlPWQzODhkYWQ5MGQ0YmJkNzYwYTE1MjMyMWYyMTQzYWY3LGNoYXJzZXQ9dXRmLTgK<span class="tag">&lt;/<span class="title">response</span>&gt;</span></div><div class="line"></div><div class="line">解码后的响应码如下:</div><div class="line">username="somenode",realm="somerealm",nonce="OA6MG9tEQGm2hh",cnonce="OA6MHXh6VqTrRk",nc=00000001,qop=auth,digest-uri="xmpp/example.com",response=d388dad90d4bbd760a152321f2143af7,charset=utf-8</div></pre></td></tr></table></figure>
+
+<p>第7步: 服务器发送另一个以BASE64编码的验证码给客户端: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cnNwYXV0aD1lYTQwZjYwMzM1YzQyN2I1NTI3Yjg0ZGJhYmNkZmZmZAo=<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line"> 解码后的验证码:</div><div class="line">   rspauth=ea40f60335c427b5527b84dbabcdfffd</div></pre></td></tr></table></figure>
+
+<p>第8步: 客户端响应验证码: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第9步: 服务器提示客户端认证通过:  </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">success</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第10步: 客户端向服务器发起新连接: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">to</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>第11步: 服务器响应一个stream头，可能携带特性:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">id</span>=<span class="value">'c2s_345'</span></div><div class="line">    <span class="attribute">from</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;    <span class="tag">&lt;<span class="title">stream:features</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>/&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">session</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-session'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<h3 id="绑定资源">绑定资源</h3>
+<p>客户端登陆<br>SENT:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"1a58416"</span> <span class="attribute">type</span>=<span class="value">"get"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>RECV:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'5573507c'</span> <span class="attribute">type</span>=<span class="value">'result'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>/&gt;</span><span class="tag">&lt;<span class="title">password</span>/&gt;</span><span class="tag">&lt;<span class="title">resource</span>/&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>注意中间的ID，这个ID是服务器端返回给客户端的验证信息，验证信息一般是以该ID号+用户密码通过SHA1(RFC3174)算法进行操作的。也就是说客户端得到该ID和密码经过SHA1算法加密后返回给服务器。</p>
+<p>SENT(客户端提交字段内容进行验证):<br>文本格式，非加密模式</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">query</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>加密模式</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>javaScript<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line">或者</div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>这个digest就是上面经过SHA1算法得出的结果字段;<br>如果客户端发送的字段包括了用户名和IQ-GET的字段，服务器不应该返回错误消息（因为需要服务器判断当前用户名是否在使用），如果服务器不支持可插入的简单认证及密码模块，那么必须返回一个<service-unavailable>的错误;如果客户端企图使用SASL认证但是失败，服务器必须返回<policy-violation>错误信息<br>在认证过程中，jabber:iq:auth命名、用户名和资源是必须要求客户端提供的，而服务器返回的XML流中也必须提供<username>和<resource>这2个元素。</resource></username></policy-violation></service-unavailable></p>
+<p>RECV: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'jcl_104'</span> <span class="attribute">type</span>=<span class="value">'result'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">presence</span>&gt;</span><span class="tag">&lt;<span class="title">c</span> <span class="attribute">node</span>=<span class="value">"http://exodus.jabberstudio.org/caps"</span> <span class="attribute">ver</span>=<span class="value">"0.9.1.0"</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/protocol/caps"</span>/&gt;</span><span class="tag">&lt;<span class="title">status</span>&gt;</span>Available<span class="tag">&lt;/<span class="title">status</span>&gt;</span><span class="tag">&lt;<span class="title">priority</span>&gt;</span>1<span class="tag">&lt;/<span class="title">priority</span>&gt;</span><span class="tag">&lt;/<span class="title">presence</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'1a58416'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash_as3<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">type</span>=<span class="value">"get"</span> <span class="attribute">to</span>=<span class="value">"muc.maimaijun.com"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:mucAnonyRoom'</span> <span class="attribute">actionType</span>=<span class="value">'getRoomIndex'</span>&gt;</span><span class="tag">&lt;<span class="title">item</span>&gt;</span><span class="tag">&lt;<span class="title">customerIndex</span>&gt;</span>1<span class="tag">&lt;/<span class="title">customerIndex</span>&gt;</span><span class="tag">&lt;/<span class="title">item</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>登录结果<br>成功</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 认证失败，可能是用户名密码不匹配或数字验证错误</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'401'</span> <span class="attribute">type</span>=<span class="value">'auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-authorized</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 资源冲突/错误</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'409'</span> <span class="attribute">type</span>=<span class="value">'cancel'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">conflict</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 没有提供需要验证的字段</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'406'</span> <span class="attribute">type</span>=<span class="value">'modify'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-acceptable</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>客户端连接成功后使用iq(Info Query)查询服务器资源。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">resource</span>&gt;</span>someresource<span class="tag">&lt;/<span class="title">resource</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span>  </div><div class="line">服务器确认客户端要绑定的资源后，必须返回一个iq标签。</div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">jid</span>&gt;</span>somenode@example.com/someresource<span class="tag">&lt;/<span class="title">jid</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<h3 id="XML短语（Stanzas）">XML短语（Stanzas）</h3>
+<p>有三种短语——<message>（消息）、<presence>（在线状态）和<iq>（信息查询），三种短语都有共同属性，如下。</iq></presence></message></p>
+<ol>
+<li>Message语义<br>message短语可视为一种推送机制——某个实体向另一个实体推送信息。所有message短语必须携带to属性，以标明接收者。服务器收到message短语后，或路由或投递给接收者。</li>
+<li>Presence语义<br>presence可被视为一个基本的广播或“发布-订阅”机制，多个实体接收他们订阅的关于某个实体的信息。</li>
+<li>IQ语义<br>Info/Query，或IQ，是一种”请求-响应“机制，与HTTP类似。IQ使一个实体能够向另一个实体发起请求，请求/响应报文以id属性标示。IQ交互通常以get/result和set/result模式执行。</li>
+<li>基于XMPP的即时信使扩展<br>XMPP标准由XMPP Core(RFC3920)、XMPP IM(RFC3921)、XMPP CPIM(RFC3922)(映射XMPP到IETF的CPIM规范)、XMPP E2E(RFC3922)(端到端信号和对象加密)、XMPP URN(RFC4854)(基于XMPP扩展的Uniform Resource Name树)、XMPP ENUM(RFC4979)(在IANA注册的枚举服务)、XMPP URI(RFC5122)(对RFC4622的勘误)。本文只覆盖了XMPP Core和XMPP IM，其中XMPP IM由XMPP Core扩展而得。</li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h2 id="XMPP消息格式">XMPP消息格式</h2>
+<p>Jabber/XMPP系统使用XML流在不同实体之间相互传输数据。在两个实体的连接期间，XML流将从一个实体传送到另一个实体。在实体间，有三个顶层的XML元素:，和。每一个都包含属性和子节点。下面将分别描述这些]]>
+    </summary>
+    
+      <category term="XMPP" scheme="http://lawrence-zxc.github.io/tags/XMPP/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
@@ -776,7 +997,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     <link href="http://lawrence-zxc.github.io/2014/09/18/blog3/"/>
     <id>http://lawrence-zxc.github.io/2014/09/18/blog3/</id>
     <published>2014-09-18T07:12:39.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
+    <updated>2014-12-30T03:18:40.000Z</updated>
     <content type="html"><![CDATA[<p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
 <p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
 <p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
@@ -787,10 +1008,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
 
 <p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd_40x40.jpg</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
 
 <p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">location ~ <span class="string">'/images/([0-9a-z]+)_([0-9]+)x([0-9]+).jpg$'</span> {</div><div class="line">    root /home/images;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> =  <span class="string">'/home/images'</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> = ngx.arg[<span class="number">1</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> = ngx.arg[<span class="number">2</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> = ngx.arg[<span class="number">3</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName</span>.jpg</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName_</span><span class="variable">$widthx</span><span class="variable">$height</span>.jpg</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x"</div><div class="line">                            ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">         ';</div><div class="line"> }</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
 ]]></content>
@@ -801,211 +1022,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </summary>
     
       <category term="Nginx" scheme="http://lawrence-zxc.github.io/tags/Nginx/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[REST风格的软件架构]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/09/05/blog1/"/>
-    <id>http://lawrence-zxc.github.io/2014/09/05/blog1/</id>
-    <published>2014-09-05T06:10:03.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
-    <content type="html"><![CDATA[<p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了]]>
-    </summary>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
-    
-      <category term="架构" scheme="http://lawrence-zxc.github.io/tags/%E6%9E%B6%E6%9E%84/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[java泛型的理解]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/07/18/java-generics/"/>
-    <id>http://lawrence-zxc.github.io/2014/07/18/java-generics/</id>
-    <published>2014-07-18T08:02:20.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
-    <content type="html"><![CDATA[<p>这是自己java泛型的理解,心得体会!</p>
-<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程中，对于泛型一直没有特别深入的使用过，没有遇到那样的需求和场景。只需要了解Java中的泛型是编译期的，运行期被“擦拭”掉了；然后还有几种通配符的表示就足够了。</p>
-<p>直到一天我在查看Java5中Enum的源代码时，发现它是这么定义的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Enum</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">Enum</span>&lt;<span class="title">E</span>&gt;&gt; </span></div><div class="line">                <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">E</span>&gt;, <span class="title">Serializable</span> {</div></pre></td></tr></table></figure>
-
-<p>这个类似递归结构的 Enum<e extends="" enum<e="">&gt; 究竟表达什么意思？</e></p>
-<p>随后我又看到了在Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>怎么TMD还会有这么复杂的泛型表达式!?（幸好的是这种情况在我们实际开发过程中不多见，甚至不应该见到，大概只有像JDK这种为了保留对老版本的兼容才会设计出这么复杂的泛型表达式出来。）</p>
-<p>上面的问题，你可以通过：<a href="http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf" target="_blank" rel="external">http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf</a> 来获取答案，中文版的在：<a href="http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx" target="_blank" rel="external">http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx</a><br>这篇泛型指南的文章，非常详细。</p>
-<p>或许你看了上面的文章，依然心存疑虑。我下面的内容则是对这篇文档的一些补充（会和这篇文档有点重合）<br>回到我之前抛出的问题上：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;? extends Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">}</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bar</span>(List&lt;? <span class="keyword">super</span> Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">    l.add(<span class="keyword">new</span> Float(<span class="number">2</span>));    <span class="comment">// ok?</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这里主要说说 &lt;? extends T&gt; 和 &lt;? super T&gt; 这两种通配符对于方法参数的使用原则。<br>即 PECS 原则 (producser-extends, consumer-super) 或者也叫 Get and Put 原则</p>
-<p>当没有使用通配符的情况下，我们定义一个方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="keyword">void</span> <span class="title">test</span>(List&lt;E&gt; l){</div><div class="line">    E e = l.get(<span class="number">0</span>);</div><div class="line">    l.set(<span class="number">0</span>, e);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>我们从List中 get和set都没有问题，因为这个E 它的类型是某种明确的类型。</p>
-<p>而当使用通配符时来描述参数时，就有些不同了。</p>
-<p>我们先定义一下两种通配符： </p>
-<p>&lt;? extends E&gt; 是 Upper Bound（上限） 的通配符</p>
-<p>&lt;? super E&gt; 是 Lower Bound（下限） 的通配符</p>
-<p>1) 当使用 Upper Bound 通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;?&gt; list){</div><div class="line">    Object e = list.get(<span class="number">0</span>); <span class="comment">// get OK</span></div><div class="line">    list.set(<span class="number">0</span>, e);         <span class="comment">// set 编译报错</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面代码中通配符&lt;?&gt; 是 &lt;? extends Object&gt; 的简写。(关于&lt;?&gt;是否和&lt;? extends Object&gt;完全等价，我遇到个小插曲，在结束的时候来描述)</p>
-<p>在eclipse里错误提示为：<br><em>The method set(int, capture#2-of ?) in the type List<capture#2-of ?=""> is not applicable for the arguments (int, Object)</capture#2-of></em></p>
-<p>注： <capture#2-of ?=""> 是一个占位符，表示编译器对通配符的捕获，更多见：</capture#2-of></p>
-<p><a href="http://www.ibm.com/developerworks/cn/java/j-jtp04298.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-jtp04298.html</a></p>
-<p>set报错的原因是因为此时方法中的类型是不可具体化的(reified)，你可以传递一个String，Number，Book，等任何继承自Object的类作为List的参数类型给test方法，而list要求集合中的类型必须是一致的，set的时候没有办法保证set进去的数据类型是否和list中原本的类型一致，比如你传给test方法的是 List<book>， 那么在方法中set进去一个Object显然类型就不一致了。这也是通配符带来灵活性的同时所要付出的代价。</book></p>
-<p>结论：使用了 &lt;? extends E&gt; 这样的通配符，test方法的参数list变成了只能get不能set（除了null） 或者不严谨的说它变成了只读参数了， 有些类似一个生产者，提供数据。</p>
-<p>2) 当使用 Lower Bound 的通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;? <span class="keyword">super</span> Number&gt; list){</div><div class="line">    Number n = list.get(<span class="number">0</span>);             <span class="comment">// 编译错误</span></div><div class="line">    Object o = list.get(<span class="number">0</span>);             <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Object());          <span class="comment">// 编译错误</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Long(<span class="number">0</span>));           <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>));        <span class="comment">// OK</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这时get只能get出最宽泛的父类型，即Object。</p>
-<p>这时set的时候，必须是Number或Number的子类。</p>
-<p>原因和上面的get类似。</p>
-<p>结论： 使用了&lt;? super E&gt; 这种通配符，test方法的参数list的get受到了很大的制约，只能最宽泛的方式来获取list中的数据，相当于get只提供了数据最小级别的访问权限（想想，你可能原本是放进去了一个Book，却只能当作Object来访问）。它更多适合于set的使用场景，像是一个消费者，主要用来消费数据。</p>
-<p>上面便是对通配符的使用原则的说明，简单的说 PECS原则是指导我们在泛型方法中使用通配符的直接原则。参数作为生产者使用&lt;? extends E&gt;，作为消费者时使用&lt;? super E&gt; 。</p>
-<p>那么说完了PECS原则，我们再回过头来分析那两个复杂的泛型表达式是怎么含义</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class Enum&lt;E extends Enum&lt;E&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>它确实是一个 “递归类型限制”(recursive type bound)<br>要说明白这个问题，我们要先明白2点：</p>
-<p>a) Enum可以理解为一组同一类型的有限的数据集合；</p>
-<p>b) Java对Enum中的数据类型要求必须也是枚举类型（即必须是继承Enum类的）</p>
-<p>对于 a) 我们先定义一个 Enum<t> 表明定义了T这种类型作为它内部的数据类型，这么看它就像个普通的集合。</t></p>
-<p>再来根据 b) 定义类型E，要求E必须是继承自 Enum<t>，便成了 <e extends="" enum<t="">&gt;<br>实际上 E和T是一回事，它们是同一类型， 所以它就是 <e extends="" enum<e="">&gt;</e></e></t></p>
-<p>暂停，可能我上面的表达不太合理可能会误人子弟，递归类型限制是有些抽象，它应该有严谨的数学描述，我想不清楚怎么表达，我先用另一个简单些例子来说明吧</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;T&gt;&gt; T <span class="title">max</span>(List&lt;T&gt; list)</div></pre></td></tr></table></figure>
-
-<p>这个方法用来获取list 中的最大值，它定义了一个 <t extends="" comparable<t="">&gt; 的类型表达式</t></p>
-<p>这个递归类型限制的表达式容易理解一些，</p>
-<p><t extends="" comparable<t="">&gt; 表示的是：针对可以与自身进行比较的每个类型T。<br>或者说，每个实现了Comparable<t>接口的类型T，比如 String 实现了 Comparable<string> ， Long实现了Comparable<long>等等</long></string></t></t></p>
-<p>而Enum因为使用enum关键字的原因，让我们忽略了它底层的实现其实也是</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class EnumSample extends Enum&lt;EnumSample&gt;</div></pre></td></tr></table></figure>
-
-<p>这一事实，比如我们定义了 BoundKind 这样的一个枚举：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> BoundKind{ }</div></pre></td></tr></table></figure>
-
-<p>编译器会转换为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BoundKind</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">Enum</span>&lt;<span class="title">BoundKind</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>看到了，这和 String implements Comparable<string> 类似</string></p>
-<p>这样我们套回到<e extends="" enum<e="">&gt; 就是 <boundkind extends="" enum<boundkind="">&gt;</boundkind></e></p>
-<p>这下好理解了， <e extends="" enum<e="">&gt; 直接按字面理解：每个继承自Enum<e>的类型E，比如</e></e></p>
-<p>BoundKind 继承了 Enum<boundkind></boundkind></p>
-<p>通过与<t extends="" comparable<t="">&gt;的对比，我们可以理解 <e extends="" enum<e="">&gt;了。</e></t></p>
-<p>那现在我们再回到Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>我们先简化一下这个表达式，看看<t extends="" comparable<?="" super="" t="">&gt; 怎么理解？</t></p>
-<p>既然 <t extends="" comparable<t="">&gt; 我们都理解了，把Comparable<t>改为</t></t></p>
-<p>Comparable&lt;? super T&gt; 也没什么费解的</p>
-<p>在《Java1.5 Generics Tutorial》一文中的解释是：<br>T 精确的(exactly)和自己能比较是不需要的。所需要的 是 T能 够和它的父类中的一个进行比较。</p>
-<p>而《Effictive Java》第二版中对此是用 PECS原则来解释的：</p>
-<p>下面是修改过的使用通配符类型的声明：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">               T <span class="title">max</span>(List&lt;? extends T&gt; list)</div></pre></td></tr></table></figure>
-
-<p><em>为了从初始声明中得到修改后的版本，要应用PECS转换两次，最直接的是运用到参数List。它产生T实例，因此将类型从List改为List&lt;? extends T&gt;。（ok好理解）<br>。。。。。。<br>更灵活的是运用到类型参数T。最初T 被指定用来扩展Comparable，但是T的comparable消费T实例（并产生表示顺序关系的整值）。因此，参数化类型Comparable被有限制通配符类型Comparable&lt;? super T&gt;取代。comparable始终是消费者，因此使用时始终应该是Comparable&lt;? super T&gt; 优先于 Comparable。</em></p>
-<p>蓝色粗体的那句翻译的不好。还是看一下代码来理解吧：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">            T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div><div class="line">    Iterator&lt;? extends T&gt; i = coll.iterator();</div><div class="line">    T candidate = i.next();</div><div class="line">    <span class="keyword">while</span> (i.hasNext()) {</div><div class="line">        T next = i.next();</div><div class="line">        <span class="keyword">if</span> (next.compareTo(candidate) &gt; <span class="number">0</span>) <span class="comment">// here comparaTo</span></div><div class="line">            candidate = next;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> candidate;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>第5行，Bloch认为 next.compareTo(cand) 是一句消费操作，在消费一个candidate对象时，根据PECS原则，candidate的类型应该使用 &lt;? super T&gt; 来提高它的灵活性。</p>
-<p>我觉得Bloch将第5行当作消费操作挺别扭的，我个人偏向《Java1.5 Generics Tutorial》中的解释。<br>但归根到底，都是降低限制，提高比较时的灵活性。</p>
-<p>最后，我们再来完整的理解：<t extends="" object="" &="" comparable<?="" super="" t="">&gt;<br>就只是比 &gt; 多了一个限制(bounds)。</t></p>
-<p>Object &amp; Comparable&lt;? super T&gt; 是一个多限定(multiple bounds)的用法，</p>
-<p>语法为： T1 &amp; T2 … &amp; Tn</p>
-<p>一个有多个界限的类型的参数是所有界限中列出来的类型的子类。当多个界限被使用的时候，界限中的第一个类型被用作这个类型参数的erasure。</p>
-<p>最终这个方法的返回值，按照第一个限定，擦拭为Object类型了。这是因为在以前版本中此方法就是返回的Object类型，需要兼容。</p>
-<p>因为多限定（multiple bounds）的存在，泛型方法中又对应的增加了一个很不优雅的调用方式。下面用一段代码来说明:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsTest</span> </span>{    </div><div class="line">    <span class="keyword">static</span> class Book {};</div><div class="line">    <span class="keyword">static</span> class StoryBook extends Book implements Comparable&lt;StoryBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(StoryBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line">    <span class="keyword">static</span> class TechBook extends Book implements Comparable&lt;TechBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(TechBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; Set&lt;E&gt; <span class="title">merge</span>(Set&lt;? extends E&gt; s1, Set&lt;? extends E&gt; s2) {</div><div class="line">        HashSet&lt;E&gt; newSet = <span class="keyword">new</span> HashSet&lt;E&gt;(s1);</div><div class="line">        newSet.addAll(s2);</div><div class="line">        <span class="keyword">return</span> newSet;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        HashSet&lt;StoryBook&gt; s1 = <span class="keyword">new</span> HashSet&lt;StoryBook&gt;();</div><div class="line">        HashSet&lt;TechBook&gt; s2 = <span class="keyword">new</span> HashSet&lt;TechBook&gt;();</div><div class="line">        Set&lt;Book&gt; sb = merge(s1, s2); <span class="comment">// 错误</span></div><div class="line">        <span class="comment">// 需通过显式的类型参数(explicit type parameter)来告诉它要使用哪种类型</span></div><div class="line">        Set&lt;Book&gt; bs = GenericsTest.&lt;Book&gt;merge(s1,s2); <span class="comment">//OK</span></div><div class="line">        <span class="comment">// 或者</span></div><div class="line">        Set&lt;Comparable&lt;?&gt;&gt; s = GenericsTest.&lt;Comparable&lt;?&gt;&gt;merge(s1,s2);</div><div class="line">     }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面直接调用merge(s1,s2) 那行代码错误的提示信息：<br>Type mismatch: cannot convert from Set<genericstest.book&comparable<?>&gt; to Set<genericstest.book><br>这归于泛型的类型推导(type inference)，当无法推导出明确的类型时，就需要显式的描述，如上面代码中红色粗体字。</genericstest.book></genericstest.book&comparable<?></p>
-<p>后注：<br>有关于 &lt;?&gt; 与 &lt;? extends Object&gt;是否是一回事<br>今天中午发现同事桌上有本《Java编程思想》第四版，随手翻了一下，发现泛型一章的介绍中，有句描述：“UnboundedWildcards.java 展示了编译器处理List&lt;?&gt;和List&lt;? Extends Object&gt;时是不同的。”<br>这让我奇怪，查看了一下它的代码，主要因为是对于Raw类型的造型为泛型时的警告信息不同。<br>将一个Raw的ArrayList造型给 List&lt;?&gt; 没有问题，而给List&lt;? Extends Object&gt;却会有警告。</p>
-<p>在网上查了一下，发现对于&lt;?&gt;与&lt;? extends Object&gt;是否等同，是有些不同意见的。</p>
-<p><a href="http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html" target="_blank" rel="external">http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html</a></p>
-<p><a href="http://bugs.sun.com/view_bug.do?bug_id=6559175" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6559175</a></p>
-<p>这个报告里，有两段代码反映了两者的不同：<br>（1）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args)  {</div><div class="line">    Object  customer  = <span class="keyword">null</span>;</div><div class="line">    foo((List&lt;? extends String&gt;) customer ); <span class="comment">//[1]</span></div><div class="line">    foo((List&lt;? extends Object&gt;) customer ); <span class="comment">//[2] 编译有警告</span></div><div class="line">    foo((List&lt;?&gt;) customer ); <span class="comment">//[3]  编译没有警告</span></div><div class="line">}</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;?&gt; list) {</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>（2）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object o2 = <span class="keyword">new</span> List&lt;?&gt;[<span class="number">3</span>];   <span class="comment">// 编译居然OK，估计直接当作Raw处理了</span></div><div class="line">Object o3 = <span class="keyword">new</span> List&lt;? extends Object&gt;[<span class="number">3</span>]; <span class="comment">// 报错</span></div></pre></td></tr></table></figure>
-
-<p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
-<p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
-<p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
-<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
-<p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
-<p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
-<p>我们暂从语义上认为两者相等。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>这是自己java泛型的理解,心得体会!</p>
-<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程]]>
-    </summary>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[java中使HttpDelete可以发送body信息]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/07/11/java-http/"/>
-    <id>http://lawrence-zxc.github.io/2014/07/11/java-http/</id>
-    <published>2014-07-11T02:32:48.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
-    <content type="html"><![CDATA[<p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含HttpGet, HttpPost, HttpPut, HttpDelete等类来实现http的常用操作。 其中，HttpPost继承自HttpEntityEnclosingRequestBase，HttpEntityEnclosingRequestBase类又实现了HttpEntityEnclosingRequest接口，实现了setEntity的方法。 而HttpDelete继承自HttpRequestBase，没有实现setEntity的方法，因此无法设置HttpEntity对象。 这样解决方法就明显了，我们可以自己实现一个MyHttpDelete类，继承自HttpEntityEnclosingRequestBase，覆盖其中的getMethod方法，使其返回“DELETE”。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHttpDelete</span> <span class="keyword">extends</span> <span class="title">HttpEntityEnclosingRequestBase</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String METHOD_NAME = <span class="string">"DELETE"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> String <span class="title">getMethod</span>() {</div><div class="line">        <span class="keyword">return</span> METHOD_NAME;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> String uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(URI.create(uri));</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> URI uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(uri);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>() {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>使用delete方法时，直接可以按下面方式操作</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">DefaultHttpClient httpClient = <span class="keyword">new</span> DefaultHttpClient(); </div><div class="line"></div><div class="line">MyHttpDelete delete = <span class="keyword">new</span> MyHttpDelete(<span class="string">"http://url.com"</span>); </div><div class="line"></div><div class="line">List&lt;NameValuePair&gt; nameValuePairs = <span class="keyword">new</span> ArrayList&lt;NameValuePair&gt;(); </div><div class="line"></div><div class="line">delete.setEntity(<span class="keyword">new</span> UrlEncodedFormEntity(nameValuePairs)); </div><div class="line"></div><div class="line">HttpResponse response = httpClient.execute(delete);</div></pre></td></tr></table></figure>
-
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含Ht]]>
-    </summary>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     

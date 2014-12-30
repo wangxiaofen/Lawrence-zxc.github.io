@@ -93,6 +93,186 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/24/java-regex/">正则表达式匹配中文</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
+<p>js代码：</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+
+<p>java代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p><br></p>
+<h3 id="常用正则表达式">常用正则表达式</h3>
+<p>说明：正则表达式通常用于两种任务：1.验证，2.搜索/替换。用于验证时，通常需要在前后分别加上^和$，以匹配整个待验证字符串；搜索/替换时是否加上此限定则根据搜索的要求而定，此外，也有可能要在前后加上\b而不是^和$。此表所列的常用正则表达式，除个别外均未在前后加上任何限定，请根据需要，自行处理。</p>
+<p>说明     | 正则表达式<br>网址（URL）</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[a-zA-z]+://[^\s]*</div></pre></td></tr></table></figure>
+
+<p>IP地址(IP Address)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)</div></pre></td></tr></table></figure>
+
+<p>电子邮件(Email)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*</div></pre></td></tr></table></figure>
+
+<p>QQ号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{4,}</div></pre></td></tr></table></figure>
+
+<p>HTML标记(包含内容或自闭合)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">(.*)(.*)</span>&gt;</span>.*<span class="tag">&lt;<span class="title">\</span>/\<span class="attribute">1</span>&gt;</span>|<span class="tag">&lt;<span class="title">(.*)</span> \/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(?=^.{8,}$)(?=.*\d)(?=.*\W+)(?=.*[A-Z])(?=.*[a-z])(?!.*\n).*$</div></pre></td></tr></table></figure>
+
+<p>日期(年-月-日)</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}|\d{2})-((1[0-2])|(0?[1-9]))-(([12][0-9])|(3[01])|(0?[1-9]))</div></pre></td></tr></table></figure>
+
+<p>日期(月/日/年)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1[0-2])|(0?[1-9]))/(([12][0-9])|(3[01])|(0?[1-9]))/(\d{4}|\d{2})</div></pre></td></tr></table></figure>
+
+
+<p>时间(小时:分钟, 24小时制)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1|0?)[0-9]|2[0-3]):([0-5][0-9])</div></pre></td></tr></table></figure>
+
+<p>汉字(字符)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u4e00-\u9fa5]</div></pre></td></tr></table></figure>
+
+
+<p>中文及全角标点符号(字符)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee]</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆固定电话号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}-|\d{3}-)?(\d{8}|\d{7})</div></pre></td></tr></table></figure>
+
+<p>中国大陆手机号码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">1\d{10}</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆邮政编码    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{5}</div></pre></td></tr></table></figure>
+
+
+<p>中国大陆身份证号(15位或18位)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d{15}(\d\d[0-9xX])?</div></pre></td></tr></table></figure>
+
+<p>非负整数(正整数或零)    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d+</div></pre></td></tr></table></figure>
+
+<p>正整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
+
+
+<p>负整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
+
+<p>整数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-?\d+</div></pre></td></tr></table></figure>
+
+<p>小数    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(-?\d+)(\.\d+)?</div></pre></td></tr></table></figure>
+
+<p>不包含abc的单词    </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\b((?!abc)\w)+\b</div></pre></td></tr></table></figure>
+
+
+
+<p>以上正则表达式均经过多次测试，如果你发现有错误，请通过微博联系我．</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="秋意渐浓">秋意渐浓</h3>
+<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
+
+<p><br></p>
+<h3 id="晚秋">晚秋</h3>
+<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
       
       
@@ -509,10 +689,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
 
 <p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd_40x40.jpg</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
 
 <p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">location ~ <span class="string">'/images/([0-9a-z]+)_([0-9]+)x([0-9]+).jpg$'</span> {</div><div class="line">    root /home/images;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> =  <span class="string">'/home/images'</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> = ngx.arg[<span class="number">1</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> = ngx.arg[<span class="number">2</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> = ngx.arg[<span class="number">3</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName</span>.jpg</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName_</span><span class="variable">$widthx</span><span class="variable">$height</span>.jpg</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x"</div><div class="line">                            ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">         ';</div><div class="line"> }</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
 
@@ -613,215 +793,6 @@ Stateless 无状态
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-07-18T08:02:20.000Z"><a href="/2014/07/18/java-generics/">7月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/07/18/java-generics/">java泛型的理解</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>这是自己java泛型的理解,心得体会!</p>
-<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程中，对于泛型一直没有特别深入的使用过，没有遇到那样的需求和场景。只需要了解Java中的泛型是编译期的，运行期被“擦拭”掉了；然后还有几种通配符的表示就足够了。</p>
-<p>直到一天我在查看Java5中Enum的源代码时，发现它是这么定义的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Enum</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">Enum</span>&lt;<span class="title">E</span>&gt;&gt; </span></div><div class="line">                <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">E</span>&gt;, <span class="title">Serializable</span> {</div></pre></td></tr></table></figure>
-
-<p>这个类似递归结构的 Enum<e extends="" enum<e="">&gt; 究竟表达什么意思？</e></p>
-<p>随后我又看到了在Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>怎么TMD还会有这么复杂的泛型表达式!?（幸好的是这种情况在我们实际开发过程中不多见，甚至不应该见到，大概只有像JDK这种为了保留对老版本的兼容才会设计出这么复杂的泛型表达式出来。）</p>
-<p>上面的问题，你可以通过：<a href="http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf" target="_blank" rel="external">http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf</a> 来获取答案，中文版的在：<a href="http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx" target="_blank" rel="external">http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx</a><br>这篇泛型指南的文章，非常详细。</p>
-<p>或许你看了上面的文章，依然心存疑虑。我下面的内容则是对这篇文档的一些补充（会和这篇文档有点重合）<br>回到我之前抛出的问题上：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;? extends Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">}</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bar</span>(List&lt;? <span class="keyword">super</span> Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">    l.add(<span class="keyword">new</span> Float(<span class="number">2</span>));    <span class="comment">// ok?</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这里主要说说 &lt;? extends T&gt; 和 &lt;? super T&gt; 这两种通配符对于方法参数的使用原则。<br>即 PECS 原则 (producser-extends, consumer-super) 或者也叫 Get and Put 原则</p>
-<p>当没有使用通配符的情况下，我们定义一个方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="keyword">void</span> <span class="title">test</span>(List&lt;E&gt; l){</div><div class="line">    E e = l.get(<span class="number">0</span>);</div><div class="line">    l.set(<span class="number">0</span>, e);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>我们从List中 get和set都没有问题，因为这个E 它的类型是某种明确的类型。</p>
-<p>而当使用通配符时来描述参数时，就有些不同了。</p>
-<p>我们先定义一下两种通配符： </p>
-<p>&lt;? extends E&gt; 是 Upper Bound（上限） 的通配符</p>
-<p>&lt;? super E&gt; 是 Lower Bound（下限） 的通配符</p>
-<p>1) 当使用 Upper Bound 通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;?&gt; list){</div><div class="line">    Object e = list.get(<span class="number">0</span>); <span class="comment">// get OK</span></div><div class="line">    list.set(<span class="number">0</span>, e);         <span class="comment">// set 编译报错</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面代码中通配符&lt;?&gt; 是 &lt;? extends Object&gt; 的简写。(关于&lt;?&gt;是否和&lt;? extends Object&gt;完全等价，我遇到个小插曲，在结束的时候来描述)</p>
-<p>在eclipse里错误提示为：<br><em>The method set(int, capture#2-of ?) in the type List<capture#2-of ?=""> is not applicable for the arguments (int, Object)</capture#2-of></em></p>
-<p>注： <capture#2-of ?=""> 是一个占位符，表示编译器对通配符的捕获，更多见：</capture#2-of></p>
-<p><a href="http://www.ibm.com/developerworks/cn/java/j-jtp04298.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-jtp04298.html</a></p>
-<p>set报错的原因是因为此时方法中的类型是不可具体化的(reified)，你可以传递一个String，Number，Book，等任何继承自Object的类作为List的参数类型给test方法，而list要求集合中的类型必须是一致的，set的时候没有办法保证set进去的数据类型是否和list中原本的类型一致，比如你传给test方法的是 List<book>， 那么在方法中set进去一个Object显然类型就不一致了。这也是通配符带来灵活性的同时所要付出的代价。</book></p>
-<p>结论：使用了 &lt;? extends E&gt; 这样的通配符，test方法的参数list变成了只能get不能set（除了null） 或者不严谨的说它变成了只读参数了， 有些类似一个生产者，提供数据。</p>
-<p>2) 当使用 Lower Bound 的通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;? <span class="keyword">super</span> Number&gt; list){</div><div class="line">    Number n = list.get(<span class="number">0</span>);             <span class="comment">// 编译错误</span></div><div class="line">    Object o = list.get(<span class="number">0</span>);             <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Object());          <span class="comment">// 编译错误</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Long(<span class="number">0</span>));           <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>));        <span class="comment">// OK</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这时get只能get出最宽泛的父类型，即Object。</p>
-<p>这时set的时候，必须是Number或Number的子类。</p>
-<p>原因和上面的get类似。</p>
-<p>结论： 使用了&lt;? super E&gt; 这种通配符，test方法的参数list的get受到了很大的制约，只能最宽泛的方式来获取list中的数据，相当于get只提供了数据最小级别的访问权限（想想，你可能原本是放进去了一个Book，却只能当作Object来访问）。它更多适合于set的使用场景，像是一个消费者，主要用来消费数据。</p>
-<p>上面便是对通配符的使用原则的说明，简单的说 PECS原则是指导我们在泛型方法中使用通配符的直接原则。参数作为生产者使用&lt;? extends E&gt;，作为消费者时使用&lt;? super E&gt; 。</p>
-<p>那么说完了PECS原则，我们再回过头来分析那两个复杂的泛型表达式是怎么含义</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class Enum&lt;E extends Enum&lt;E&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>它确实是一个 “递归类型限制”(recursive type bound)<br>要说明白这个问题，我们要先明白2点：</p>
-<p>a) Enum可以理解为一组同一类型的有限的数据集合；</p>
-<p>b) Java对Enum中的数据类型要求必须也是枚举类型（即必须是继承Enum类的）</p>
-<p>对于 a) 我们先定义一个 Enum<t> 表明定义了T这种类型作为它内部的数据类型，这么看它就像个普通的集合。</t></p>
-<p>再来根据 b) 定义类型E，要求E必须是继承自 Enum<t>，便成了 <e extends="" enum<t="">&gt;<br>实际上 E和T是一回事，它们是同一类型， 所以它就是 <e extends="" enum<e="">&gt;</e></e></t></p>
-<p>暂停，可能我上面的表达不太合理可能会误人子弟，递归类型限制是有些抽象，它应该有严谨的数学描述，我想不清楚怎么表达，我先用另一个简单些例子来说明吧</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;T&gt;&gt; T <span class="title">max</span>(List&lt;T&gt; list)</div></pre></td></tr></table></figure>
-
-<p>这个方法用来获取list 中的最大值，它定义了一个 <t extends="" comparable<t="">&gt; 的类型表达式</t></p>
-<p>这个递归类型限制的表达式容易理解一些，</p>
-<p><t extends="" comparable<t="">&gt; 表示的是：针对可以与自身进行比较的每个类型T。<br>或者说，每个实现了Comparable<t>接口的类型T，比如 String 实现了 Comparable<string> ， Long实现了Comparable<long>等等</long></string></t></t></p>
-<p>而Enum因为使用enum关键字的原因，让我们忽略了它底层的实现其实也是</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class EnumSample extends Enum&lt;EnumSample&gt;</div></pre></td></tr></table></figure>
-
-<p>这一事实，比如我们定义了 BoundKind 这样的一个枚举：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> BoundKind{ }</div></pre></td></tr></table></figure>
-
-<p>编译器会转换为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BoundKind</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">Enum</span>&lt;<span class="title">BoundKind</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>看到了，这和 String implements Comparable<string> 类似</string></p>
-<p>这样我们套回到<e extends="" enum<e="">&gt; 就是 <boundkind extends="" enum<boundkind="">&gt;</boundkind></e></p>
-<p>这下好理解了， <e extends="" enum<e="">&gt; 直接按字面理解：每个继承自Enum<e>的类型E，比如</e></e></p>
-<p>BoundKind 继承了 Enum<boundkind></boundkind></p>
-<p>通过与<t extends="" comparable<t="">&gt;的对比，我们可以理解 <e extends="" enum<e="">&gt;了。</e></t></p>
-<p>那现在我们再回到Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>我们先简化一下这个表达式，看看<t extends="" comparable<?="" super="" t="">&gt; 怎么理解？</t></p>
-<p>既然 <t extends="" comparable<t="">&gt; 我们都理解了，把Comparable<t>改为</t></t></p>
-<p>Comparable&lt;? super T&gt; 也没什么费解的</p>
-<p>在《Java1.5 Generics Tutorial》一文中的解释是：<br>T 精确的(exactly)和自己能比较是不需要的。所需要的 是 T能 够和它的父类中的一个进行比较。</p>
-<p>而《Effictive Java》第二版中对此是用 PECS原则来解释的：</p>
-<p>下面是修改过的使用通配符类型的声明：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">               T <span class="title">max</span>(List&lt;? extends T&gt; list)</div></pre></td></tr></table></figure>
-
-<p><em>为了从初始声明中得到修改后的版本，要应用PECS转换两次，最直接的是运用到参数List。它产生T实例，因此将类型从List改为List&lt;? extends T&gt;。（ok好理解）<br>。。。。。。<br>更灵活的是运用到类型参数T。最初T 被指定用来扩展Comparable，但是T的comparable消费T实例（并产生表示顺序关系的整值）。因此，参数化类型Comparable被有限制通配符类型Comparable&lt;? super T&gt;取代。comparable始终是消费者，因此使用时始终应该是Comparable&lt;? super T&gt; 优先于 Comparable。</em></p>
-<p>蓝色粗体的那句翻译的不好。还是看一下代码来理解吧：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">            T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div><div class="line">    Iterator&lt;? extends T&gt; i = coll.iterator();</div><div class="line">    T candidate = i.next();</div><div class="line">    <span class="keyword">while</span> (i.hasNext()) {</div><div class="line">        T next = i.next();</div><div class="line">        <span class="keyword">if</span> (next.compareTo(candidate) &gt; <span class="number">0</span>) <span class="comment">// here comparaTo</span></div><div class="line">            candidate = next;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> candidate;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>第5行，Bloch认为 next.compareTo(cand) 是一句消费操作，在消费一个candidate对象时，根据PECS原则，candidate的类型应该使用 &lt;? super T&gt; 来提高它的灵活性。</p>
-<p>我觉得Bloch将第5行当作消费操作挺别扭的，我个人偏向《Java1.5 Generics Tutorial》中的解释。<br>但归根到底，都是降低限制，提高比较时的灵活性。</p>
-<p>最后，我们再来完整的理解：<t extends="" object="" &="" comparable<?="" super="" t="">&gt;<br>就只是比 &gt; 多了一个限制(bounds)。</t></p>
-<p>Object &amp; Comparable&lt;? super T&gt; 是一个多限定(multiple bounds)的用法，</p>
-<p>语法为： T1 &amp; T2 … &amp; Tn</p>
-<p>一个有多个界限的类型的参数是所有界限中列出来的类型的子类。当多个界限被使用的时候，界限中的第一个类型被用作这个类型参数的erasure。</p>
-<p>最终这个方法的返回值，按照第一个限定，擦拭为Object类型了。这是因为在以前版本中此方法就是返回的Object类型，需要兼容。</p>
-<p>因为多限定（multiple bounds）的存在，泛型方法中又对应的增加了一个很不优雅的调用方式。下面用一段代码来说明:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsTest</span> </span>{    </div><div class="line">    <span class="keyword">static</span> class Book {};</div><div class="line">    <span class="keyword">static</span> class StoryBook extends Book implements Comparable&lt;StoryBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(StoryBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line">    <span class="keyword">static</span> class TechBook extends Book implements Comparable&lt;TechBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(TechBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; Set&lt;E&gt; <span class="title">merge</span>(Set&lt;? extends E&gt; s1, Set&lt;? extends E&gt; s2) {</div><div class="line">        HashSet&lt;E&gt; newSet = <span class="keyword">new</span> HashSet&lt;E&gt;(s1);</div><div class="line">        newSet.addAll(s2);</div><div class="line">        <span class="keyword">return</span> newSet;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        HashSet&lt;StoryBook&gt; s1 = <span class="keyword">new</span> HashSet&lt;StoryBook&gt;();</div><div class="line">        HashSet&lt;TechBook&gt; s2 = <span class="keyword">new</span> HashSet&lt;TechBook&gt;();</div><div class="line">        Set&lt;Book&gt; sb = merge(s1, s2); <span class="comment">// 错误</span></div><div class="line">        <span class="comment">// 需通过显式的类型参数(explicit type parameter)来告诉它要使用哪种类型</span></div><div class="line">        Set&lt;Book&gt; bs = GenericsTest.&lt;Book&gt;merge(s1,s2); <span class="comment">//OK</span></div><div class="line">        <span class="comment">// 或者</span></div><div class="line">        Set&lt;Comparable&lt;?&gt;&gt; s = GenericsTest.&lt;Comparable&lt;?&gt;&gt;merge(s1,s2);</div><div class="line">     }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面直接调用merge(s1,s2) 那行代码错误的提示信息：<br>Type mismatch: cannot convert from Set<genericstest.book&comparable<?>&gt; to Set<genericstest.book><br>这归于泛型的类型推导(type inference)，当无法推导出明确的类型时，就需要显式的描述，如上面代码中红色粗体字。</genericstest.book></genericstest.book&comparable<?></p>
-<p>后注：<br>有关于 &lt;?&gt; 与 &lt;? extends Object&gt;是否是一回事<br>今天中午发现同事桌上有本《Java编程思想》第四版，随手翻了一下，发现泛型一章的介绍中，有句描述：“UnboundedWildcards.java 展示了编译器处理List&lt;?&gt;和List&lt;? Extends Object&gt;时是不同的。”<br>这让我奇怪，查看了一下它的代码，主要因为是对于Raw类型的造型为泛型时的警告信息不同。<br>将一个Raw的ArrayList造型给 List&lt;?&gt; 没有问题，而给List&lt;? Extends Object&gt;却会有警告。</p>
-<p>在网上查了一下，发现对于&lt;?&gt;与&lt;? extends Object&gt;是否等同，是有些不同意见的。</p>
-<p><a href="http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html" target="_blank" rel="external">http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html</a></p>
-<p><a href="http://bugs.sun.com/view_bug.do?bug_id=6559175" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6559175</a></p>
-<p>这个报告里，有两段代码反映了两者的不同：<br>（1）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args)  {</div><div class="line">    Object  customer  = <span class="keyword">null</span>;</div><div class="line">    foo((List&lt;? extends String&gt;) customer ); <span class="comment">//[1]</span></div><div class="line">    foo((List&lt;? extends Object&gt;) customer ); <span class="comment">//[2] 编译有警告</span></div><div class="line">    foo((List&lt;?&gt;) customer ); <span class="comment">//[3]  编译没有警告</span></div><div class="line">}</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;?&gt; list) {</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>（2）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object o2 = <span class="keyword">new</span> List&lt;?&gt;[<span class="number">3</span>];   <span class="comment">// 编译居然OK，估计直接当作Raw处理了</span></div><div class="line">Object o3 = <span class="keyword">new</span> List&lt;? extends Object&gt;[<span class="number">3</span>]; <span class="comment">// 报错</span></div></pre></td></tr></table></figure>
-
-<p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
-<p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
-<p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
-<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
-<p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
-<p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
-<p>我们暂从语义上认为两者相等。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含HttpGet, HttpPost, HttpPut, HttpDelete等类来实现http的常用操作。 其中，HttpPost继承自HttpEntityEnclosingRequestBase，HttpEntityEnclosingRequestBase类又实现了HttpEntityEnclosingRequest接口，实现了setEntity的方法。 而HttpDelete继承自HttpRequestBase，没有实现setEntity的方法，因此无法设置HttpEntity对象。 这样解决方法就明显了，我们可以自己实现一个MyHttpDelete类，继承自HttpEntityEnclosingRequestBase，覆盖其中的getMethod方法，使其返回“DELETE”。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHttpDelete</span> <span class="keyword">extends</span> <span class="title">HttpEntityEnclosingRequestBase</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String METHOD_NAME = <span class="string">"DELETE"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> String <span class="title">getMethod</span>() {</div><div class="line">        <span class="keyword">return</span> METHOD_NAME;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> String uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(URI.create(uri));</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> URI uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(uri);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>() {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>使用delete方法时，直接可以按下面方式操作</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">DefaultHttpClient httpClient = <span class="keyword">new</span> DefaultHttpClient(); </div><div class="line"></div><div class="line">MyHttpDelete delete = <span class="keyword">new</span> MyHttpDelete(<span class="string">"http://url.com"</span>); </div><div class="line"></div><div class="line">List&lt;NameValuePair&gt; nameValuePairs = <span class="keyword">new</span> ArrayList&lt;NameValuePair&gt;(); </div><div class="line"></div><div class="line">delete.setEntity(<span class="keyword">new</span> UrlEncodedFormEntity(nameValuePairs)); </div><div class="line"></div><div class="line">HttpResponse response = httpClient.execute(delete);</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -856,7 +827,7 @@ Stateless 无状态
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>12</small></li>
+    <li><a href="/tags/Java/">Java</a><small>13</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -873,6 +844,8 @@ Stateless 无状态
     <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -915,6 +888,14 @@ Stateless 无状态
       </li>
     
       <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
       </li>
     
@@ -931,6 +912,10 @@ Stateless 无状态
       </li>
     
       <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -944,18 +929,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/23/qiu/">秋</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
   </ul>

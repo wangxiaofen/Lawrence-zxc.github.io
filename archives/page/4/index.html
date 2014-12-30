@@ -93,6 +93,237 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-03-21T04:00:35.000Z"><a href="/2014/03/21/nginx-gzip/">3月 21 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<p>网站的访问量如果越来越高，那么就需要考虑带宽的问题了，因为流量会提升一些费用成本，没有经过压缩的文本也会影响网页的加载速度。当然我目前对这个考虑还是远了，因为流量对我来说还没感受到那么大的问题。只是考虑用户提升访问速度。</p>
+<p>当然了gzip压缩在当前HTTP传输来说还是主流的，所有的服务器应该都能启用gzip压缩才对。</p>
+<p>对于Nginx来启用gzip很简单。打开nginx.conf配置进行编辑：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="title">http</span> {   <span class="comment">#在http里面进行设置</span></div><div class="line"> </div><div class="line">    <span class="comment">#开启gzip压缩</span></div><div class="line">    <span class="title">gzip</span>  <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment">#启用gzip压缩最小长度必须大于1kB，否则不启用压缩</span></div><div class="line">    <span class="title">gzip_min_length</span> <span class="number">1k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的缓冲区</span></div><div class="line">    <span class="title">gzip_buffers</span> <span class="number">4</span> <span class="number">16k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的等级，0-9之间，数字越大，压缩率越高，但是cpu消耗也大。</span></div><div class="line">    <span class="title">gzip_comp_level</span> <span class="number">9</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 启用gzip的文件类型，一般text、css、json、javascript、xml进行压缩，image最好不要压缩了吧？</span></div><div class="line">    <span class="title">gzip_types</span> text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;</div><div class="line"> </div><div class="line">    <span class="comment"># 和http头有关系，加个vary头，给代理服务器用的，有的浏览器支持压缩，有的不支持。</span></div><div class="line">    <span class="comment"># 因此，为避免浪费不支持的也压缩，需要根据客户端的HTTP头来判断，是否需要压缩。</span></div><div class="line">    <span class="title">gzip_vary</span> <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 好吧，IE6对gzip压缩不太好，但是应该要淘汰IE6了吧，你的受众是IE6用户，那么你也太没有魅力了。</span></div><div class="line">    <span class="comment">#gzip_disable "MSIE [1-6]\.";</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>推荐一个：<a href="http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google" target="_blank" rel="external">http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google</a> page speed。<br>还有一个，阿里测<a href="http://alibench.com/" target="_blank" rel="external">http://alibench.com/</a></p>
+<h4 id="参考文章">参考文章</h4>
+<ul>
+<li><a href="http://blog.csdn.net/xzknet/article/details/7416148" target="_blank" rel="external">http://blog.csdn.net/xzknet/article/details/7416148</a></li>
+<li><a href="http://www.veryhuo.com/a/view/51706.html" target="_blank" rel="external">http://www.veryhuo.com/a/view/51706.html</a></li>
+<li><a href="http://willko.iteye.com/blog/667091" target="_blank" rel="external">http://willko.iteye.com/blog/667091</a></li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-02-11T08:09:32.000Z"><a href="/2014/02/11/git-help/">2月 11 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/02/11/git-help/">git使用帮助</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="使用http协议">使用http协议</h3>
+<p>对于较新版本的git，比如1.7.9以上，我们推荐使用http协议来访问git仓库，不需配置ssh key，使用注册用户名和密码就可以访问。</p>
+<p>使用git credential-cache来记住用户名和密码：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config <span class="subst">--</span><span class="built_in">global</span> credential<span class="built_in">.</span>helper <span class="keyword">cache</span></div></pre></td></tr></table></figure>
+
+<p>git<br>如果需要设置cache的时间，设置记住用户名和密码的时间(秒为单位)：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> credential.helper <span class="string">'cache --timeout=10000000'</span></div></pre></td></tr></table></figure>
+
+<p>git默认的postbuffer是比较小的，在push一个大的commit会出现错误，设置postbuffer，相关链接看<a href="http://stackoverflow.com/questions/2702731/git-fails-when-pushing-commit-to-github" target="_blank" rel="external">这里</a>：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> http.postBuffer <span class="number">524288000</span></div></pre></td></tr></table></figure>
+
+<p>在使用多个账户的情况下，为了避免混淆用户，可以使用@yourname来强制指定，比如：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git clone http<span class="variable">s:</span>//Lawrence-zxc@github.<span class="keyword">com</span>/Lawrence-zxc/github.git</div></pre></td></tr></table></figure>
+
+<h3 id="管理ssh_key">管理ssh key</h3>
+<p>ssh 公钥密钥对是一切安全的基础，就像第一道防盗门。Github出于安全的考虑，一概通过ssh协议交换数据，保护好ssh密钥是一个程序员应该有的安全意识，希望您通过<code>1password</code>之类的工具妥善保存，此外最好能定期的更新密钥。</p>
+<p>多人共用密钥是严格不支持的！</p>
+<p>如果您第一次使用，按照以下的方式配置ssh密码：</p>
+<p>快速入门：</p>
+<p>如果您使用任何类unix系统，第一次配置 ssh 公钥密钥，请按照步骤，复制灰色背景字符，在终端执行命令，和编辑文件</p>
+<p>如果不存在<code>~/.ssh/id_rsa</code>，执行以下命令，生成 ssh 密钥</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span></div><div class="line">cat ~/.ssh/id_rsa.pub</div></pre></td></tr></table></figure>
+
+<p>点击ssh public key 管理，输入标识保存公钥</p>
+<p>[可选]如果你要生成特定 ssh 密钥只用于github（是第一步的另外可选方案）</p>
+<p>执行以下命令，生成 ssh 密钥, 保存在 <code>~/.ssh/github.com_rsa</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span> <span class="operator">-f</span> ~/.ssh/github.com_rsa;</div></pre></td></tr></table></figure>
+
+<p>编辑 ssh 客户端配置文件 <code>~/.ssh/config</code>，使用您熟悉的编辑器，在后面添加</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Host github.com</div><div class="line"> User </div><div class="line"> IdentityFile ~/.ssh/github.com_rsa</div><div class="line"> PreferredAuthentications publickey</div></pre></td></tr></table></figure>
+
+
+<p>查看 ssh 公钥，使用 cat 命令，或者用编辑器打开，请复制 ssh 公钥的文本内容</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat ~/.ssh/github.com_rsa.pub</div></pre></td></tr></table></figure>
+
+<p>点击ssh public key 管理，输入标识保存公钥</p>
+<p>ssh 公钥配置之后就可以长期使用了，请保护好密钥。点击创建仓库，详细仓库说明有助于推广</p>
+<p>你已经可以使用 github 来托管代码了，以下是示范的操作，详细信息请开始git的学习</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your_name/repo_name</div><div class="line"><span class="variable">$ </span>cd repo_name;</div><div class="line"><span class="variable">$ </span>vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span> .</div><div class="line"><span class="variable">$ </span>git push -u origin master</div></pre></td></tr></table></figure>
+
+
+<p>配置 user.name, user.mail ，两者对后台统计，信息push有重要的作用，选择您注册的用户名和email按照下面配置</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ git config --global <span class="literal">user</span>.name <span class="string">"your_name"</span></div><div class="line">$ git config --global <span class="literal">user</span>.email <span class="string">"your_email"</span></div></pre></td></tr></table></figure>
+
+
+<p>如果不想 global，在每个仓库里面执行 git config ，去掉 —global 参数</p>
+<h3 id="管理仓库">管理仓库</h3>
+<p>仓库是开发的基础容器，一切活动都源于仓库。如果您想让别人知道您的仓库，最好是<br>良好的命名，简单概要。<br>适当的注释，让人知道您的仓库做什么的，解决什么问题。<br>最重要的当然是不断的开发成为优秀的项目。<br>仓库除了代码之外，其他的数据都是被严格限制的，您务必理解这一点。</p>
+<p>clone·push·pull代码</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your/repo</div><div class="line"><span class="variable">$ </span>cd repo; vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span></div><div class="line"><span class="variable">$ </span>git push -u origin master</div><div class="line"><span class="variable">$ </span>git pull</div></pre></td></tr></table></figure>
+
+<h3 id="git外部学习资源">git外部学习资源</h3>
+<ul>
+<li>Git Official Site<a href="http://book.git-scm.com/" target="_blank" rel="external">http://book.git-scm.com/</a></li>
+<li>Git Community Book 中文版<a href="http://gitbook.liuhui998.com/index.html" target="_blank" rel="external">http://gitbook.liuhui998.com/index.html</a></li>
+<li>Pro Git 简体中文版<a href="http://git.oschina.net/progit/" target="_blank" rel="external">http://git.oschina.net/progit/</a></li>
+<li>Git权威指南 相关blog<a href="http://www.worldhello.net/" target="_blank" rel="external">http://www.worldhello.net/</a></li>
+<li>Markdown 语法<a href="http://qingbo.net/picky/502-markdown-syntax.html" target="_blank" rel="external">http://qingbo.net/picky/502-markdown-syntax.html</a></li>
+<li>假如你没什么事情可以做了，还可以看看<a href="http://blog.gitshell.com/" target="_blank" rel="external">http://blog.gitshell.com/</a></li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-01-16T09:05:42.000Z"><a href="/2014/01/16/java-object-init/">1月 16 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/01/16/java-object-init/">java对象初始化顺序问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>今天我在Dzone阅读了一篇关于<a href="http://java.dzone.com/articles/java-object-initialization?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+javalobby%2Ffrontpage+%28Javalobby+%2F+Java+Zone%29&amp;utm_content=" target="_blank" rel="external">java对象实例初始化顺序</a>的有趣文章。说它有趣，是因为作者使用了一种并不太推荐的编码风格，只有用这种编码风格才能触发这个极为少见的 Java object initialization order 问题。</p>
+<p>其实java对象初始化顺序算是一个比较基础的java知识点。但是网上的文章多半描述不清，使用上一不小心就容易出问题。<br>所以在本文中，我想结合JLS和自己的理解，举例剖析问题的所在。</p>
+<p>OK，我们先来看个模仿Dzone作者原意的简单例子:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zxc.tmp;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">extends</span> <span class="title">B</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> a = <span class="number">100</span>;</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="title">A</span>() {</div><div class="line">		<span class="keyword">super</span>();</div><div class="line">		System.out.println(a);</div><div class="line">		a = <span class="number">200</span>;</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">		System.out.println(<span class="keyword">new</span> A().a);</div><div class="line">	}</div><div class="line">}</div><div class="line"></div><div class="line">class B {</div><div class="line">	<span class="keyword">public</span> <span class="title">B</span>() {</div><div class="line">		System.out.println(((A) <span class="keyword">this</span>).a);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>例子代码很简单，不多做解释了，直接看输出:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="number">0</span></div><div class="line"><span class="number">100</span></div><div class="line"><span class="number">200</span></div></pre></td></tr></table></figure>
+
+<p>对照这个输出，我们来详细分析一下对象的初始化顺序：<br>1，为A类分配内存空间，初始化所有成员变量为默认值，包括primitive类型(int=0,boolean=false,…)和Reference类型。<br>2，调用A类构造函数。<br>3，调用B类构造函数。<br>4，调用Object空构造函数。（java编译器会默认加此构造函数，且object构造函数是个空函数，所以立即返回）<br>5，<strong>初始化B类成员变量，因为B类没有成员变量，跳过。</strong><br>6，执行sysout输出子类A的成员变量小a。// 此时为0<br>7，<strong>初始化A类成员变量，将A类成员变量小a赋值100。</strong><br>8，执行sysout输出当前A类的成员变量小a。// 此时为100<br>9，赋值当前A类的成员变量小a为200。<br>10，main函数中执行sysout，输出A类实例的成员变量小a。// 此时为200</p>
+<p>加粗的那两行描述是重点，结论是<strong>成员变量初始化是在父类构造函数调用完后，在此之前，成员变量的值均是默认值。</strong><br>Dzone作者就是栽在这里，没有仔细分析成员变量初始化在对象初始化中的顺序，造成了程序未按原意执行。<br>其实这类问题，熟悉原理是一方面，本质上只要不在构造函数中插入过多的业务逻辑，出问题的概率也会低很多。</p>
+<p>最后，我们再来看看JLS中给出的Java类对象初始化顺序定义，这是一个带条件分支的流程描述：</p>
+<ul>
+<li>Assign the arguments for the constructor to newly created parameter variables for this constructor invocation.</li>
+<li>If this constructor begins with an explicit constructor invocation of another constructor in the same class (using this), then evaluate the arguments and process that constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason; otherwise, continue with step 5.</li>
+<li>This constructor does not begin with an explicit constructor invocation of another constructor in the same class (using this). If this constructor is for a class other than Object, then this constructor will begin with an explicit or implicit invocation of a superclass constructor (using super). Evaluate the arguments and process that superclass constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, continue with step 4.</li>
+<li>Execute the instance initializers and instance variable initializers for this class, assigning the values of instance variable initializers to the corresponding instance variables, in the left-to-right order in which they appear textually in the source code for the class. If execution of any of these initializers results in an exception, then no further initializers are processed and this procedure completes abruptly with that same exception. Otherwise, continue with step 5. (In some early implementations, the compiler incorrectly omitted the code to initialize a field if the field initializer expression was a constant expression whose value was equal to the default initialization value for its type.)</li>
+<li>Execute the rest of the body of this constructor. If that execution completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, this procedure completes normally.</li>
+</ul>
+<p>引用自 <a href="http://java.sun.com/docs/books/jls/second_edition/html/execution.doc.html#44670" target="_blank" rel="external">section 12.5 of the Java Language Spec</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2013-11-13T02:15:01.000Z"><a href="/2013/11/13/hello-world/">11月 13 2013</a></time>
       
       
@@ -191,7 +422,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>12</small></li>
+    <li><a href="/tags/Java/">Java</a><small>13</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -208,6 +439,8 @@
     <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -250,6 +483,14 @@
       </li>
     
       <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
       </li>
     
@@ -266,6 +507,10 @@
       </li>
     
       <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -279,18 +524,6 @@
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/23/qiu/">秋</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
   </ul>

@@ -1,0 +1,387 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Openfire服务端错误解决 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Openfire服务端错误解决"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-20T04:24:18.000Z"><a href="/2014/11/20/openfire/">11月 20 2014</a></time>
+      
+      
+  
+    <h1 class="title">Openfire服务端错误解决</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近发现Openfire服务端隔段时间就会报这样的错：<br><img src="/img/openfire1.png"><br>有时候是这样：<br><img src="/img/openfire2.png"></p>
+<p>决定处理一下这个“黑盒”，从异常信息看，这个异常有关socket连接超时或者是连接被重置。查了一下相关问题出现原因：（引）</p>
+<p>常出现的Connection reset by peer: 原因可能是多方面的，不过更常见的原因是:</p>
+<p>服务器的并发连接数超过了其承载量，服务器会将其中一些连接Down掉；<br>客户端断掉连接，而服务器还在给客户端发送数据；<br>该异常在客户端和服务器端均有可能发生，引起该异常的原因有两个，一个是如果一端的Socket被关闭（或主动关闭或者因为异常退出而引起的关闭），另一端仍发送数据，发送的第一个数据包引发该异常(Connect reset by peer)。另一个是一端退出，但退出时并未关闭该连接，另一端如果在从连接中读数据则抛出该异常（Connection reset）。简单的说就是由连接断开后的读和写操作引起的。</p>
+<p>如果频繁出现，就表示很多客户端连接到Apache服务器的响应时间太长了，可能是网络的问题或者服务器性能问题。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Connection timed out:</div></pre></td></tr></table></figure>
+
+<p>连接超时，其实还是找不到已连接的客户端。可能出现原因：客户端网络问题导致连接没断开。</p>
+<p>由于Openfire是基于mina做的socket连接，mina本身封装了socket的各种异常，只剩下ProtocolCodecException、ProtocolEncoderException、ProtocolDecoderException、RecoverableProtocolDecoderException 四种异常，其他都作为运行时异常抛出。</p>
+<p>Openfire的连接管理类是ConnectionHandler，继承了mina的IoHandlerAdapter。通过exceptionCaught方法实现连接过程中的异常处理。</p>
+<p>源码如下(Openfire 3.7.2版本)：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exceptionCaught</span>(IoSession session, Throwable cause) <span class="keyword">throws</span> Exception {</div><div class="line">  	<span class="keyword">if</span> (cause <span class="keyword">instanceof</span> IOException) {</div><div class="line">      	<span class="comment">// TODO Verify if there were packets pending to be sent and decide what to do with them</span></div><div class="line">      	Log.info(<span class="string">"ConnectionHandler reports IOException for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> <span class="keyword">if</span> (cause <span class="keyword">instanceof</span> ProtocolDecoderException) {</div><div class="line">      	Log.warn(<span class="string">"Closing session due to exception: "</span> + session, cause);</div><div class="line">      </div><div class="line">      	<span class="comment">// PIO-524: Determine stream:error message.</span></div><div class="line">      	<span class="keyword">final</span> StreamError error;</div><div class="line">      	<span class="keyword">if</span> (cause.getCause() != <span class="keyword">null</span> && cause.getCause() <span class="keyword">instanceof</span> XMLNotWellFormedException) {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.xml_not_well_formed);</div><div class="line">      	} <span class="keyword">else</span> {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.internal_server_error);</div><div class="line">      	}</div><div class="line">      </div><div class="line">      	<span class="keyword">final</span> Connection connection = (Connection) session.getAttribute(CONNECTION);</div><div class="line">      	connection.deliverRawText(error.toXML());</div><div class="line">      	session.close();</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> {</div><div class="line">      	Log.error(<span class="string">"ConnectionHandler reports unexpected exception for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>可以看出，openfire本身没有处理IO异常，只是打了一下log。这会导致断开的链接发生没断干净的情况。这种情况下面再讨论。</p>
+<p>编写网络程序时需要注意的问题:（引）</p>
+<p>是要正确区分长、短连接。所谓的长连接是指一经建立就永久保持。短连接的情况是，准备数据—&gt;建立连接—&gt;发送数据—&gt;关闭连接。很多的程序员写了多年的网络程序，居然不知道什么是长连接，什么是短连接。</p>
+<p>是对长连接的维护。所谓维护包括两个方面，首先是检测对方的主动断连（即调用 Socket的close方法），其次是检测对方的宕机、异常退出及网络不通。这是一个健壮的通信程序必须具备的。检测对方的主动断连很简单，主要一方主动断连，另一方如果在进行读操作，则此时的返回值只-1，一旦检测到对方断连，则应该主动关闭本端的连接（调用Socket的close方法）。而检测对方的宕机、异常退出及网络不通，常用方法是用“心跳”，也就是双方周期性的发送数据给对方，同时也从对方接收“心跳”，如果连续几个周期都没有收到对方心跳，则可以判断对方宕机、异常退出或者网络不通，此时也需要主动关闭本端连接，如果是客户端可在延迟一定时间后重新发起连接。虽然Socket有一个keep alive选项来维护连接，如果用该选项，一般需要两个小时才能发现对方的宕机、异常退出及网络不通。</p>
+<p>是处理效率问题。不管是客户端还是服务器，如果是长连接一个程序至少需要两个线程，一个用于接收数据，一个用于发送心跳，写数据不需要专门的线程，当然另外还需要一类线程（俗称Worker线程）用于进行消息的处理，也就是说接收线程仅仅负责接收数据，然后再分发给Worker进行数据的处理。如果是短连接，则不需要发送心跳的线程，如果是服务器还需要一个专门的线程负责进行连接请求的监听。这些是一个通信程序的整体要求，具体到你的程序中，就看你如何对程序进行优化了。</p>
+<p>openfire自带了心跳机制，是通过在服务端设置Client Connections –&gt; Idle Connections Policy中的：</p>
+<p>Disconnect  client after they have been idle for [<em>*</em>] seconds<br>mina框架提供了空闲检测功能，这项功能可检测客户端口建立了TCP/IP连接、却不发送任何消息的情况。</p>
+<p>当我们设置了选项时长，openfire会调用mina的session.setIdleTime()方法，在客户端口连接经过指定时长未发送任何消息的情况下触发sessionIdle事件，由sessionIdle()方法处理。</p>
+<p>Openfire can send an XMPP Ping request to clients that are idle, before they are disconnected. Clients must respond to such a request, which allows Openfire to determine if the client connection has indeed been lost. The XMPP specification requires all clients to respond to request. If a client does not support the XMPP Ping request, it must return an error (which in itself is a response too).<br>选项中 Send an XMPP Ping request to idle clients对ConnectionHandler进行了再一次封装，在第一次触发sessionIdle时发送一次ping 消息，迫使客户端进行响应。</p>
+<p>在ConnectionHandler 的sessionIdle()方法中判断当前的idle次数大于1次时将关闭客户端连接。我们设置了idle Time 之后这个idle的检测发生在达到一半时间和达到指定时间，每次检测都会将idle 的次数加1 。 例如我们设置了120s，则mina会在这个时长的一半时间内，60s，发送一个ping包，等待客户端响应，然后在到达指定时长后，客户端仍未发送消息时再发一次。如果两次都没有收到回复，则认为连接断掉了，触发sessionIdle()事件，关闭连接。</p>
+<p>但是两次心跳中间的消息包就会丢失，并且不会抛出异常，因此选择通过消息回执的方式，保证消息的稳定性XEP-0184。</p>
+<p>考虑解决方案：</p>
+<p>在发生Exception后主动关闭连接。<br>心跳机制的设置与优化<br>由于服务端没有断开异常连接，会产生大量的CLOSE_WAIT和FIN_WAIT2状态。可以通过</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -na|grep <span class="number">9090</span>|grep FIN_WAIT2|wc <span class="operator">-l</span></div></pre></td></tr></table></figure>
+
+<p>或者：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -n | awk <span class="string">'/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'</span></div></pre></td></tr></table></figure>
+
+<p>命令查看。</p>
+<p>返回结果：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">TIME_WAIT <span class="number">1</span></div><div class="line">CLOSE_WAIT <span class="number">87</span></div><div class="line">FIN_WAIT1 <span class="number">4</span></div><div class="line">ESTABLISHED <span class="number">377</span></div><div class="line">FIN_WAIT2 <span class="number">3305</span></div></pre></td></tr></table></figure>
+
+<p>解决方案：<br>为 FIN_WAIT2 增加超时机制<br>CLOSE_WAIT缩短keepAlive时间<br>修改linux系统内核参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/sysctl.conf</div></pre></td></tr></table></figure>
+
+<p>加入以下数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">net.ipv4.tcp_keepalive_time = <span class="number">30</span></div><div class="line">net.ipv4.tcp_keepalive_probes = <span class="number">2</span></div><div class="line">net.ipv4.tcp_keepalive_intvl = <span class="number">2</span></div><div class="line">net.ipv4.tcp_fin_timeout = <span class="number">30</span></div></pre></td></tr></table></figure>
+
+<p>设置fin的连接超时时间为30s</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2014/11/25/xushen/">徐神的诗</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2014/11/20/openfire/">
+                  http://lawrence-zxc.github.io/2014/11/20/openfire/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2014/11/25/xushen/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2014/11/12/ibatis1/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2014/11/20/openfire/" data-title="Openfire服务端错误解决" data-url="http://lawrence-zxc.github.io/2014/11/20/openfire/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/前端/">前端</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>2</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/理财/">理财</a><small>1</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>2</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2014 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+</body>
+
+</html>

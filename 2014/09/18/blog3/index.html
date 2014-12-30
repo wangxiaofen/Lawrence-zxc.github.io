@@ -108,10 +108,10 @@
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
 
 <p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd_40x40.jpg</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
 
 <p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">location ~ <span class="string">'/images/([0-9a-z]+)_([0-9]+)x([0-9]+).jpg$'</span> {</div><div class="line">    root /home/images;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> =  <span class="string">'/home/images'</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> = ngx.arg[<span class="number">1</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> = ngx.arg[<span class="number">2</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> = ngx.arg[<span class="number">3</span>];</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName</span>.jpg</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> = <span class="variable">$image_root</span>/<span class="variable">$fileName_</span><span class="variable">$widthx</span><span class="variable">$height</span>.jpg</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x"</div><div class="line">                            ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">         ';</div><div class="line"> }</div></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
 
@@ -239,7 +239,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>12</small></li>
+    <li><a href="/tags/Java/">Java</a><small>13</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -256,6 +256,8 @@ var duoshuoQuery = {short_name:"zxc337"};
     <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
@@ -298,6 +300,14 @@ var duoshuoQuery = {short_name:"zxc337"};
       </li>
     
       <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
       </li>
     
@@ -314,6 +324,10 @@ var duoshuoQuery = {short_name:"zxc337"};
       </li>
     
       <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
@@ -327,18 +341,6 @@ var duoshuoQuery = {short_name:"zxc337"};
     
       <li>
         <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/23/qiu/">秋</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a>
       </li>
     
   </ul>
