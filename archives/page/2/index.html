@@ -93,6 +93,302 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T03:38:10.000Z"><a href="/2014/11/10/xmpp/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/xmpp/">xmpp通信过程分析</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="XMPP消息格式">XMPP消息格式</h2>
+<p>Jabber/XMPP系统使用XML流在不同实体之间相互传输数据。在两个实体的连接期间，XML流将从一个实体传送到另一个实体。在实体间，有三个顶层的XML元素:，和。每一个都包含属性和子节点。下面将分别描述这些元素。</p>
+<p>1)消息(message)元素：</p>
+<p>一个即时消息系统最基本的功能就是能够在两个用户之间实时交换消息，元素就提供了这个功能。每条消息都有一个或多个属性和子元素。属性“from”和“to”分别表示了消息发送者和接收者的地址。也可以包含一个“type”属性，这给接收者一个提示，这个消息是什么样的消息。表3-1给出了“type”属性的可能取值。中也可以包含“id”属性，用来唯一的标识一个输出消息的响应。</p>
+<p>2)状态(presence)元素:</p>
+<p>元素用来传递一个用户的存在状态的感知信息。用户可以是“available”，要么是“unavailable”，“Hide”等。当用户连接到即时消息服务器后，好友发给他的消息就立即被传递。如果用户没有连接到服务器，好友发给他的消息将被服务器存储起来直到用户连接到服务器。用户通过即时消息客户端自己控制可用性。但是，如果用户断开了同服务器的连接，服务器将发送给订阅了这个用户的存在信息的用户通知他们用户已经不可用。还包含了两个子元素：和。包含了一个对的文本描述。</p>
+<p>3)IQ(Info&lt;Query)元素</p>
+<p>IQ元素是Jabber/XMPP消息协议的第三个顶层元素。IQ代表”Info/Query”，用来发送和获取实体之间的信息。IQ消息是通过“请求/响应”机制在实体间进行交换的。IQ元素用于不同的目的，它们之间通过不同的命名空间来加以区分。在Jabber/XMPP消息协议里有许多的命名空间，但最常用的命名空间是：”jabber:iq:register”,”jabber:iq:auth”,”jabber:iq:roster”。</p>
+<p>上面描述了Jabber协议的三个顶层节点。通过这种格式Jabber消息不仅可以是简单的文本（text），而且可以携带复杂的数据和各种格式的文件，也就是说Jabber不仅可以用在人与人之间的交流，而且可以实现软件与软件或软件与人之间的交流。Jabber的这种功能大大扩展了即时通信的应用范围。</p>
+<h2 id="XMPP通信过程">XMPP通信过程</h2>
+<p>XMPP被设计为能够异步并能快速交换短文的协议，为此客户端和服务器之间存在两条XML流，用于异步通信，流传输的是XML文档。TCP是XMPP的默认承载协议，在客户端到服务器的通信模型下，需要一条TCP链路；在服务器到服务器的通信模式下，需要两条TCP链路以传输两个对端数据。</p>
+<p>XMPP流以<stream>标记开始，以</stream>结束。XMPP流可以视为一个well-form的XML文档，每次传输的是文档的片段，而片段则是well-form的XML标签。</p>
+<p>stream标记的属性如下：<br>to只能用于从客户端到服务器的XML流中。<br>from只能用于从服务器到客户端的XML流中。<br>id只能用于从接收实体到发送实体的XML流中，id必须唯一，用于标记会话。<br>xml:lang只能用于发起方，用于约定语言。如发起方没有携带xml:lang属性，接收方应使用默认语言。<br>version至少在“1.0”以上。</p>
+<p>可以看到客户端和服务器双方都以<stream>标记开始会话，即双方都在传输一个完整的XML文档。以<stream>发起会话后，双方建立TLS安全链路，然后用SASL（稍后说明）认证对方身份，最后绑定资源并开始传输消息报文。</stream></stream></p>
+<p>TLS是SSL的后继者，TLS1.0和SSL3.0非常相似。TLS建立在传输层上，通信双方先用不对称加密算法传输对称加密算法的密钥，然后用对称加密算法加密传输内容。  </p>
+<h3 id="TLS">TLS</h3>
+<p>第1步: 客户端发起连接:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第2步: 服务器向客户端返回一个<stream>标记: </stream></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">id</span>=<span class="value">'c2s_123'</span> <span class="attribute">from</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第3步: 服务器向客户端发送STARTTLS扩展，并携带认证机制和流特性:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>&gt;</span><span class="tag">&lt;<span class="title">required</span>/&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第4步: 客户端发送STARTTLS给服务器:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第5步: 服务器提示客户端可以继续:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">proceed</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第6步: 客户端和服务器尝试在已有的TCP链路上完成TLS握手过程。<br>第7步: 如果TLS握手成功，客户端向服务器发起一个新流:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>第8步: 服务器以一个stream头响应，同时携带可能的流特性: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"3f857b69"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第9步: 客户端继续SASL握手。</p>
+<h3 id="SASL(Simple_Authentication_and_Security_Layer_protocol)">SASL(Simple Authentication and Security Layer protocol)</h3>
+<p>第1步: 客户端向服务器发起流请求: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>第2步: 服务器向客户端响应stream标记: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"9a7eced8"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第3步: 服务器向客户端提示可用的认证方法: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第4步: 客户端选择一种认证方法:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span> <span class="attribute">mechanism</span>=<span class="value">'DIGEST-MD5'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第5步: 服务器发送以BASE64编码的验证码给客户端:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cmVhbG09InNvbWVyZWFsbSIsbm9uY2U9Ik9BNk1HOXRFUUdtMmhoIixxb3A9ImF1dGgiLGNoYXJzZXQ9dXRmLTgsYWxnb3JpdGhtPW1kNS1zZXNzCg==<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line">验证码解码后如下:</div><div class="line">realm="somerealm",nonce="OA6MG9tEQGm2hh",qop="auth",charset=utf-8,algorithm=md5-sess</div></pre></td></tr></table></figure>
+
+<p>第6步: 客户端发送以BASE64编码的响应码:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>dXNlcm5hbWU9InNvbWVub2RlIixyZWFsbT0ic29tZXJlYWxtIixub25jZT0iT0E2TUc5dEVRR20yaGgiLGNub25jZT0iT0E2TUhYaDZWcVRyUmsiLG5jPTAwMDAwMDAxLHFvcD1hdXRoLGRpZ2VzdC11cmk9InhtcHAvZXhhbXBsZS5jb20iLHJlc3BvbnNlPWQzODhkYWQ5MGQ0YmJkNzYwYTE1MjMyMWYyMTQzYWY3LGNoYXJzZXQ9dXRmLTgK<span class="tag">&lt;/<span class="title">response</span>&gt;</span></div><div class="line"></div><div class="line">解码后的响应码如下:</div><div class="line">username="somenode",realm="somerealm",nonce="OA6MG9tEQGm2hh",cnonce="OA6MHXh6VqTrRk",nc=00000001,qop=auth,digest-uri="xmpp/example.com",response=d388dad90d4bbd760a152321f2143af7,charset=utf-8</div></pre></td></tr></table></figure>
+
+<p>第7步: 服务器发送另一个以BASE64编码的验证码给客户端: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cnNwYXV0aD1lYTQwZjYwMzM1YzQyN2I1NTI3Yjg0ZGJhYmNkZmZmZAo=<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line"> 解码后的验证码:</div><div class="line">   rspauth=ea40f60335c427b5527b84dbabcdfffd</div></pre></td></tr></table></figure>
+
+<p>第8步: 客户端响应验证码: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第9步: 服务器提示客户端认证通过:  </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">success</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>第10步: 客户端向服务器发起新连接: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">to</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>第11步: 服务器响应一个stream头，可能携带特性:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">id</span>=<span class="value">'c2s_345'</span></div><div class="line">    <span class="attribute">from</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;    <span class="tag">&lt;<span class="title">stream:features</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>/&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">session</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-session'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<h3 id="绑定资源">绑定资源</h3>
+<p>客户端登陆<br>SENT:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"1a58416"</span> <span class="attribute">type</span>=<span class="value">"get"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>RECV:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'5573507c'</span> <span class="attribute">type</span>=<span class="value">'result'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>/&gt;</span><span class="tag">&lt;<span class="title">password</span>/&gt;</span><span class="tag">&lt;<span class="title">resource</span>/&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>注意中间的ID，这个ID是服务器端返回给客户端的验证信息，验证信息一般是以该ID号+用户密码通过SHA1(RFC3174)算法进行操作的。也就是说客户端得到该ID和密码经过SHA1算法加密后返回给服务器。</p>
+<p>SENT(客户端提交字段内容进行验证):<br>文本格式，非加密模式</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">query</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>加密模式</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>javaScript<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line">或者</div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>这个digest就是上面经过SHA1算法得出的结果字段;<br>如果客户端发送的字段包括了用户名和IQ-GET的字段，服务器不应该返回错误消息（因为需要服务器判断当前用户名是否在使用），如果服务器不支持可插入的简单认证及密码模块，那么必须返回一个<service-unavailable>的错误;如果客户端企图使用SASL认证但是失败，服务器必须返回<policy-violation>错误信息<br>在认证过程中，jabber:iq:auth命名、用户名和资源是必须要求客户端提供的，而服务器返回的XML流中也必须提供<username>和<resource>这2个元素。</resource></username></policy-violation></service-unavailable></p>
+<p>RECV: </p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'jcl_104'</span> <span class="attribute">type</span>=<span class="value">'result'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">presence</span>&gt;</span><span class="tag">&lt;<span class="title">c</span> <span class="attribute">node</span>=<span class="value">"http://exodus.jabberstudio.org/caps"</span> <span class="attribute">ver</span>=<span class="value">"0.9.1.0"</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/protocol/caps"</span>/&gt;</span><span class="tag">&lt;<span class="title">status</span>&gt;</span>Available<span class="tag">&lt;/<span class="title">status</span>&gt;</span><span class="tag">&lt;<span class="title">priority</span>&gt;</span>1<span class="tag">&lt;/<span class="title">priority</span>&gt;</span><span class="tag">&lt;/<span class="title">presence</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'1a58416'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash_as3<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">type</span>=<span class="value">"get"</span> <span class="attribute">to</span>=<span class="value">"muc.maimaijun.com"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:mucAnonyRoom'</span> <span class="attribute">actionType</span>=<span class="value">'getRoomIndex'</span>&gt;</span><span class="tag">&lt;<span class="title">item</span>&gt;</span><span class="tag">&lt;<span class="title">customerIndex</span>&gt;</span>1<span class="tag">&lt;/<span class="title">customerIndex</span>&gt;</span><span class="tag">&lt;/<span class="title">item</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>登录结果<br>成功</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>/&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 认证失败，可能是用户名密码不匹配或数字验证错误</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'401'</span> <span class="attribute">type</span>=<span class="value">'auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-authorized</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 资源冲突/错误</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'409'</span> <span class="attribute">type</span>=<span class="value">'cancel'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">conflict</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>失败 – 没有提供需要验证的字段</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'406'</span> <span class="attribute">type</span>=<span class="value">'modify'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-acceptable</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>客户端连接成功后使用iq(Info Query)查询服务器资源。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">resource</span>&gt;</span>someresource<span class="tag">&lt;/<span class="title">resource</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span>  </div><div class="line">服务器确认客户端要绑定的资源后，必须返回一个iq标签。</div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">jid</span>&gt;</span>somenode@example.com/someresource<span class="tag">&lt;/<span class="title">jid</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<h3 id="XML短语（Stanzas）">XML短语（Stanzas）</h3>
+<p>有三种短语——<message>（消息）、<presence>（在线状态）和<iq>（信息查询），三种短语都有共同属性，如下。</iq></presence></message></p>
+<ol>
+<li>Message语义<br>message短语可视为一种推送机制——某个实体向另一个实体推送信息。所有message短语必须携带to属性，以标明接收者。服务器收到message短语后，或路由或投递给接收者。</li>
+<li>Presence语义<br>presence可被视为一个基本的广播或“发布-订阅”机制，多个实体接收他们订阅的关于某个实体的信息。</li>
+<li>IQ语义<br>Info/Query，或IQ，是一种”请求-响应“机制，与HTTP类似。IQ使一个实体能够向另一个实体发起请求，请求/响应报文以id属性标示。IQ交互通常以get/result和set/result模式执行。</li>
+<li>基于XMPP的即时信使扩展<br>XMPP标准由XMPP Core(RFC3920)、XMPP IM(RFC3921)、XMPP CPIM(RFC3922)(映射XMPP到IETF的CPIM规范)、XMPP E2E(RFC3922)(端到端信号和对象加密)、XMPP URN(RFC4854)(基于XMPP扩展的Uniform Resource Name树)、XMPP ENUM(RFC4979)(在IANA注册的枚举服务)、XMPP URI(RFC5122)(对RFC4622的勘误)。本文只覆盖了XMPP Core和XMPP IM，其中XMPP IM由XMPP Core扩展而得。</li>
+</ol>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>在需要使用负载均衡的server中增加</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
+
+<p>每个设备的状态设置为:</p>
+<ul>
+<li>1.down 表示单前的server暂时不参与负载</li>
+<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
+<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
+<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
+<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
+<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
+<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
+<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
+<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>如果是jvm自身执行了System.exit比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
+
+<p>那么在跟踪的信息里，是看不到signal的:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
       
       
@@ -578,217 +874,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-01T06:55:13.000Z"><a href="/2014/10/01/aboutMe/">10月 1 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/01/aboutMe/">关于我</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<h3 id="张兄才"><em>张兄才</em></h3>
-<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
-<h3 id="技术领域"><em>技术领域</em></h3>
-<p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
-<h3 id="足迹"><em>足迹</em></h3>
-<ul>
-<li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
-<li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
-<li><img src="/img/yahoo.png">邮箱：xiongcaizhang@yahoo.com</li>
-<li><img src="/img/qq.png">QQ：407815772</li>
-<li><img src="/img/twitter.png">Twitter: <a href="http://twitter.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
-<li><img src="/img/facebook.png">Facebook: <a href="https://www.facebook.com/zxc337" target="_blank" rel="external">@Jeck Zhang</a></li>
-<li><img src="/img/quora.png">Quora: <a href="http://quora.com/Jeck-Zhang" target="_blank" rel="external">@Jeck Zhang</a></li>
-<li><img src="/img/gmail.png">Gmail: zhangxiongcai337#gmail.com(把#换成@)</li>
-<li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
-<li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
-</ul>
-<h3 id="情怀"><em>情怀</em></h3>
-<p><code>爱狗</code>、<code>完美主义</code>、<code>Apple控</code>、<code>Google控</code>、<code>旅行</code>、<code>电影</code>、<code>吃货</code>、<code>游戏</code>、<code>豆瓣</code></p>
-<h3 id="咖啡"><em>咖啡</em></h3>
-<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对『Jeck_Zhang』进行无负担小额赞助(1元即可)</p>
-<ul>
-<li><strong>支付宝帐号</strong>  407815772@qq.com</li>
-</ul>
-<ul>
-<li><strong>手机扫码</strong>  <img src="/img/zxc_Alipay.png" width="150" height="150"></li>
-</ul>
-<p><br></p>
-<h2><br></h2>
-<p><img src="/img/my-work.jpg"></p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
-<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
-<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
-<p>-集成了Lua模块的Nginx项目OpenResty</p>
-<p>-GraphicsMagick的安装和使用</p>
-<p>-具体使用方法</p>
-<p>原始图片地址：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
-
-<p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
-
-<p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -823,11 +908,11 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+    <li><a href="/tags/Java/">Java</a><small>15</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -880,6 +965,18 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <ul class="entry">
     
       <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -915,18 +1012,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
   </ul>
 </div>
 
@@ -936,7 +1021,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2014 Jeck Zhang
+  &copy; 2015 Jeck Zhang
   
 </div>
 <div class="clearfix"></div></footer>

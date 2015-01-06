@@ -93,6 +93,118 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含HttpGet, HttpPost, HttpPut, HttpDelete等类来实现http的常用操作。 其中，HttpPost继承自HttpEntityEnclosingRequestBase，HttpEntityEnclosingRequestBase类又实现了HttpEntityEnclosingRequest接口，实现了setEntity的方法。 而HttpDelete继承自HttpRequestBase，没有实现setEntity的方法，因此无法设置HttpEntity对象。 这样解决方法就明显了，我们可以自己实现一个MyHttpDelete类，继承自HttpEntityEnclosingRequestBase，覆盖其中的getMethod方法，使其返回“DELETE”。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHttpDelete</span> <span class="keyword">extends</span> <span class="title">HttpEntityEnclosingRequestBase</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String METHOD_NAME = <span class="string">"DELETE"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> String <span class="title">getMethod</span>() {</div><div class="line">        <span class="keyword">return</span> METHOD_NAME;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> String uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(URI.create(uri));</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> URI uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(uri);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>() {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用delete方法时，直接可以按下面方式操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">DefaultHttpClient httpClient = <span class="keyword">new</span> DefaultHttpClient(); </div><div class="line"></div><div class="line">MyHttpDelete delete = <span class="keyword">new</span> MyHttpDelete(<span class="string">"http://url.com"</span>); </div><div class="line"></div><div class="line">List&lt;NameValuePair&gt; nameValuePairs = <span class="keyword">new</span> ArrayList&lt;NameValuePair&gt;(); </div><div class="line"></div><div class="line">delete.setEntity(<span class="keyword">new</span> UrlEncodedFormEntity(nameValuePairs)); </div><div class="line"></div><div class="line">HttpResponse response = httpClient.execute(delete);</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-06-18T08:15:01.000Z"><a href="/2014/06/18/hello/">6月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在apache-tomcat托管的应用里如果使用了dubbo的消费端，关闭tomcat时，会无法退出进程，应用会被关闭，connector端口也关闭了，但dubbo相关的一些线程仍存在，导致java进程并不会消失。</p>
+<p>这其实是由非daemon线程引起的，jvm里当前main线程在退出时，只要存在非daemon的子线程，就不会退出jvm，哪怕这个非daemon的线程是在一个daemon线程里启动的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonTest</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">static</span> class MyThread extends Thread {</div><div class="line">        <span class="keyword">public</span> <span class="title">MyThread</span>(<span class="keyword">boolean</span> isDaemon){</div><div class="line">            <span class="keyword">this</span>.setDaemon(isDaemon);</div><div class="line">        }</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                Thread.sleep(<span class="number">1000</span>*<span class="number">10000</span>);;</div><div class="line">            } <span class="keyword">catch</span> (Exception e) {</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception{</div><div class="line">        Thread t1 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t2 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t3 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t4 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    <span class="keyword">new</span> MyThread(<span class="keyword">false</span>).start(); <span class="comment">//非daemon</span></div><div class="line">                    Thread.sleep(<span class="number">1000</span> * <span class="number">10000</span>);</div><div class="line">                } <span class="keyword">catch</span> (Exception e) {</div><div class="line">                }</div><div class="line">            }</div><div class="line">        };</div><div class="line"></div><div class="line"></div><div class="line">        t1.start();</div><div class="line">        t2.start();</div><div class="line">        t3.start();</div><div class="line">        t4.start();</div><div class="line"></div><div class="line">        Thread.sleep(<span class="number">2000</span>);</div><div class="line">        System.out.println(<span class="string">"main thread quit"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>上面启动了4个子线程，都是daemon的，其中有一个子线程又启动了一个非daemon线程，结果主线程退出时，jvm进程并不会退出，并且其他daemon线程也继续运行。</p>
+<p>Dubbo的线程都是daemon的，不过它使用的netty框架却有一个非daemon的“Hashed wheel timer”线程：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="string">"Hashed wheel timer #1"</span> #<span class="number">1582</span> prio=<span class="number">5</span> os_prio=<span class="number">0</span> tid=<span class="number">0x00002aaac5054800</span> nid=<span class="number">0x7fd3</span> waiting on condition [<span class="number">0x0000000041262000</span>]</div><div class="line">   java.lang.Thread.State: TIMED_WAITING (sleeping)</div><div class="line">    at java.lang.Thread.sleep(Native Method)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.waitForNextTick(HashedWheelTimer.java:<span class="number">459</span>)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:<span class="number">376</span>)</div><div class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</div></pre></td></tr></table></figure>
+
+<p>正是这个非daemon线程，导致tomcat的主线程退出后，jvm进程没能退出。类似的问题以前在HSF2里也存在，后来已经解决了。dubbo的这个问题可以通过kill来结束。</p>
+<p>在tomcat的脚本里，先使用正常的方式(viaport)停止tomcat，在不成功之后会尝试”kill”方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"># stop failed. Shutdown port disabled? Try a normal kill.</div><div class="line"><span class="keyword">if</span> [ $? != <span class="number">0</span> ]; then</div><div class="line">    <span class="keyword">if</span> [ ! -z <span class="string">"$CATALINA_PID"</span> ]; then</div><div class="line">      echo <span class="string">"The stop command failed. Attempting to signal the process to stop through OS signal."</span></div><div class="line">      kill -<span class="number">15</span> `cat <span class="string">"$CATALINA_PID"</span>` &gt;/dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&<span class="number">1</span></div><div class="line">    fi</div><div class="line">fi</div></pre></td></tr></table></figure>
+
+<p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
+<p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-06-15T09:06:46.000Z"><a href="/2014/06/15/java-mybatis/">6月 15 2014</a></time>
       
       
@@ -817,11 +929,11 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+    <li><a href="/tags/Java/">Java</a><small>15</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -874,6 +986,18 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -909,18 +1033,6 @@
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
   </ul>
 </div>
 
@@ -930,7 +1042,7 @@
   <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2014 Jeck Zhang
+  &copy; 2015 Jeck Zhang
   
 </div>
 <div class="clearfix"></div></footer>

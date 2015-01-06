@@ -93,6 +93,216 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2015-01-02T03:04:47.000Z"><a href="/2015/01/02/linux-shell-xml/">1月 2 2015</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在Linux下如何用<code>Shell</code>脚本读写<code>XML</code>? 现有一个config.xml</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">config</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">server-ip</span>&gt;</span>192.168.1.45<span class="tag">&lt;/<span class="title">server-ip</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">server-port</span>&gt;</span>1209<span class="tag">&lt;/<span class="title">server-port</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">repository-temp-path</span>&gt;</span>/home/john<span class="tag">&lt;/<span class="title">repository-temp-path</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">config</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>需要修改里面的<code>server-ip</code>, <code>server-port</code> 和 <code>import-path</code>,用Shell脚本的参数$1,$2,$3来写入。</p>
+<p><br></p>
+<h3 id="方法1:用sed命令实现">方法1:用sed命令实现</h3>
+<p>首先想到的就是用sed正则匹配替换实现，写了一个shell脚本，是这样的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/sh</span></div><div class="line"><span class="keyword">if</span> [ <span class="variable">$#</span> <span class="operator">-ne</span> <span class="number">3</span> ];<span class="keyword">then</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"usage: argument 1:IP_Address 2:Server_PORT 3:Temp_PATH"</span></div><div class="line"><span class="keyword">exit</span> <span class="number">1</span></div><div class="line"><span class="keyword">fi</span></div><div class="line">IP=<span class="variable">$1</span></div><div class="line">PORT=<span class="variable">$2</span></div><div class="line">DIRT=<span class="variable">$3</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Change values in config.xml..."</span></div><div class="line"></div><div class="line">sed <span class="string">"s/&lt;server-ip&gt;.*&lt;\/server-ip&gt;/&lt;server-ip&gt;<span class="variable">${IP}</span>&lt;\/server-ip&gt;/;s/&lt;server-port&gt;.*&lt;\/server-port&gt;/&lt;server-port&gt;<span class="variable">${PORT}</span>&lt;\/server-port&gt;/;s/&lt;repository-temp-path&gt;.*&lt;\/repository-temp-path&gt;/&lt;repository-temp-path&gt;<span class="variable">${DIRT}</span>&lt;\/repository-temp-path&gt;/"</span> config.xml &gt; config.xml</div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Done."</span></div></pre></td></tr></table></figure>
+
+<p>测试下来调用$ ./abc.sh 192.168.1.6 9909 \/home\/abc”是可以的，但环境变量不行，例如：$ ./abc.sh 192.168.1.6 9909 $HOME\/abc”，因为首先环境变量被解析了，所以存在反斜杠转义字符和sed替换冲突的问题。<br>用另外一个思路实现</p>
+<p><br></p>
+<h3 id="方法2:是直接输出该xml的内容，测试下来很管用，使用很方便，不存在反斜杠转义字符的问题和环境变量的问题：">方法2:是直接输出该xml的内容，测试下来很管用，使用很方便，不存在反斜杠转义字符的问题和环境变量的问题：</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/sh</span></div><div class="line"><span class="keyword">if</span> [ <span class="variable">$#</span> <span class="operator">-ne</span> <span class="number">3</span> ];<span class="keyword">then</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"usage: argument 1:IP_Address 2:Server_PORT 3:Temp_PATH"</span></div><div class="line"><span class="keyword">exit</span> <span class="number">1</span></div><div class="line"><span class="keyword">fi</span></div><div class="line">IP=<span class="variable">$1</span></div><div class="line">PORT=<span class="variable">$2</span></div><div class="line">DIRT=<span class="variable">$3</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Change values in config.xml..."</span></div><div class="line"></div><div class="line">cat &lt;&lt;EOF &gt;config.xml</div><div class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span>?&gt;</div><div class="line">&lt;config&gt;</div><div class="line">   &lt;server-ip&gt;<span class="variable">${IP}</span>&lt;/server-ip&gt;</div><div class="line">   &lt;server-port&gt;<span class="variable">${PORT}</span>&lt;/server-port&gt;</div><div class="line">   &lt;repository-temp-path&gt;<span class="variable">${DIRT}</span>&lt;/repository-temp-path&gt;</div><div class="line">&lt;/config&gt;</div><div class="line">EOF  </div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Done."</span></div></pre></td></tr></table></figure>
+
+<p><br></p>
+<h3 id="方法3：用XMLStarlet">方法3：用XMLStarlet</h3>
+<p>XML + shell = XMLStarlet</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ xmlstarlet ed -u /config/server-ip -v <span class="number">192.168</span>.<span class="number">1.6</span> -u /config/server-port -v <span class="number">9909</span> -u /config/repository-temp-path -v /home/bbb input.xml</div><div class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span>?&gt;</div><div class="line">&lt;config&gt;</div><div class="line">  &lt;server-ip&gt;<span class="number">192.168</span>.<span class="number">1.6</span>&lt;/server-ip&gt;</div><div class="line">  &lt;server-port&gt;<span class="number">9909</span>&lt;/server-port&gt;</div><div class="line">  &lt;repository-temp-path&gt;/home/bbb&lt;/repository-temp-path&gt;</div><div class="line">&lt;/config&gt;</div></pre></td></tr></table></figure>
+
+<p><br></p>
+<h3 id="方法4：用xsltproc">方法4：用xsltproc</h3>
+<p>很多Linux比如CentOS默认已安装<code>xsltproc</code>，所以用xslt可以很方便的把一个xml转换为另外一个xml。<a href="http://xmlsoft.org/XSLT/xsltproc.html" target="_blank" rel="external">具体用法</a>。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-27T02:57:11.000Z"><a href="/2014/11/27/spring-mvc-wizard/">11月 27 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>近期项目需要用到向导式的跳转页面效果，本项目又是用spring mvc实现的，刚开始想到用spring的<code>webflow</code>，不过<code>webflow</code>太过笨重，对于我们不是很复杂的跳转来说好像有种“杀鸡焉用牛刀”的感觉，于是就网上搜索看有没有类似的解决方案，网上的答案一般都是叫你继承<code>AbstractWizardFormContoller</code>这个类来实现，但对于<code>spring mvc3.0.x</code>这个类将不再使用，转而推荐使用<code>注解</code>的方式来实现，于是参考<code>官方文档</code>，用注解方式实现了向导式页面。</p>
+<p>下面是代码示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"/wizard.htm"</span>)    </div><div class="line"><span class="annotation">@SessionAttributes</span>(<span class="string">"bean"</span>)  <span class="comment">//需要保存在session中的变量</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestWizardController</span></span>{  </div><div class="line">    </div><div class="line">  <span class="annotation">@Resource</span>(name = <span class="string">"beanService"</span>)  </div><div class="line">  <span class="keyword">private</span> BeanService beanService;    </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step1</span>(<span class="keyword">final</span> ModelMap modelMap){  </div><div class="line">    modelMap.addAttribute(<span class="string">"bean"</span>, <span class="keyword">new</span> Bean());  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step1"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=2"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step2</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step2"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=3"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step3</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step3"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_finish"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processFinish</span>(@<span class="title">ModelAttribute</span>("bean")Bean bean,  </div><div class="line">                              <span class="keyword">final</span> Errors errors,  </div><div class="line">                              <span class="keyword">final</span> ModelMap modelMap,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">  </div><div class="line">    beanService.add(bean);     </div><div class="line">    status.setComplete();  </div><div class="line">    <span class="keyword">return</span> <span class="string">"success"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_cancel"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processCancel</span>(<span class="keyword">final</span> HttpServletRequest request,  </div><div class="line">                              <span class="keyword">final</span> HttpServletResponse response,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">     status.setComplete();  </div><div class="line">     <span class="keyword">return</span> <span class="string">"cancel"</span>;  </div><div class="line">  }  </div><div class="line">      </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>其中起到最大作用的就是<code>@SessionAttributes</code>这个注解，它定义了一个在<code>session</code>范围内的变量，这个变量可以在不同的页面跳转时保持状态。</p>
+<p>第一次访问 <a href="http://www.example.com/wizard.htm" target="_blank" rel="external">http://www.example.com/wizard.htm</a> 时进入step1方法，其后提交的表单action后面都要加上相应的参数，如：</p>
+<p>step1页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=2"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>step2页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=3"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>step3页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_finish"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-26T08:03:16.000Z"><a href="/2014/11/26/spring-mvc-xss/">11月 26 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>关于xss的介绍可以看 <a href="http://www.cnblogs.com/luminji/archive/2012/05/22/2507185.html" target="_blank" rel="external">Asp.net安全架构之1：xss（跨站脚本）</a>和 <a href="http://www.cnblogs.com/kingthy/archive/2011/08/20/2147355.html" target="_blank" rel="external">腾讯微博的XSS攻击漏洞</a> 网页，</p>
+<p>具体我就讲讲Spring MVC里面的预防：</p>
+<h3 id="第一种方法,使用Spring_MVC">第一种方法,使用Spring MVC</h3>
+<p>web.xml加上：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>defaultHtmlEscape<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">context-param</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>Forms加上：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">spring:htmlEscape</span> <span class="attribute">defaultHtmlEscape</span>=<span class="value">"true"</span> /&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>更多信息查看<a href="https://www.owasp.org/index.php/Main_Page" target="_blank" rel="external">OWASP</a>的<a href="https://www.owasp.org/index.php/XSS_%28Cross_Site_Scripting%29_Prevention_Cheat_Sheet" target="_blank" rel="external">页面</a></p>
+<p><br></p>
+<h3 id="第二种方法是手动escape">第二种方法是手动escape</h3>
+<p>例如用户可以输入：</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;script&gt;alert();<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></div></pre></td></tr></table></figure>
+
+<p>或者输入</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">h2</span>&gt;</span>abc<span class="tag">&lt;<span class="title">h2</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>,如果有异常,显然有xss漏洞。<br>首先添加一个jar包:<code>commons-lang-2.5.jar</code>,然后在后台调用这些函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">StringEscapeUtils.escapeHtml(string); </div><div class="line">StringEscapeUtils.escapeJavaScript(string); </div><div class="line">StringEscapeUtils.escapeSql(string);</div></pre></td></tr></table></figure>
+
+<p>前台js调用escape函数即可。</p>
+<p><br></p>
+<h3 id="第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的">第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的</h3>
+<p>例如：&lt; &gt; ‘ “ \ /  # &amp;<br>方法是实现一个自定义的<code>HttpServletRequestWrapper</code>，然后在Filter里面调用它，替换掉getParameter函数即可。<br>首先添加一个<code>XssHttpServletRequestWrapper</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.Enumeration;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequestWrapper;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssHttpServletRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{  </div><div class="line">    <span class="keyword">public</span> <span class="title">XssHttpServletRequestWrapper</span>(HttpServletRequest servletRequest) {</div><div class="line">        <span class="keyword">super</span>(servletRequest);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String[] <span class="title">getParameterValues</span>(String parameter) {</div><div class="line">      String[] values = <span class="keyword">super</span>.getParameterValues(parameter);</div><div class="line">      <span class="keyword">if</span> (values==<span class="keyword">null</span>)  {</div><div class="line">                  <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">          }</div><div class="line">      <span class="keyword">int</span> count = values.length;</div><div class="line">      String[] encodedValues = <span class="keyword">new</span> String[count];</div><div class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) {</div><div class="line">                 encodedValues[i] = cleanXSS(values[i]);</div><div class="line">       }</div><div class="line">      <span class="keyword">return</span> encodedValues;</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getParameter</span>(String parameter) {</div><div class="line">          String value = <span class="keyword">super</span>.getParameter(parameter);</div><div class="line">          <span class="keyword">if</span> (value == <span class="keyword">null</span>) {</div><div class="line">                 <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                  }</div><div class="line">          <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getHeader</span>(String name) {</div><div class="line">        String value = <span class="keyword">super</span>.getHeader(name);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> String <span class="title">cleanXSS</span>(String value) {</div><div class="line">                <span class="comment">//You'll need to remove the spaces from the html entities below</span></div><div class="line">        value = value.replaceAll(<span class="string">"&lt;"</span>, <span class="string">"& lt;"</span>).replaceAll(<span class="string">"&gt;"</span>, <span class="string">"& gt;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"\\("</span>, <span class="string">"& #40;"</span>).replaceAll(<span class="string">"\\)"</span>, <span class="string">"& #41;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"'"</span>, <span class="string">"& #39;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"eval\\((.*)\\)"</span>, <span class="string">""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']"</span>, <span class="string">"\"\""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"script"</span>, <span class="string">""</span>);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    }</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>然后添加一个过滤器XssFilter ：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.Filter;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterChain;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletException;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line">    FilterConfig filterConfig = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span>(FilterConfig filterConfig) <span class="keyword">throws</span> ServletException {</div><div class="line">        <span class="keyword">this</span>.filterConfig = filterConfig;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span>() {</div><div class="line">        <span class="keyword">this</span>.filterConfig = <span class="keyword">null</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response,</div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException {</div><div class="line">        chain.doFilter(<span class="keyword">new</span> XssHttpServletRequestWrapper(</div><div class="line">                (HttpServletRequest) request), response);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>最后在web.xml里面配置一下，所有的请求的getParameter会被替换，如果参数里面含有<code>敏感词</code>会被替换掉：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>com.ibm.web.beans.XssFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="title">dispatcher</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p> (这个Filter也可以防止SQL注入攻击) </p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-25T03:01:27.000Z"><a href="/2014/11/25/xushen/">11月 25 2014</a></time>
       
       
@@ -666,216 +876,6 @@
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>在需要使用负载均衡的server中增加</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
-
-<p>每个设备的状态设置为:</p>
-<ul>
-<li>1.down 表示单前的server暂时不参与负载</li>
-<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
-<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
-<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
-<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
-<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
-<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
-<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
-<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>如果是jvm自身执行了System.exit比如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
-
-<p>那么在跟踪的信息里，是看不到signal的:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近需要给一个现网server增加过载保护的功能，借此机会也思考了很多，简单谈谈我对这两个概念的理解和实现方法。</p>
-<p>一.负载均衡<br>简单来说，就是按照目标server的参数进行合理分配，这个参数可以是失败率，也可以是响应时间，也可以是请求量，甚至是随机数。<br>我们来按照从简单到复杂逐个看一下几种实现。</p>
-<p>1.轮询式<br>逻辑比较简单，直接看代码：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">vector&lt;Server*&gt; vecServer;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    Server* server = vecServer[curIndex % vecServer.size()];</div><div class="line">    curIndex ++;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>如上代码就是一个简单的轮询式分配方法，这种方法优点实现简单，cpu计算少，缺点就是无法动态判断server的状态，当后端有一台server挂掉的时候，会至少1/vecServer.size()的请求。（最为严重的情况是由于单台后端server的超时导致前段全部挂死）。而且这种分配方法有一个bug，就是当每次请求结束后就释放内存，那么curIndex永远都只会为0，即每次都请求第一个server。</p>
-<p>2.定死权重式<br>这种方式适用于那种需要实现就规定后端server的权重，比如A比Bserver的响应速度快，我们希望A接受的请求比B多。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">//假设A，B, C server的权重分别为 10 5 2</div><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    //server 指针</div><div class="line">    Server* server;</div><div class="line">    //权重</div><div class="line">    int weight;</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">vecServer.push_back(A);</div><div class="line">vecServer.push_back(B);</div><div class="line">vecServer.push_back(C);</div><div class="line"> </div><div class="line">vector&lt;int&gt; vecWeight;</div><div class="line">for (unsigned i = 0; i &lt; vecServer.size(); i++)</div><div class="line">{</div><div class="line">    vecWeight.insert(vecWeight.end(),vecServer[i]-&gt;weight,i);</div><div class="line">}</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    index = vecWeight[random() % vecWeight.size()];</div><div class="line">    Server* server = vecServer[index].server;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面的代码也比较好理解，一共有两个数组，一个是server信息数组vecServer，一个是权重数组vecWeight。在分配server时，先通过权重数组vecWeight获取到server信息数组的下标，然后分配server。<br>这样的做法在我1年半写的一个项目是有使用的，经过统计效果是很不错的，基本是访问量是严格按照权重比分配的。这样做的cpu消耗也不高，但是缺点也是显而易见的，就是还是没有办法动态调整权重，需要人为去修改。所以我们接下来看第三种。</p>
-<p>3.动态调整权重<br>要讨论这种方法前，我们先要明确几个希望使用他的原因：</p>
-<ul>
-<li>1.我们希望server能够自动按照运行状态进行按照权重的选择</li>
-<li>2.我们不希望手工去配置权重变化</li>
-</ul>
-<p>然后是我们实现方法，很明显，我们需要一个基准来告诉我们这台server是否是正常的。这个基准是什么，是历史累计的平均值。比如如果是按照响应时间分配权重，那么就是所有后端server历史累计的平均响应时间，如果是错误率也是如此。<br>那么一旦调整了权重，我们什么时候来调整权重呢，调整比例是怎样呢？按照我的经验，一般是隔一段固定时间才进行调整，如果正常但是权重过低，那么就按照20%的比例恢复；如果server不正常，那么直接按照当前server响应时间/历史平均响应时间进行降权。这里的逻辑之所以不一样是有原因的，因为服务出现问题的时候，我们是能够知道这坏的程度有多少的，就是当前server响应时间/历史平均响应时间进行降权；但是要恢复的时候，你并不能保证server能够支撑到多大的访问量，所以只能按照20%放量来试。也避免滚雪球效应的发生。<br>我们来看一下代码。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">int total_rsp_time = 0;</div><div class="line">int total_req_count = 0;</div><div class="line"> </div><div class="line">unsigned int comWeight = 100;</div><div class="line">unsigned int MaxWeight = 1000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    float total_rsp_avg_time = (float)total_rsp_time / (float)total_req_count;</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_rsp_avg_time = (float)it-&gt;_rsp_time / (float)it-&gt;_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt = int(comWeight*total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_wt = it-&gt;_cur_wt &lt; MaxWeight ? it-&gt;_cur_wt : MaxWeight;</div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>以上基本展示了动态调整的过程，代码可能只是起演示作用，很多比如越界的检测都没有做，大家参照就好~</p>
-<p>OK，到这里我们基本就结束了负载均衡的讨论了，但是还有一个话题：过载保护。</p>
-<p>二.过载保护<br>关于过载保护其实经常适合负载均衡结合在一起使用的，但有两个问题：</p>
-<ul>
-<li>1.过载参照的基准是谁。<br>  是上面代码中的total_rsp_avg_time吗？<br>  不是，因为除非所有机器的正常性能完全一样，<br>  否则不可以拿total_rsp_avg_time来作为某台机器的负载基准。<br>  而能拿来做参照的，只有这台server自身的历史累计值。</li>
-<li>2.怎么实现过载保护。其实很简单，我们定义两个值_cur_max_queue_cnt和_queue_req_cnt，<br>  意义分别是这个server上在一段时间内允许分配的最多次数和当前已经排队的个数。<br>  _cur_max_queue_cnt值是通过当前时间段响应时间和历史累计时间算出来的。<br>  每次使用分配的server前，都要判断一下_queue_req_cnt是否达到了_cur_max_queue_cnt，<br>  如果达到了，分配失败。否则分配成功并且_queue_req_cnt++。</li>
-</ul>
-<p>代码如下：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line"> </div><div class="line">    int             _total_req_count;           //总的请求数</div><div class="line">    float           _total_rsp_avg_time;        //总的请求平均响应时间</div><div class="line">    int             _total_rsp_error;           //总的请求错误数</div><div class="line">    float           _total_rsp_time;        //总的请求时间</div><div class="line"> </div><div class="line">    float           _cur_max_queue_cnt; //当前实际允许的最大排队请求数</div><div class="line">    int             _queue_req_cnt;         //当前排队请求数</div><div class="line"> </div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">float comxQueueSize = 1000;</div><div class="line">float maxQueueSize = 10000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line"> </div><div class="line">    if(serverInfo._queue_req_cnt &gt; serverInfo._cur_max_queue_cnt)</div><div class="line">    {</div><div class="line">        //分配失败</div><div class="line">        continue;</div><div class="line">    }</div><div class="line">    serverInfo._queue_req_cnt ++;</div><div class="line">    </div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    serverInfo._total_req_count++;</div><div class="line">    serverInfo._total_rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照第三种方法重新分配权重</div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line"> </div><div class="line">    //其实和上面的循环合并成一个</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_total_rsp_avg_time = (float)it-&gt;_total_rsp_time / (float)it-&gt;_total_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; it-&gt;_total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt = int(comxQueueSize*it-&gt;_total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_max_queue_cnt = it-&gt;_cur_max_queue_cnt &lt; maxQueueSize ? it-&gt;_cur_max_queue_cnt : maxQueueSize;</div><div class="line">        it-&gt;_queue_req_cnt = 0;</div><div class="line">    }</div><div class="line">    </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面的代码为了演示方便，所以把两个for循环拆开了，实际上是应该合到一个里面写的。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -908,11 +908,11 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+    <li><a href="/tags/Java/">Java</a><small>15</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -965,6 +965,18 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -1000,18 +1012,6 @@
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
   </ul>
 </div>
 
@@ -1021,7 +1021,7 @@
   <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2014 Jeck Zhang
+  &copy; 2015 Jeck Zhang
   
 </div>
 <div class="clearfix"></div></footer>

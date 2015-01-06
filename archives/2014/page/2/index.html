@@ -93,6 +93,141 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>在需要使用负载均衡的server中增加</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
+
+<p>每个设备的状态设置为:</p>
+<ul>
+<li>1.down 表示单前的server暂时不参与负载</li>
+<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
+<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
+<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
+<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
+<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
+<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
+<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
+<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>如果是jvm自身执行了System.exit比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
+
+<p>那么在跟踪的信息里，是看不到signal的:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
+
+<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
       
       
@@ -655,140 +790,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
-<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
-<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
-<p>-集成了Lua模块的Nginx项目OpenResty</p>
-<p>-GraphicsMagick的安装和使用</p>
-<p>-具体使用方法</p>
-<p>原始图片地址：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
-
-<p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
-
-<p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -823,11 +824,11 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+    <li><a href="/tags/Java/">Java</a><small>15</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -880,6 +881,18 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <ul class="entry">
     
       <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -915,18 +928,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
   </ul>
 </div>
 
@@ -936,7 +937,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2014 Jeck Zhang
+  &copy; 2015 Jeck Zhang
   
 </div>
 <div class="clearfix"></div></footer>

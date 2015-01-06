@@ -93,6 +93,148 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-27T02:57:11.000Z"><a href="/2014/11/27/spring-mvc-wizard/">11月 27 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>近期项目需要用到向导式的跳转页面效果，本项目又是用spring mvc实现的，刚开始想到用spring的<code>webflow</code>，不过<code>webflow</code>太过笨重，对于我们不是很复杂的跳转来说好像有种“杀鸡焉用牛刀”的感觉，于是就网上搜索看有没有类似的解决方案，网上的答案一般都是叫你继承<code>AbstractWizardFormContoller</code>这个类来实现，但对于<code>spring mvc3.0.x</code>这个类将不再使用，转而推荐使用<code>注解</code>的方式来实现，于是参考<code>官方文档</code>，用注解方式实现了向导式页面。</p>
+<p>下面是代码示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"/wizard.htm"</span>)    </div><div class="line"><span class="annotation">@SessionAttributes</span>(<span class="string">"bean"</span>)  <span class="comment">//需要保存在session中的变量</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestWizardController</span></span>{  </div><div class="line">    </div><div class="line">  <span class="annotation">@Resource</span>(name = <span class="string">"beanService"</span>)  </div><div class="line">  <span class="keyword">private</span> BeanService beanService;    </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step1</span>(<span class="keyword">final</span> ModelMap modelMap){  </div><div class="line">    modelMap.addAttribute(<span class="string">"bean"</span>, <span class="keyword">new</span> Bean());  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step1"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=2"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step2</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step2"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=3"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step3</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step3"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_finish"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processFinish</span>(@<span class="title">ModelAttribute</span>("bean")Bean bean,  </div><div class="line">                              <span class="keyword">final</span> Errors errors,  </div><div class="line">                              <span class="keyword">final</span> ModelMap modelMap,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">  </div><div class="line">    beanService.add(bean);     </div><div class="line">    status.setComplete();  </div><div class="line">    <span class="keyword">return</span> <span class="string">"success"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_cancel"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processCancel</span>(<span class="keyword">final</span> HttpServletRequest request,  </div><div class="line">                              <span class="keyword">final</span> HttpServletResponse response,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">     status.setComplete();  </div><div class="line">     <span class="keyword">return</span> <span class="string">"cancel"</span>;  </div><div class="line">  }  </div><div class="line">      </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>其中起到最大作用的就是<code>@SessionAttributes</code>这个注解，它定义了一个在<code>session</code>范围内的变量，这个变量可以在不同的页面跳转时保持状态。</p>
+<p>第一次访问 <a href="http://www.example.com/wizard.htm" target="_blank" rel="external">http://www.example.com/wizard.htm</a> 时进入step1方法，其后提交的表单action后面都要加上相应的参数，如：</p>
+<p>step1页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=2"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>step2页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=3"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>step3页面 </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_finish"</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-26T08:03:16.000Z"><a href="/2014/11/26/spring-mvc-xss/">11月 26 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>关于xss的介绍可以看 <a href="http://www.cnblogs.com/luminji/archive/2012/05/22/2507185.html" target="_blank" rel="external">Asp.net安全架构之1：xss（跨站脚本）</a>和 <a href="http://www.cnblogs.com/kingthy/archive/2011/08/20/2147355.html" target="_blank" rel="external">腾讯微博的XSS攻击漏洞</a> 网页，</p>
+<p>具体我就讲讲Spring MVC里面的预防：</p>
+<h3 id="第一种方法,使用Spring_MVC">第一种方法,使用Spring MVC</h3>
+<p>web.xml加上：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>defaultHtmlEscape<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">context-param</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>Forms加上：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">spring:htmlEscape</span> <span class="attribute">defaultHtmlEscape</span>=<span class="value">"true"</span> /&gt;</span></div></pre></td></tr></table></figure>
+
+
+<p>更多信息查看<a href="https://www.owasp.org/index.php/Main_Page" target="_blank" rel="external">OWASP</a>的<a href="https://www.owasp.org/index.php/XSS_%28Cross_Site_Scripting%29_Prevention_Cheat_Sheet" target="_blank" rel="external">页面</a></p>
+<p><br></p>
+<h3 id="第二种方法是手动escape">第二种方法是手动escape</h3>
+<p>例如用户可以输入：</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;script&gt;alert();<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></div></pre></td></tr></table></figure>
+
+<p>或者输入</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">h2</span>&gt;</span>abc<span class="tag">&lt;<span class="title">h2</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>,如果有异常,显然有xss漏洞。<br>首先添加一个jar包:<code>commons-lang-2.5.jar</code>,然后在后台调用这些函数：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">StringEscapeUtils.escapeHtml(string); </div><div class="line">StringEscapeUtils.escapeJavaScript(string); </div><div class="line">StringEscapeUtils.escapeSql(string);</div></pre></td></tr></table></figure>
+
+<p>前台js调用escape函数即可。</p>
+<p><br></p>
+<h3 id="第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的">第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的</h3>
+<p>例如：&lt; &gt; ‘ “ \ /  # &amp;<br>方法是实现一个自定义的<code>HttpServletRequestWrapper</code>，然后在Filter里面调用它，替换掉getParameter函数即可。<br>首先添加一个<code>XssHttpServletRequestWrapper</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.Enumeration;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequestWrapper;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssHttpServletRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{  </div><div class="line">    <span class="keyword">public</span> <span class="title">XssHttpServletRequestWrapper</span>(HttpServletRequest servletRequest) {</div><div class="line">        <span class="keyword">super</span>(servletRequest);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String[] <span class="title">getParameterValues</span>(String parameter) {</div><div class="line">      String[] values = <span class="keyword">super</span>.getParameterValues(parameter);</div><div class="line">      <span class="keyword">if</span> (values==<span class="keyword">null</span>)  {</div><div class="line">                  <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">          }</div><div class="line">      <span class="keyword">int</span> count = values.length;</div><div class="line">      String[] encodedValues = <span class="keyword">new</span> String[count];</div><div class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) {</div><div class="line">                 encodedValues[i] = cleanXSS(values[i]);</div><div class="line">       }</div><div class="line">      <span class="keyword">return</span> encodedValues;</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getParameter</span>(String parameter) {</div><div class="line">          String value = <span class="keyword">super</span>.getParameter(parameter);</div><div class="line">          <span class="keyword">if</span> (value == <span class="keyword">null</span>) {</div><div class="line">                 <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                  }</div><div class="line">          <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getHeader</span>(String name) {</div><div class="line">        String value = <span class="keyword">super</span>.getHeader(name);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> String <span class="title">cleanXSS</span>(String value) {</div><div class="line">                <span class="comment">//You'll need to remove the spaces from the html entities below</span></div><div class="line">        value = value.replaceAll(<span class="string">"&lt;"</span>, <span class="string">"& lt;"</span>).replaceAll(<span class="string">"&gt;"</span>, <span class="string">"& gt;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"\\("</span>, <span class="string">"& #40;"</span>).replaceAll(<span class="string">"\\)"</span>, <span class="string">"& #41;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"'"</span>, <span class="string">"& #39;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"eval\\((.*)\\)"</span>, <span class="string">""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']"</span>, <span class="string">"\"\""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"script"</span>, <span class="string">""</span>);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    }</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>然后添加一个过滤器XssFilter ：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.Filter;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterChain;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletException;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line">    FilterConfig filterConfig = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span>(FilterConfig filterConfig) <span class="keyword">throws</span> ServletException {</div><div class="line">        <span class="keyword">this</span>.filterConfig = filterConfig;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span>() {</div><div class="line">        <span class="keyword">this</span>.filterConfig = <span class="keyword">null</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response,</div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException {</div><div class="line">        chain.doFilter(<span class="keyword">new</span> XssHttpServletRequestWrapper(</div><div class="line">                (HttpServletRequest) request), response);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>最后在web.xml里面配置一下，所有的请求的getParameter会被替换，如果参数里面含有<code>敏感词</code>会被替换掉：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>com.ibm.web.beans.XssFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="title">dispatcher</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p> (这个Filter也可以防止SQL注入攻击) </p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-25T03:01:27.000Z"><a href="/2014/11/25/xushen/">11月 25 2014</a></time>
       
       
@@ -782,11 +924,11 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>13</small></li>
+    <li><a href="/tags/Java/">Java</a><small>15</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>9</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -839,6 +981,18 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -874,18 +1028,6 @@
         <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/24/java-regex/">正则表达式匹配中文</a>
-      </li>
-    
   </ul>
 </div>
 
@@ -895,7 +1037,7 @@
   <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
   <footer id="footer" class="inner"><div class="alignleft">
   
-  &copy; 2014 Jeck Zhang
+  &copy; 2015 Jeck Zhang
   
 </div>
 <div class="clearfix"></div></footer>
