@@ -108,9 +108,11 @@
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                          				512</div></pre></td></tr></table></figure>
 
 <h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div><div class="line"></div><div class="line"></div><div class="line">###重新设定临时表空间容量</div></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div></pre></td></tr></table></figure>
 
-<p>sql<br>SQL&gt; alter database tempfile ‘/home/database/oracle/oradata/zuobian/temp01.dbf’ resize 1024M;<br>Database altered<br>```</p>
+<h3 id="重新设定临时表空间容量">重新设定临时表空间容量</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">SQL&gt; alter database tempfile '/home/database/oracle/oradata/zuobian/temp01.dbf' resize 1024M;</div><div class="line">Database altered</div></pre></td></tr></table></figure>
+
 
       
     </div>
