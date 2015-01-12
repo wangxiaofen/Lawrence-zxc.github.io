@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>随感 | Jeck_Zhang</title>
+  <title>归档：2014/12 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -72,7 +72,7 @@
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title tag">随感</h2>
+<h2 class="archive-title">2014/12</h2>
 
 
   
@@ -93,69 +93,25 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+        <time datetime="2014-12-12T02:50:46.000Z"><a href="/2014/12/12/oracle-tmp-tablespace/">12月 12 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<h3 id="秋意渐浓">秋意渐浓</h3>
-<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
-
-<p><br></p>
-<h3 id="晚秋">晚秋</h3>
-<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+    <h1 class="title"><a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
+        <p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
+<h3 id="查询临时表空间">查询临时表空间</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                          				512</div></pre></td></tr></table></figure>
+
+<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div><div class="line"></div><div class="line"></div><div class="line">###重新设定临时表空间容量</div></pre></td></tr></table></figure>
+
+<p>sql<br>SQL&gt; alter database tempfile ‘/home/database/oracle/oradata/zuobian/temp01.dbf’ resize 1024M;<br>Database altered<br>```</p>
+
       
     </div>
     <footer>

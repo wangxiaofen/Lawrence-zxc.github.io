@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2015-01-12T03:41:34.910Z</updated>
+  <updated>2015-01-12T04:55:10.369Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -49,6 +49,33 @@
     </summary>
     
       <category term="Linux" scheme="http://lawrence-zxc.github.io/tags/Linux/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[oracle 临时表空间扩容]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/12/12/oracle-tmp-tablespace/"/>
+    <id>http://lawrence-zxc.github.io/2014/12/12/oracle-tmp-tablespace/</id>
+    <published>2014-12-12T02:50:46.000Z</published>
+    <updated>2015-01-12T04:54:40.000Z</updated>
+    <content type="html"><![CDATA[<p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
+<h3 id="查询临时表空间">查询临时表空间</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                          				512</div></pre></td></tr></table></figure>
+
+<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div><div class="line"></div><div class="line"></div><div class="line">###重新设定临时表空间容量</div></pre></td></tr></table></figure>
+
+<p>sql<br>SQL&gt; alter database tempfile ‘/home/database/oracle/oradata/zuobian/temp01.dbf’ resize 1024M;<br>Database altered<br>```</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
+<h3 id="查询临时表空间">查询临时表空间</h3>
+<figure class="highlight sq]]>
+    </summary>
+    
+      <category term="Oracle" scheme="http://lawrence-zxc.github.io/tags/Oracle/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
@@ -967,55 +994,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </summary>
     
       <category term="Mysql" scheme="http://lawrence-zxc.github.io/tags/Mysql/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[琐忆]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/10/05/rizhi/"/>
-    <id>http://lawrence-zxc.github.io/2014/10/05/rizhi/</id>
-    <published>2014-10-05T09:10:34.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
-    <content type="html"><![CDATA[<center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>]]></content>
-    <summary type="html">
-    <![CDATA[<center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>]]>
-    </summary>
-    
-      <category term="开始" scheme="http://lawrence-zxc.github.io/tags/%E5%BC%80%E5%A7%8B/"/>
-    
-      <category term="Mac/Unix" scheme="http://lawrence-zxc.github.io/tags/Mac-Unix/"/>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
-    
-      <category term="JavaScript" scheme="http://lawrence-zxc.github.io/tags/JavaScript/"/>
-    
-      <category term="Mongodb" scheme="http://lawrence-zxc.github.io/tags/Mongodb/"/>
-    
-      <category term="Linux" scheme="http://lawrence-zxc.github.io/tags/Linux/"/>
-    
-      <category term="Nginx" scheme="http://lawrence-zxc.github.io/tags/Nginx/"/>
-    
-      <category term="Oracle" scheme="http://lawrence-zxc.github.io/tags/Oracle/"/>
-    
-      <category term="Mysql" scheme="http://lawrence-zxc.github.io/tags/Mysql/"/>
-    
-      <category term="前端" scheme="http://lawrence-zxc.github.io/tags/%E5%89%8D%E7%AB%AF/"/>
-    
-      <category term="技术" scheme="http://lawrence-zxc.github.io/tags/%E6%8A%80%E6%9C%AF/"/>
-    
-      <category term="旅行" scheme="http://lawrence-zxc.github.io/tags/%E6%97%85%E8%A1%8C/"/>
-    
-      <category term="理财" scheme="http://lawrence-zxc.github.io/tags/%E7%90%86%E8%B4%A2/"/>
-    
-      <category term="生活" scheme="http://lawrence-zxc.github.io/tags/%E7%94%9F%E6%B4%BB/"/>
-    
-      <category term="读书" scheme="http://lawrence-zxc.github.io/tags/%E8%AF%BB%E4%B9%A6/"/>
-    
-      <category term="随感" scheme="http://lawrence-zxc.github.io/tags/%E9%9A%8F%E6%84%9F/"/>
-    
-      <category term="其他" scheme="http://lawrence-zxc.github.io/tags/%E5%85%B6%E4%BB%96/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     

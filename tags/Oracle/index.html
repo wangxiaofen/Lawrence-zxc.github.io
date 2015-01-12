@@ -93,6 +93,60 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-12-12T02:50:46.000Z"><a href="/2014/12/12/oracle-tmp-tablespace/">12月 12 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
+<h3 id="查询临时表空间">查询临时表空间</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                          				512</div></pre></td></tr></table></figure>
+
+<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div><div class="line"></div><div class="line"></div><div class="line">###重新设定临时表空间容量</div></pre></td></tr></table></figure>
+
+<p>sql<br>SQL&gt; alter database tempfile ‘/home/database/oracle/oradata/zuobian/temp01.dbf’ resize 1024M;<br>Database altered<br>```</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
       
       
@@ -335,7 +389,7 @@
   
     <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>5</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -382,6 +436,10 @@
       </li>
     
       <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
       </li>
     
@@ -419,10 +477,6 @@
     
       <li>
         <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
   </ul>

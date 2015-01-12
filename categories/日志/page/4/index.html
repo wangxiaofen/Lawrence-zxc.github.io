@@ -93,6 +93,84 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-05-19T06:34:24.000Z"><a href="/2014/05/19/python1/">5月 19 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/05/19/python1/">Python常见问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="is_和_==_的区别_与_列表的赋值问题">is 和 == 的区别 与 列表的赋值问题</h3>
+<p>is 与 == 所代表的含义不同，is 表示“是”，说明里那个对象所引用的区域是相同的，而 == 表示“值相等”。两者区别可以通过下面的代码看出来：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names= [<span class="string">"Daniel"</span>,<span class="string">"Jackie"</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n = names</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n <span class="keyword">is</span> names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m = names[:]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m <span class="keyword">is</span> names</div><div class="line"><span class="keyword">False</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>m == names</div><div class="line"><span class="keyword">True</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n[<span class="number">0</span>] = <span class="string">'Json'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>n</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>names</div><div class="line">[<span class="string">'Json'</span>, <span class="string">'Jackie'</span>]</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>当用 = 赋值时，names 与 n 引用同一块内存区域，所以names 与 n 是完全相同的，== 和 is 均返回True。所以改变 n[0] 会同时改变 names[0]的值，如代码最后一部分显示的一样。如果既想对列表进行改变值的操作，同时又希望保存旧版本供其他操作，这时候怎么办呢？这就需要复制整个列表的切片。如 m = names[ : ]   这样会产生一个names的副本，但是不是同一块内存区域，用 is 和 == 检查发现， is 返回 False ， == 返回 True 也可以说明这一点。</p>
+<h3 id="字符串的格式化">字符串的格式化</h3>
+<p>简单的字符串格式化</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; format = "Hello, %s. %s enough for ya?"</div><div class="line">&gt;&gt;&gt; values = ('world', 'Hot')</div><div class="line">&gt;&gt;&gt; print format % values</div><div class="line">Hello, world. Hot enough for ya?</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>%s 为转换说明符，标记需要在此位置插入字符。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%10.8f'</span> % pi</div><div class="line"><span class="string">'3.14159265'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%.5s'</span> % <span class="string">'Daniel Hou'</span></div><div class="line"><span class="string">'Danie'</span></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">'%.*s'</span> % (<span class="number">5</span>, <span class="string">'Daniel Hou'</span>)</div><div class="line"><span class="string">'Danie'</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>%10.8f 10为宽度，不足时前面为空格，8为精度。 %.5s 则为从后面取出前5位，%.<em>s 中 </em>代表精度从后面的元组中读取。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>phonebook = { <span class="string">'Hou'</span> : <span class="number">1234</span>, <span class="string">'Daniel'</span>:<span class="number">5678</span>}</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="string">"Hou's phone is %(Hou)s."</span> % phonebook</div><div class="line"><span class="string">"Hou's phone is 1234."</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>可以通过以上的方式来访问字典中的对应字段。括号中为字典的key     </p>
+<h3 id="Python中的惰性求值">Python中的惰性求值</h3>
+<p>在逻辑运算存在。例如， a and b ，当 a 为 False 时，直接返回 False ，不再运算 b； a or b，当为 a 为 True 时，直接返回 a 的值， 否则返回 b 的值。避免了代码的无用计算。运用以上的特性可以实现 java 中的三元运算符的功能。例如：a if b or c当 b 为 真时，返回 a，否则返回 c     </p>
+<p>range的边界问题与xrange</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span>range(<span class="number">0</span>,<span class="number">10</span>)</div><div class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>可以看出，range不包含上界，相当于集合中的 [ a, b )xrang 函数作用类似于 range ，不同的地方在不 range 函数一次创建整个序列，而 xrange 一次只创建一个数，因此，需要迭代一个巨大的序列的时候， xrange 更加高效。</p>
+<h3 id="递归">递归</h3>
+<p>实现 n 的阶乘，一般实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">factorial</span><span class="params">(n)</span>:</span></div><div class="line">	result = n</div><div class="line">	<span class="keyword">for</span> i <span class="keyword">in</span> range(<span class="number">1</span>,n):</div><div class="line">		result *= i</div><div class="line">	<span class="keyword">return</span> result</div><div class="line"></div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>factorial(<span class="number">10</span>)</div><div class="line"><span class="number">3628800</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>递归实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="prompt">&gt;&gt;&gt; </span><span class="function"><span class="keyword">def</span> <span class="title">factorial</span><span class="params">(n)</span>:</span></div><div class="line">	<span class="keyword">if</span> n == <span class="number">1</span>:</div><div class="line">		<span class="keyword">return</span> <span class="number">1</span></div><div class="line">	<span class="keyword">else</span>:</div><div class="line">		<span class="keyword">return</span> n*factorial(n-<span class="number">1</span>)</div><div class="line"></div><div class="line">	</div><div class="line"><span class="prompt">&gt;&gt;&gt; </span>factorial(<span class="number">10</span>)</div><div class="line"><span class="number">3628800</span></div><div class="line">&gt;&gt;&gt;</div></pre></td></tr></table></figure>
+
+<p>使用递归实现二分法查找（binary search）</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">search</span><span class="params">(seq, num, lower=<span class="number">0</span>, upper=None)</span>:</span></div><div class="line">    upper = len(seq) - <span class="number">1</span></div><div class="line">    <span class="keyword">if</span> lower == upper :</div><div class="line">        <span class="keyword">return</span> lower</div><div class="line">    <span class="keyword">else</span>:</div><div class="line">        middle = (lower + upper) // <span class="number">2</span></div><div class="line">        <span class="keyword">if</span> num &gt; seq[middle]:</div><div class="line">            <span class="keyword">return</span> search(seq, num, middle + <span class="number">1</span>, upper)</div><div class="line">        <span class="keyword">else</span>:</div><div class="line">            <span class="keyword">return</span> search(seq, num, lower, middle)</div><div class="line"></div><div class="line">seq = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</div><div class="line"><span class="keyword">print</span> search(seq, <span class="number">7</span>)</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-05-17T05:42:35.000Z"><a href="/2014/05/17/javascript/">5月 17 2014</a></time>
       
       
@@ -885,7 +963,7 @@
   
     <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>5</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -932,6 +1010,10 @@
       </li>
     
       <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
       </li>
     
@@ -969,10 +1051,6 @@
     
       <li>
         <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a>
       </li>
     
   </ul>

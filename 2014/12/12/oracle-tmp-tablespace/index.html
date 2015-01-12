@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>随感 | Jeck_Zhang</title>
+  <title>oracle 临时表空间扩容 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  
+  <meta property="og:title" content="oracle 临时表空间扩容"/>
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -71,12 +71,7 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper">
-<h2 class="archive-title tag">随感</h2>
-
-
-  
-    <article class="post">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
   
     <div class="gallery">
   <div class="photoset">
@@ -93,29 +88,89 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+        <time datetime="2014-12-12T02:50:46.000Z"><a href="/2014/12/12/oracle-tmp-tablespace/">12月 12 2014</a></time>
       
       
   
-    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
+    <h1 class="title">oracle 临时表空间扩容</h1>
   
 
     </header>
     <div class="entry">
       
-        <p><br></p>
-<h3 id="秋意渐浓">秋意渐浓</h3>
-<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
+        <p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
+<h3 id="查询临时表空间">查询临时表空间</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                          				512</div></pre></td></tr></table></figure>
 
-<p><br></p>
-<h3 id="晚秋">晚秋</h3>
-<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
+<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                                          256</div><div class="line"></div><div class="line"></div><div class="line">###重新设定临时表空间容量</div></pre></td></tr></table></figure>
+
+<p>sql<br>SQL&gt; alter database tempfile ‘/home/database/oracle/oradata/zuobian/temp01.dbf’ resize 1024M;<br>Database altered<br>```</p>
+
       
     </div>
     <footer>
       
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+          </div>
         
         
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2014/12/12/oracle-tmp-tablespace/">
+                  http://lawrence-zxc.github.io/2014/12/12/oracle-tmp-tablespace/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Oracle/">Oracle</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
       
       <div class="clearfix"></div>
     </footer>
@@ -125,66 +180,40 @@
 
 
 
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+<nav id="pagination" >
     
-      <img src="">
+    <a href="/2015/01/02/linux-shell-xml/" class="alignleft prev" >上一页</a>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
+    
+    <a href="/2014/11/27/spring-mvc-wizard/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
 </nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2014/12/12/oracle-tmp-tablespace/" data-title="oracle 临时表空间扩容" data-url="http://lawrence-zxc.github.io/2014/12/12/oracle-tmp-tablespace/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
