@@ -93,6 +93,75 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2015-01-23T02:53:40.000Z"><a href="/2015/01/23/suishoupai/">1月 23 2015</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>早上在地铁上突然想到这个需求,觉得是<code>刚需</code>,而且应用场景应该很广,大致说下我的想法:</p>
+<h3 id="初级">初级</h3>
+<p>能有效的识别随手拍的人脸,给出关于这个人的<code>基础信息</code>,<code>信用信息</code>,<code>社会评价</code>,<code>人品得分</code>,<code>职业信息</code>,<code>家庭信息</code>,<code>社交元素</code>,<code>系统建议</code>等等有用的实时信息;<br>当然可能识别出多个人出来,初步可以接受;<br>支持用户上传个人<code>真实信息</code>,如果信息不真实被系统识别,会降低人品得分;</p>
+<h3 id="中级">中级</h3>
+<p>构建个人信用信息<code>数学模型</code>,人脸识别准确性要突破提高;<br>构建人品得分数学模型,准备预测某个人的<code>真实一面</code>;<br>增加人物评价体系,作为人品得分的<code>量化参数</code>之一;<br>评价可以匿名化;<br>基础人物信息收集;</p>
+<h3 id="高级">高级</h3>
+<p>构建人类基础<code>人脸信息库</code>;构建人类基础<code>信用信息库</code>;<br>构建人类基础<code>个人信息库</code>;考虑识别<code>非人类物体</code>,<code>动物</code>,<code>植物</code>,<code>商业产品</code>等;<br><code>google眼镜</code>可以是个很好地系统<code>硬件媒介</code>,拍摄人与物;</p>
+<h3 id="应用场景">应用场景</h3>
+<ul>
+<li>交友,通过APP认识<code>陌生人</code>,认识有<code>眼缘</code>的人,认识有趣的人,通过自己的<code>第六感</code>预测值得认识这个人;</li>
+<li>避免<code>黑车</code>,第六感通常不准,坐上黑车了不知道,随手拍下,看看这个是否可信;</li>
+<li>识别<code>骗子</code>,让骗子无法隐藏;</li>
+<li>寻找失踪儿童,迷途少年,失踪少女,失踪老人,<code>失踪人口</code>让社会更和谐;</li>
+<li>通过系统的个人<code>信用信息查询</code>,识别某个人的<code>信用情况</code>;</li>
+</ul>
+<h3 id="可能依赖的内外部条件">可能依赖的内外部条件</h3>
+<ul>
+<li>图形图像识别;</li>
+<li>人脸识别;</li>
+<li>个人信息采集;</li>
+<li>数学模型构建;</li>
+<li>人肉搜索,真实信息辨别;</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2015-01-02T03:04:47.000Z"><a href="/2015/01/02/linux-shell-xml/">1月 2 2015</a></time>
       
       
@@ -649,128 +718,6 @@
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T07:49:30.000Z"><a href="/2014/11/10/git-pro/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/git-pro/">Git配置和常用命令</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>Git是一个分布式版本控制／软件配置管理软件，原来是linux内核开发者林纳斯·托瓦兹（Linus Torvalds）为了更好地管理linux内核开发而创立的。</p>
-<h3 id="Git配置">Git配置</h3>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> user.name <span class="string">"Lawrence-zxc"</span></div><div class="line">git config --<span class="keyword">global</span> user.email <span class="string">"zhangxiongcai337@gmail.com"</span></div><div class="line">git config --<span class="keyword">global</span> color.ui <span class="literal">true</span></div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.co checkout</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.ci commit</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.st status</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.br branch</div><div class="line">git config -l  <span class="preprocessor"># 列举所有配置</span></div></pre></td></tr></table></figure>
-
-<p>用户的git配置文件在<code>~/.gitconfig</code>，我的配置：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">  /Users/zxc/workspace/blog  ❤  cat ~/.gitconfig </div><div class="line">[user]</div><div class="line">    <span class="variable">email =</span> zhangxiongcai337@gmail.com</div><div class="line">    <span class="variable">name =</span> Lawrence-zxc</div><div class="line">[color]</div><div class="line">    <span class="variable">ui =</span> auto</div><div class="line">[color <span class="string">"branch"</span>]</div><div class="line">    <span class="variable">current =</span> yellow reverse</div><div class="line">    <span class="variable">local =</span> yellow</div><div class="line">    <span class="variable">remote =</span> green</div><div class="line">[color <span class="string">"diff"</span>]</div><div class="line">    <span class="variable">meta =</span> yellow bold</div><div class="line">    <span class="variable">frag =</span> magenta bold</div><div class="line">    <span class="variable">old =</span> red bold</div><div class="line">    <span class="variable">new =</span> green bold</div><div class="line">[color <span class="string">"status"</span>]</div><div class="line">    <span class="variable">added =</span> yellow</div><div class="line">    <span class="variable">changed =</span> green</div><div class="line">    <span class="variable">untracked =</span> cyan</div><div class="line">[alias]</div><div class="line">    <span class="variable">st =</span> <span class="string">"status"</span></div><div class="line">    <span class="variable">co =</span> checkout</div><div class="line">    <span class="variable">ls =</span> <span class="string">"ls-files"</span></div><div class="line">    <span class="variable">ci =</span> commit</div><div class="line">    <span class="variable">br =</span> branch</div><div class="line">    <span class="variable">rt =</span> reset --hard</div><div class="line">    <span class="variable">unstage =</span> reset HEAD</div><div class="line">    <span class="variable">uncommit =</span> reset --soft HEAD^</div><div class="line">    <span class="variable">l =</span> log <span class="variable">--pretty=</span>oneline --abbrev-commit --graph --decorate</div><div class="line">    <span class="variable">amend =</span> commit --amend </div><div class="line">    <span class="variable">who =</span> shortlog -n -s --no-merges </div><div class="line">    <span class="variable">g =</span> grep -n --color -E </div><div class="line">    <span class="variable">cp =</span> cherry-pick -x </div><div class="line">    <span class="variable">cb =</span> checkout -b </div><div class="line">[core]</div><div class="line">    <span class="variable">filemode =</span> <span class="constant">true</span></div></pre></td></tr></table></figure>
-
-<h3 id="Git常用命令">Git常用命令</h3>
-<p>查看、帮助命令</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git help &lt;command&gt;</span>  <span class="comment"># 显示command的help</span></span></div><div class="line">git show            <span class="comment"># 显示某次提交的内容</span></div><div class="line">git show <span class="variable">$id</span></div></pre></td></tr></table></figure>
-
-<p>查看提交记录</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">git <span class="keyword">log</span></div><div class="line">git <span class="keyword">log</span> &lt;file&gt;      <span class="comment"># 查看该文件每次提交记录</span></div><div class="line">git <span class="keyword">log</span> -p &lt;file&gt;   <span class="comment"># 显示版本历史，以及版本间的内容差异</span></div><div class="line">git <span class="keyword">log</span> -p -<span class="number">2</span>       <span class="comment"># 查看最近两次详细修改内容的diff</span></div><div class="line">git <span class="keyword">log</span> --<span class="keyword">stat</span>      <span class="comment"># 查看提交统计信息</span></div><div class="line">git <span class="keyword">log</span> --since=<span class="string">"6 hours"</span>  <span class="comment"># 显示最近6小时提交</span></div><div class="line">git <span class="keyword">log</span> --before=<span class="string">"2 days"</span>  <span class="comment"># 显示2天前提交</span></div><div class="line">git <span class="keyword">log</span> -<span class="number">1</span> HEAD~<span class="number">3</span>          <span class="comment"># 显示比HEAD早3个提交的那个提交</span></div><div class="line">git <span class="keyword">log</span> -<span class="number">1</span> HEAD^^^</div><div class="line">git reflog                 <span class="comment"># 查看操作记录</span></div></pre></td></tr></table></figure>
-
-<p>添加、提交、删除、找回，重置修改文件</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git co  -- &lt;file&gt;</span>   <span class="comment"># 抛弃工作区修改</span></span></div><div class="line"><span class="input"><span class="prompt">git co  .           # 抛弃工作区修改</span></span></div><div class="line">git co HEAD &lt;file&gt;  <span class="comment"># 抛弃工作目录区中文件的修改</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git add &lt;file&gt;</span>      <span class="comment"># 将工作文件修改提交到本地暂存区</span></span></div><div class="line">git add .           <span class="comment"># 将所有修改过的工作文件提交暂存区</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git rm &lt;file&gt;</span>       <span class="comment"># 从版本库中删除文件</span></span></div><div class="line"><span class="input"><span class="prompt">git rm &lt;file&gt;</span> --cached  <span class="comment"># 从版本库中删除文件，但不删除文件</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git reset &lt;file&gt;</span>    <span class="comment"># 从暂存区恢复到工作文件</span></span></div><div class="line"><span class="input"><span class="prompt">git reset -- .      # 从暂存区恢复到工作文件</span></span></div><div class="line">git reset --hard  HEAD^ # 恢复最近一次提交过的状态，即放弃上次提交后的所有本次修改</div><div class="line">git reset --hard &lt;commit id&gt;  <span class="comment"># 恢复到某一次提交的状态</span></div><div class="line"><span class="input"><span class="prompt">git reset HEAD &lt;file&gt;</span> <span class="comment"># 抛弃暂存区中文件的修改</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">git ci &lt;<span class="built_in">file</span>&gt;</div><div class="line">git ci .</div><div class="line">git ci -<span class="operator">a</span>           <span class="comment"># 将git add, git rm和git ci等操作都合并在一起做</span></div><div class="line">git ci -am <span class="string">"some comments"</span></div><div class="line">git ci <span class="comment">--amend      # 修改最后一次提交记录</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git revert &lt;$id&gt;</span>    <span class="comment"># 恢复某次提交的状态，恢复动作本身也创建了一次提交对象</span></span></div><div class="line">git revert <span class="constant">HEAD</span>     <span class="comment"># 恢复最后一次提交的状态</span></div></pre></td></tr></table></figure>
-
-<p>查看文件diff</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git diff &lt;file&gt;</span>     <span class="comment"># 比较当前文件和暂存区文件差异</span></span></div><div class="line"><span class="input"><span class="prompt">git diff</span></span></div><div class="line">git diff &lt;$id1&gt; &lt;<span class="variable">$id2</span>&gt;      <span class="comment"># 比较两次提交之间的差异</span></div><div class="line">git diff &lt;branch1&gt;..&lt;branch2&gt;   <span class="comment"># 在两个分支之间比较 </span></div><div class="line">git diff --staged   <span class="comment"># 比较暂存区和版本库差异</span></div><div class="line">git diff --cached   <span class="comment"># 比较暂存区和版本库差异</span></div><div class="line">git diff --stat     <span class="comment"># 仅仅比较统计信息</span></div></pre></td></tr></table></figure>
-
-<h3 id="Git_本地分支管理">Git 本地分支管理</h3>
-<p>查看、切换、创建和删除分支</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git br -r           # 查看远程分支</span></span></div><div class="line">git br -v           # 查看各个分支最后提交信息</div><div class="line">git br -a           # 列出所有分支</div><div class="line">git br --merged     # 查看已经被合并到当前分支的分支</div><div class="line">git br --no-merged  # 查看尚未被合并到当前分支的分支</div><div class="line">git br &lt;new_branch&gt; <span class="comment"># 基于当前分支创建新的分支</span></div><div class="line"><span class="input"><span class="prompt">git br &lt;new_branch&gt;</span>  &lt;start_point&gt;      <span class="comment"># 基于另一个起点（分支名称，提交名称或则标签名称），创建新的分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -f &lt;existing_branch&gt;</span>  &lt;start_point&gt;  <span class="comment"># 创建同名新分支，覆盖已有分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -d &lt;branch&gt;</span>  <span class="comment"># 删除某个分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -D &lt;branch&gt;</span>  <span class="comment"># 强制删除某个分支 (未被合并的分支被删除的时候需要强制)</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git co &lt;branch&gt;</span>         <span class="comment"># 切换到某个分支</span></span></div><div class="line"><span class="input"><span class="prompt">git co -b &lt;new_branch&gt;</span>  <span class="comment"># 创建新的分支，并且切换过去</span></span></div><div class="line"><span class="input"><span class="prompt">git co -b &lt;new_branch&gt;</span> &lt;branch&gt;       <span class="comment"># 基于branch创建新的new_branch</span></span></div><div class="line"><span class="input"><span class="prompt">git co -m &lt;existing_branch&gt;</span> &lt;new_branch&gt;  <span class="comment"># 移动或重命名分支，当新分支不存在时</span></span></div><div class="line"><span class="input"><span class="prompt">git co -M &lt;existing_branch&gt;</span> &lt;new_branch&gt;  <span class="comment"># 移动或重命名分支，当新分支存在时就覆盖</span></span></div><div class="line"><span class="input"><span class="prompt"></span></span></div><div class="line">git co $id               # 把某次历史提交记录checkout出来，但无分支信息，切换到其他分支会自动删除</div><div class="line">git co $id -b &lt;new_branch&gt;       <span class="comment"># 把某次历史提交记录checkout出来，创建成一个分支</span></div></pre></td></tr></table></figure>
-
-<p>分支合并和rebase</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git merge &lt;branch&gt;</span>                  <span class="comment"># 将branch分支合并到当前分支</span></span></div><div class="line"><span class="input"><span class="prompt">git merge origin/master --no-ff     # 不要Fast-Foward合并，这样可以生成merge提交</span></span></div><div class="line">git merge --no-commit &lt;branch&gt;      <span class="comment"># 合并但不提交</span></div><div class="line"><span class="input"><span class="prompt">git merge --squash &lt;branch&gt;</span>         <span class="comment"># 把一条分支上的内容合并到另一个分支上的一个提交</span></span></div><div class="line"><span class="input"><span class="prompt"></span></span></div><div class="line">git rebase master &lt;branch&gt;          <span class="comment"># 将master rebase到branch，相当于：</span></div><div class="line"><span class="input"><span class="prompt">git co &lt;branch&gt;</span> && git rebase master && git co master && git merge &lt;branch&gt;</span></div></pre></td></tr></table></figure>
-
-<p>Git补丁管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git diff &gt; ../sync.<span class="keyword">patch</span>         <span class="preprocessor"># 生成补丁</span></div><div class="line">git apply ../sync.<span class="keyword">patch</span>          <span class="preprocessor"># 打补丁</span></div><div class="line">git apply --check ../sync.<span class="keyword">patch</span>  <span class="preprocessor"># 测试补丁能否成功</span></div><div class="line">git format-<span class="keyword">patch</span> -X              <span class="preprocessor"># 根据提交的log生成patch，X为数字，表示最近的几个日志</span></div></pre></td></tr></table></figure>
-
-<p>Git暂存管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git stash                        <span class="comment"># 暂存</span></div><div class="line">git stash <span class="keyword">list</span>                   <span class="comment"># 列所有stash</span></div><div class="line">git stash apply                  <span class="comment"># 恢复暂存的内容</span></div><div class="line">git stash drop                   <span class="comment"># 删除暂存区</span></div></pre></td></tr></table></figure>
-
-<p>Git远程分支管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">git pull                         <span class="comment"># 抓取远程仓库所有分支更新并合并到本地</span></div><div class="line">git pull --no-ff                 <span class="comment"># 抓取远程仓库所有分支更新并合并到本地，不要快进合并</span></div><div class="line">git fetch origin                 <span class="comment"># 抓取远程仓库所有更新</span></div><div class="line">git fetch origin remote-branch:local-branch <span class="comment">#抓取remote-branch分支的更新</span></div><div class="line">git fetch origin --tags          <span class="comment"># 抓取远程上的所有分支</span></div><div class="line">git checkout -b <span class="variable">&lt;new-branch&gt;</span> <span class="variable">&lt;remote_tag&gt;</span> <span class="comment"># 抓取远程上的分支</span></div><div class="line">git merge origin/master          <span class="comment"># 将远程主分支合并到本地当前分支</span></div><div class="line">git co --track origin/branch     <span class="comment"># 跟踪某个远程分支创建相应的本地分支</span></div><div class="line">git co -b <span class="variable">&lt;local_branch&gt;</span> origin/<span class="variable">&lt;remote_branch&gt;</span>  <span class="comment"># 基于远程分支创建本地分支，功能同上</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git push                         # push所有分支</span></span></div><div class="line">git push origin master           # 将本地主分支推到远程主分支</div><div class="line">git push -u origin master        # 将本地主分支推到远程(如无远程主分支则创建，用于初始化远程仓库)</div><div class="line">git push origin &lt;local_branch&gt;   <span class="comment"># 创建远程分支， origin是远程仓库名</span></div><div class="line">git push origin &lt;local_branch&gt;<span class="symbol">:&lt;remote_branch&gt;</span>  <span class="comment"># 创建远程分支</span></div><div class="line"><span class="input"><span class="prompt">git push origin :&lt;remote_branch&gt;</span>  <span class="comment">#先删除本地分支(git br -d &lt;branch&gt;)，然后再push删除远程分支</span></span></div></pre></td></tr></table></figure>
-
-<p>Git远程仓库管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">git remote -v                    <span class="comment"># 查看远程服务器地址和仓库名称</span></div><div class="line">git remote show origin           <span class="comment"># 查看远程服务器仓库状态</span></div><div class="line">git remote <span class="built_in">add</span> origin git@github:XXX/test.git         <span class="comment"># 添加远程仓库地址</span></div><div class="line">git remote <span class="built_in">set</span>-url origin git@github.com:XXX/test.git <span class="comment"># 设置远程仓库地址(用于修改远程仓库地址)</span></div><div class="line">git remote rm &lt;repository&gt;       <span class="comment"># 删除远程仓库</span></div><div class="line">git remote <span class="built_in">set</span>-head origin master   <span class="comment"># 设置远程仓库的HEAD指向master分支</span></div><div class="line"></div><div class="line">git branch <span class="comment">--set-upstream master origin/master</span></div><div class="line">git branch <span class="comment">--set-upstream develop origin/develop</span></div></pre></td></tr></table></figure>
-
-<h3 id="实例">实例</h3>
-<p>打patch过程</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">add</span> .</div><div class="line">git status</div><div class="line">git diff <span class="comment">--cached &gt;XXX.patch</span></div><div class="line">git ci -m <span class="string">'add patch'</span></div></pre></td></tr></table></figure>
-
-<h3 id="分支策略">分支策略</h3>
-<p>在实际开发中，我们应该按照几个基本原则进行分支管理：</p>
-<p>首先，master分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；</p>
-<p>那在哪干活呢？干活都在dev分支上，也就是说，dev分支是不稳定的，到某个时候，比如1.0版本发布时，再把dev分支合并到master上，在master分支发布1.0版本；</p>
-<p>你和你的小伙伴们每个人都在dev分支上干活，每个人都有自己的分支，时不时地往dev分支上合并就可以了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -841,7 +788,7 @@
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>2</small></li>
+    <li><a href="/tags/随感/">随感</a><small>3</small></li>
   
   </ul>
 </div>
@@ -858,6 +805,10 @@
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
     
       <li>
         <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
@@ -901,10 +852,6 @@
     
       <li>
         <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
   </ul>

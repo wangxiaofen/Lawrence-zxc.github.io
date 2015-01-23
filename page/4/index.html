@@ -89,6 +89,56 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-06-18T07:38:56.000Z"><a href="/2014/06/18/javaScript-muban/">6月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/18/javaScript-muban/">javascript中实现简单的模板替换</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
+<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">str_format</span><span class="params">(str, obj)</span> </span>{</div><div class="line">    <span class="keyword">return</span> str.replace(<span class="regexp">/\{\s*(\w+)\s*\}/g</span>, <span class="function"><span class="keyword">function</span><span class="params">(_i, _1)</span> </span>{</div><div class="line">        <span class="keyword">return</span> obj[_1] != <span class="literal">null</span> ? obj[_1] : <span class="string">''</span>;</div><div class="line">    });</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>很多朋友会说性能差一些，可能确实如此，不过对我来说，相比编写的舒适来说，这点性能差别实在无足轻重了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-06-15T09:06:46.000Z"><a href="/2014/06/15/java-mybatis/">6月 15 2014</a></time>
       
       
@@ -1543,7 +1593,7 @@
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>2</small></li>
+    <li><a href="/tags/随感/">随感</a><small>3</small></li>
   
   </ul>
 </div>
@@ -1560,6 +1610,10 @@
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
     
       <li>
         <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
@@ -1603,10 +1657,6 @@
     
       <li>
         <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
   </ul>

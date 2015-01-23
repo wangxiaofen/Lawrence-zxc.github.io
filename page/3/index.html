@@ -89,6 +89,70 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-09T06:48:10.000Z"><a href="/2014/10/09/blog4/">10月 9 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/09/blog4/">mysql多列索引详解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>创建多列索引</p>
+<p>在t_user表id，userName，email字段上创建多列索引（该表只有此索引）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">alter table t_user add index USER_INDEX(id, userName, email);</div></pre></td></tr></table></figure>
+
+<p>能够利用该索引的查询</p>
+<p>符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span>;</div><div class="line">select * from t_user where id between <span class="number">10</span> and <span class="number">50</span>;</div><div class="line">select * from t_user where id <span class="keyword">in</span> (<span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>);</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div><div class="line">select * from t_user where id &gt; <span class="number">40</span> and userName &gt; <span class="string">'t'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能利用以上索引的查询</p>
+<p>不符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">select * from t_user where userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div></pre></td></tr></table></figure>
+
+<p>or查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span> or userName = <span class="string">'zxc'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能使用索引的解决方案</p>
+<p>在where语句后面的查询字段建立单个索引及多列索引，注意leftmost index prefixes原则，避免建立重复索引</p>
+<p>or查询使用union来连接查询结果，并在对应的字段上建立索引</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
       
       
@@ -731,56 +795,6 @@ Stateless 无状态
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-18T07:38:56.000Z"><a href="/2014/06/18/javaScript-muban/">6月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/18/javaScript-muban/">javascript中实现简单的模板替换</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近搞了一下js，最不习惯的就是字符串生成都要用字符串拼装或者join的方式，所以尝试一下看能否实现简单的模板替换，效果还不错。</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">str_format</span><span class="params">(str, obj)</span> </span>{</div><div class="line">    <span class="keyword">return</span> str.replace(<span class="regexp">/\{\s*(\w+)\s*\}/g</span>, <span class="function"><span class="keyword">function</span><span class="params">(_i, _1)</span> </span>{</div><div class="line">        <span class="keyword">return</span> obj[_1] != <span class="literal">null</span> ? obj[_1] : <span class="string">''</span>;</div><div class="line">    });</div><div class="line">};</div></pre></td></tr></table></figure>
-
-<p>很多朋友会说性能差一些，可能确实如此，不过对我来说，相比编写的舒适来说，这点性能差别实在无足轻重了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -852,7 +866,7 @@ Stateless 无状态
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>2</small></li>
+    <li><a href="/tags/随感/">随感</a><small>3</small></li>
   
   </ul>
 </div>
@@ -869,6 +883,10 @@ Stateless 无状态
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
     
       <li>
         <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
@@ -912,10 +930,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
   </ul>
