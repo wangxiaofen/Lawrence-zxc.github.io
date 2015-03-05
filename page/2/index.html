@@ -89,6 +89,57 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>更新索引字段会触发索引重建，如果是要大批量修改大数据表的索引字段，速度会很慢，时间大多花在重建索引上了。<br>高效的办法是将索引先unusable，待批次更新修改后再重建（rebuild）索引。<br>整理語法如下,需要注意：</p>
+<pre><code><span class="bullet">1. </span>通过索引判断一个table是否大数据表（大于50M）。
+<span class="bullet">2. </span>对于分区表的索引，需用对不同分区进行重建。
+</code></pre><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">DECLARE</span></span></div><div class="line">    <span class="keyword">CURSOR</span> c1 <span class="keyword">IS</span></div><div class="line">    <span class="keyword">SELECT</span> index_name,PARTITIONED</div><div class="line">    <span class="keyword">FROM</span> user_indexes</div><div class="line">    <span class="keyword">WHERE</span> index_name <span class="keyword">IN</span> (</div><div class="line">            <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> INDEX_NAME</div><div class="line">            <span class="keyword">FROM</span> user_ind_columns</div><div class="line">            <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                <span class="keyword">AND</span> column_name = <span class="string">'COLUMN_NAME'</span> <span class="comment">--更新字段</span></div><div class="line">                <span class="keyword">AND</span> TABLE_NAME <span class="keyword">IN</span> (</div><div class="line">                    <span class="keyword">SELECT</span> segment_name</div><div class="line">                    <span class="keyword">FROM</span> (</div><div class="line">                        <span class="keyword">SELECT</span> segment_name</div><div class="line">                            ,<span class="keyword">SUM</span>(siz_M) <span class="keyword">AS</span> siz_M</div><div class="line">                        <span class="keyword">FROM</span> (</div><div class="line">                            <span class="keyword">SELECT</span> segment_name</div><div class="line">                                ,segment_type</div><div class="line">                                ,bytes / <span class="number">1024</span> / <span class="number">1024</span> <span class="keyword">AS</span> siz_M</div><div class="line">                            <span class="keyword">FROM</span> user_segments</div><div class="line">                            <span class="keyword">WHERE</span> segment_type <span class="keyword">LIKE</span> <span class="string">'TABLE%'</span></div><div class="line">                                <span class="keyword">AND</span> segment_name = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                            )</div><div class="line">                        <span class="keyword">GROUP</span> <span class="keyword">BY</span> segment_name</div><div class="line">                        )</div><div class="line">                    <span class="keyword">WHERE</span> siz_M &gt;= <span class="number">50</span>  <span class="comment">--定义达到50M的表为大数据表</span></div><div class="line">                    )</div><div class="line">            );</div><div class="line">    </div><div class="line">    TYPE IDXINFOREC </div><div class="line">    IS TABLE OF c1%ROWTYPE INDEX BY BINARY_INTEGER; </div><div class="line"></div><div class="line">    idxinfo    c1%ROWTYPE; </div><div class="line">    idxinfolist IDXINFOREC; </div><div class="line">    counter INTEGER; </div><div class="line">    </div><div class="line"><span class="operator"><span class="keyword">BEGIN</span></span></div><div class="line">    counter := <span class="number">0</span>; </div><div class="line"></div><div class="line">    OPEN c1;</div><div class="line">    </div><div class="line">    LOOP </div><div class="line">        FETCH c1 INTO idxinfo; </div><div class="line"></div><div class="line">        IF c1%FOUND THEN </div><div class="line">          counter := counter + 1; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line"></div><div class="line">        idxinfolist(counter) := idxinfo; </div><div class="line"></div><div class="line">        IF c1%NOTFOUND THEN </div><div class="line">          EXIT; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span> </div><div class="line"></div><div class="line">    CLOSE c1; </div><div class="line">    </div><div class="line">    <span class="comment">--1.unusable索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' unusable'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">        </div><div class="line">    <span class="comment">--2.中间执行更新任务</span></div><div class="line">    <span class="comment">-- update something</span></div><div class="line">    <span class="operator"><span class="keyword">COMMIT</span>;</span></div><div class="line">    </div><div class="line">    <span class="comment">--3.重建索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        IF idxinfolist(i).PARTITIONED = 'NO' THEN</div><div class="line">            <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild parallel nologging'</span>;</span></div><div class="line">            </div><div class="line">        ELSE </div><div class="line">            IF idxinfolist(i).PARTITIONED = 'YES' THEN</div><div class="line">                FOR x IN (</div><div class="line">                            <span class="operator"><span class="keyword">SELECT</span> PARTITION_NAME</span></div><div class="line">                            <span class="keyword">FROM</span> user_IND_PARTITIONS</div><div class="line">                            <span class="keyword">WHERE</span> index_name = idxinfolist(i).index_name</div><div class="line">                            <span class="keyword">ORDER</span> <span class="keyword">BY</span> PARTITION_POSITION</div><div class="line">                            ) LOOP</div><div class="line"></div><div class="line">                        <span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild PARTITION '</span> || x.PARTITION_NAME || <span class="string">' parallel nologging'</span>;</div><div class="line">                <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">            <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' noparallel'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line"><span class="operator"><span class="keyword">END</span>;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-10T08:35:30.000Z"><a href="/2014/11/10/oracle-partition/">11月 10 2014</a></time>
       
       
@@ -882,54 +933,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python</span></div><div class="line"></div><div class="line"><span class="comment">#################################################</span></div><div class="line"><span class="comment">#         左边网开发环境SwitchHosts Tools</span></div><div class="line"><span class="comment">#   (初始化开发环境,安装相关开发软件,服务器）</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#    V1.0      Writen by: zxc       Date:2014-10-11</span></div><div class="line"><span class="comment">##################################################</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> re</div><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span></div><div class="line">    hostsmap = {}</div><div class="line">    envlist = []</div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)</div><div class="line">    current_env = <span class="string">''</span></div><div class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> hosts:</div><div class="line">        line = line.strip()</div><div class="line">        env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)</div><div class="line">        <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            current_env = env_p.group(<span class="number">1</span>)</div><div class="line">            <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:</div><div class="line">                <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env</div><div class="line">            envlist.append(current_env)</div><div class="line">            hostsmap[current_env] = [] </div><div class="line">            <span class="keyword">continue</span></div><div class="line">        <span class="keyword">if</span> current_env == <span class="string">''</span>:</div><div class="line">            <span class="keyword">continue</span></div><div class="line">        hostsmap[current_env].append(line)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line">    iter_idx = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)</div><div class="line">        iter_idx = iter_idx+<span class="number">1</span></div><div class="line">    hostsmapCount = {}</div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:</div><div class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):</div><div class="line">                <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">                    hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span></div><div class="line">                <span class="keyword">else</span>:</div><div class="line">                    hostsmapCount[env] = <span class="number">1</span></div><div class="line">    current_env = <span class="keyword">None</span></div><div class="line">    max_count = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">        <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:</div><div class="line">            current_env = env </div><div class="line">            max_count = hostsmapCount[env]</div><div class="line">    <span class="keyword">if</span> max_count == <span class="number">0</span>:</div><div class="line">        current_env = <span class="string">'base'</span></div><div class="line">    <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env</div><div class="line">    env = envlist[int(sys.stdin.readline().strip())]</div><div class="line">    writehosts(env, envlist, hostsmap)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span></div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)</div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        hosts.write(<span class="string">'### %s ###'</span> % env_iter)</div><div class="line">        hosts.write(<span class="string">'\n'</span>)</div><div class="line">        desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)</div><div class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:</div><div class="line">            <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):</div><div class="line">                item = item[<span class="number">1</span> : len(item)]</div><div class="line">            <span class="keyword">if</span> desc:</div><div class="line">                hosts.write(<span class="string">'%s'</span> % item.strip())</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                hosts.write(<span class="string">'# %s'</span> % item.strip())</div><div class="line">            hosts.write(<span class="string">'\n'</span>)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span></div><div class="line">    example = <span class="string">"""&gt; cat /etc/hosts</span></div><div class="line">### base ###</div><div class="line">127.0.0.1 localhost</div><div class="line">127.0.0.1 zxc-rMBP</div><div class="line">255.255.255.255    broadcasthost</div><div class="line">::1             localhost</div><div class="line">fe80::1%lo0    localhost</div><div class="line">91.213.30.151   www.google.com</div><div class="line">91.213.30.151   www.google.com.hk</div><div class="line">91.213.30.151   accounts.google.com</div><div class="line">91.213.30.151   accounts.google.com.hk</div><div class="line">91.213.30.151   mail.google.com</div><div class="line">91.213.30.151   mail.google.com.hk</div><div class="line">91.213.30.151   plus.google.com</div><div class="line">91.213.30.151   plus.google.com.hk</div><div class="line">### server190 ###</div><div class="line">192.168.0.190  web.zuobian.com</div><div class="line">### server150 ###</div><div class="line">192.168.0.150  web.zuobian.com</div><div class="line">### localdev ###</div><div class="line">127.0.0.1   web.zuobian.com</div><div class="line">### run ###</div><div class="line">"""</div><div class="line">    <span class="keyword">print</span> example</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):</div><div class="line">        <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span></div><div class="line">        print_example()</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    switchhosts()</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1001,7 +1004,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>3</small></li>
+    <li><a href="/tags/随感/">随感</a><small>4</small></li>
   
   </ul>
 </div>
@@ -1018,6 +1021,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
     
       <li>
         <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
@@ -1061,10 +1068,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
       </li>
     
   </ul>

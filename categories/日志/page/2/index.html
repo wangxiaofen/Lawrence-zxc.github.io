@@ -93,6 +93,54 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T08:35:30.000Z"><a href="/2014/11/10/oracle-partition/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--create tablespaces</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_1 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_1.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_2 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_2.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_3 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_3.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"></div><div class="line"><span class="comment">--create table with partition declaration</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> CUSTOMER</span></div><div class="line">(</div><div class="line">  CUSTOMER_ID <span class="built_in">NUMBER</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span>,</div><div class="line">  CUST_AREA <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  FIRST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  LAST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  PHONE VARCHAR2(<span class="number">15</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  EMAIL VARCHAR2(<span class="number">80</span>),</div><div class="line">  SEX VARCHAR2(<span class="number">10</span>),</div><div class="line">  <span class="keyword">STATUS</span> VARCHAR2(<span class="number">10</span>),</div><div class="line">  CREATE_DATE <span class="built_in">DATE</span></div><div class="line">)</div><div class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> LIST (CUST_AREA) <span class="comment">--partition declaration</span></div><div class="line">(</div><div class="line">  <span class="keyword">PARTITION</span> area_1 <span class="keyword">VALUES</span>(<span class="number">1</span>) <span class="keyword">TABLESPACE</span> cus_area_1,</div><div class="line">  <span class="keyword">PARTITION</span> area_2 <span class="keyword">VALUES</span>(<span class="number">2</span>) <span class="keyword">TABLESPACE</span> cus_area_2,</div><div class="line">  <span class="keyword">PARTITION</span> area_3 <span class="keyword">VALUES</span>(<span class="number">3</span>) <span class="keyword">TABLESPACE</span> cus_area_3</div><div class="line">);</div><div class="line"></div><div class="line"><span class="comment">-- test data</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="string">'geln'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="number">2</span>,<span class="string">'eric'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="string">'tom'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">4</span>,<span class="number">3</span>,<span class="string">'tony'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">commit</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- query by partition</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER <span class="keyword">partition</span> (area_1) ;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="comment">/*+rowid(CUSTOMER)*/</span> ROWID,LAST_NAME,FIRST_NAME,PHONE <span class="keyword">FROM</span> CUSTOMER  <span class="keyword">partition</span> (AREA_1)  <span class="keyword">WHERE</span>  ROWID&gt;=<span class="string">'AAASrfAAIAAAACAAAA'</span> <span class="keyword">AND</span>  ROWID&lt;=<span class="string">'AAASrfAAIAAAACHCcQ'</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- find all partitioin data for a table</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> e.owner,e.segment_name,e.partition_name,o.data_object_id,</span></div><div class="line">    e.RELATIVE_FNO,</div><div class="line">    e.BLOCK_ID MIN_BLOCK,</div><div class="line">    e.BLOCK_ID + e.BLOCKS - <span class="number">1</span> MAX_BLOCK</div><div class="line"><span class="keyword">FROM</span> dba_extents e, dba_objects o</div><div class="line"><span class="keyword">WHERE</span>     e.segment_name = <span class="string">'CUSTOMER'</span>  <span class="comment">-- table name</span></div><div class="line">    <span class="keyword">AND</span> o.object_name = e.segment_name</div><div class="line">    <span class="keyword">AND</span> e.owner = <span class="string">'MASK'</span> <span class="comment">-- schema name</span></div><div class="line">    <span class="keyword">AND</span> o.OWNER = e.owner</div><div class="line">    <span class="keyword">AND</span> NVL (e.partition_name, <span class="number">0</span>) = NVL (o.SUBOBJECT_NAME, <span class="number">0</span>)</div><div class="line">    <span class="keyword">AND</span> o.data_object_id <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>;</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-10T07:49:30.000Z"><a href="/2014/11/10/git-pro/">11月 10 2014</a></time>
       
       
@@ -886,70 +934,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-09T06:48:10.000Z"><a href="/2014/10/09/blog4/">10月 9 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/09/blog4/">mysql多列索引详解</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>创建多列索引</p>
-<p>在t_user表id，userName，email字段上创建多列索引（该表只有此索引）：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">alter table t_user add index USER_INDEX(id, userName, email);</div></pre></td></tr></table></figure>
-
-<p>能够利用该索引的查询</p>
-<p>符合leftmost index prefixes原则的查询</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span>;</div><div class="line">select * from t_user where id between <span class="number">10</span> and <span class="number">50</span>;</div><div class="line">select * from t_user where id <span class="keyword">in</span> (<span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>);</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div><div class="line">select * from t_user where id &gt; <span class="number">40</span> and userName &gt; <span class="string">'t'</span>;</div></pre></td></tr></table></figure>
-
-<p>不能利用以上索引的查询</p>
-<p>不符合leftmost index prefixes原则的查询</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">select * from t_user where userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div></pre></td></tr></table></figure>
-
-<p>or查询</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span> or userName = <span class="string">'zxc'</span>;</div></pre></td></tr></table></figure>
-
-<p>不能使用索引的解决方案</p>
-<p>在where语句后面的查询字段建立单个索引及多列索引，注意leftmost index prefixes原则，避免建立重复索引</p>
-<p>or查询使用union来连接查询结果，并在对应的字段上建立索引</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1022,7 +1006,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>3</small></li>
+    <li><a href="/tags/随感/">随感</a><small>4</small></li>
   
   </ul>
 </div>
@@ -1039,6 +1023,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
     
       <li>
         <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
@@ -1082,10 +1070,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/git-pro/">Git配置和常用命令</a>
       </li>
     
   </ul>
