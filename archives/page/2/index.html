@@ -93,6 +93,105 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>我发现很多人没办法高效地解决问题的关键原因是不熟悉工具，不熟悉工具也还罢了，甚至还不知道怎么去找工具，这个问题就大条了。我想列下我能想到的一个Java程序员会用到的常用工具。</p>
+<p>一、编码工具</p>
+<p> 1.IDE：<a href="http://www.eclipse.org/" target="_blank" rel="external">Eclipse</a>或者<a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">IDEA</a>，熟悉尽可能多的快捷键，《<a href="https://www.google.com/#hl=zh-CN&amp;site=&amp;source=hp&amp;q=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;oq=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;aq=f&amp;aqi=g-l1&amp;aql=&amp;gs_l=hp.3..0i13.449l7739l0l7948l53l49l9l4l4l9l278l4511l14j15j7l36l0.&amp;bav=on.2,or.r_gc.r_pw.r_cp.,cf.osb&amp;fp=eef1a08d3fa904e4&amp;biw=1594&amp;bih=858" target="_blank" rel="external">Eclipse常见快捷键列表</a>》</p>
+<p> 2.插件：<br> (1) <a href="http://findbugs.sourceforge.net/" target="_blank" rel="external">Findbugs</a>，在release之前进行一次静态代码检查是必须的<br> (2) <a href="http://www.atlassian.com/software/clover/overview" target="_blank" rel="external">Clover</a>，关心你的单元测试覆盖率<br> (3) <a href="http://checkstyle.sourceforge.net/" target="_blank" rel="external">Checkstyle</a> 代码风格检查</p>
+<p> 3.构建和部署工具:ant或者maven，现在主流都是maven了吧，使用<a href="http://www.sonatype.org/nexus/" target="_blank" rel="external">nexus搭建maven私服</a>，再加上持续集成<a href="http://jenkins-ci.org/" target="_blank" rel="external">jenkins</a>。代码质量不用愁。</p>
+<p> 4.版本管理工具： svn或者git</p>
+<p> 5.<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">diff</a>和<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">patch</a></p>
+<p> 6.设置你的eclipse或者IDEA，如formatter,save actions以及code template等。代码风格，直接用google的也可以啊。《<a href="http://code.google.com/p/google-styleguide/" target="_blank" rel="external">Google style guide</a>》</p>
+<p> 7.掌握一个文本编辑器，Emacs或者VIM，熟悉常用快捷键。这在你需要在线编辑代码，或者编写其他语言代码时候特别有用。《<a href="http://linuxtoy.org/archives/why-emacs-vim-good.html" target="_blank" rel="external">神器圣战</a>》</p>
+<p>二、JDK相关</p>
+<p>1.jstat : 观察GC情况，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstat -gcutil pid <span class="number">3078</span></div></pre></td></tr></table></figure>
+
+<p>2.jmap，查看heap情况，如查看存活对象列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -histo:live pid |grep com.company |less</div></pre></td></tr></table></figure>
+
+<p>或者dump内存用来分析：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -dump:file=test.bin pid</div></pre></td></tr></table></figure>
+
+<p>3.分析dump的堆文件，可以用jhat:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jhat test.bin</div></pre></td></tr></table></figure>
+
+<p>  分析完成后可以用浏览器查看堆的情况。这个工具的分析结果还比较原始，你还可以用Eclipse MAT插件进行图形化分析，或者IBM的<a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=4544bafe-c7a2-455f-9d43-eb866ea60091" target="_blank" rel="external">Heap Analyzer</a>.</p>
+<p>4.jvisualvm和jconsole： JVM自带的性能分析和监控工具，怎么用？请自己看<a href="http://docs.oracle.com/javase/6/docs/technotes/guides/visualvm/index.html" target="_blank" rel="external">文档</a>。</p>
+<p>5.jstack：分析线程堆栈，如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstack pid &gt; thread_dump</div></pre></td></tr></table></figure>
+
+<p>查看CPU最高的线程在干什么的方法结合top和jstack：<a href="http://www.iteye.com/topic/1114219" target="_blank" rel="external">http://www.iteye.com/topic/1114219</a></p>
+<p>6.更多JVM工具，参见官方文档：<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/" target="_blank" rel="external">http://docs.oracle.com/javase/6/docs/technotes/tools/</a></p>
+<p>7.学习使用btrace分析java运行时问题。《(Btrace使用简介)[<a href="http://rdc.taobao.com/team/jm/archives/509]》" target="_blank" rel="external">http://rdc.taobao.com/team/jm/archives/509]》</a></p>
+<p>8.GC日志分析工具：GC viewer、GC-console或者自己挑<a href="http://stackoverflow.com/questions/1839599/analyze-gc-logs-for-sun-hotspots-jvm-6" target="_blank" rel="external">这里</a>。</p>
+<p>9.性能分析工具，除了自带的jvisualvm外，还可以用商业的jprofiler。</p>
+<p>10.<a href="http://kenwublog.com/docs/java6-jvm-options-chinese-edition.htm" target="_blank" rel="external">JVM参数大全</a></p>
+<p>11.《<a href="http://hllvm.group.iteye.com/group/topic/27945" target="_blank" rel="external">JVM调优标准参数陷阱</a>》，iteye神贴。</p>
+<p>三、Linux工具</p>
+<p>1.熟悉<a href="http://www.commandlinefu.com/commands/browse/sort-by-votes" target="_blank" rel="external">常用的shell命令</a>，</p>
+<p>2.设置<a href="http://paulkeck.com/ssh/" target="_blank" rel="external">ssh免登陆</a></p>
+<p>3.使用htop替换top。</p>
+<p>4.熟悉下strace,gdb甚至systemtap来分析问题。</p>
+<p>5.熟悉vmstat,iostat,sar等性能统计工具。</p>
+<p>5.自动化部署脚本，<a href="http://docs.fabfile.org/en/1.4.1/index.html" target="_blank" rel="external">py-fabric</a>或者自荐下这个<a href="https://github.com/killme2008/clojure-control" target="_blank" rel="external">clojure-control</a>。</p>
+<p>四、其他</p>
+<p>1.掌握一门脚本语言，<a href="http://python.org/" target="_blank" rel="external">Python</a>或者<a href="http://www.ruby-lang.org/" target="_blank" rel="external">Ruby</a>，高效解决一些需要quick and dirty的任务：比如读写文件、导入导出数据库、网页爬虫等。注意不是python.com，咔咔。</p>
+<p><code>Python</code>推荐<a href="http://woodpecker.org.cn/" target="_blank" rel="external">啄木鸟社区</a>,<code>Ruby</code>推荐<a href="https://ruby-china.org/" target="_blank" rel="external">Ruby China</a></p>
+<p>2.使用Linux或者Mac os系统作为你的开发环境。</p>
+<p>3.升级你的“硬件工具”，双屏大屏显示器、SSD、8G内存甚至更多。</p>
+<p>4.你懂的：<a href="https://code.google.com/p/goagent/" target="_blank" rel="external">https://code.google.com/p/goagent/</a> ; <a href="https://github.com/justjavac/Google-IPs/blob/master/README.md" target="_blank" rel="external">https://github.com/justjavac/Google-IPs/blob/master/README.md</a></p>
+<p>五、如何查找工具？</p>
+<p>1.搜索引擎，google或者baidu，《<a href="http://www.williamlong.info/archives/728.html" target="_blank" rel="external">搜索技巧</a>》</p>
+<p>2.万能的stack overflow：<a href="http://stackoverflow.com/" target="_blank" rel="external">http://stackoverflow.com/</a></p>
+<p>3.虚心问牛人。</p>
+<p>六、最重要的是⋯⋯</p>
+<p>一颗永不停止学习的心。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
       
       
@@ -848,102 +947,13 @@
 
 
   
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
-<pre><code><span class="title">RESTful</span> Web Services Cookbook
-想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
-
-RESTful API Design
-Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
-</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
-<p>API Design Tips</p>
-<p>每个实体对象仅需要两个URL </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
-
-<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
-<p>使用名词代替动词</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
-
-<p>正确使用HTTP方法 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
-
-<p>对象间的关联关系 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
-
-<p>数据分页 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>查询条件</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
-
-<p>返回需要的参数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
-
-<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
-
-<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
-
-<p>身份认证 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
-
-<p>版本管理 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/archives/">Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="page-number" href="/archives/page/4/">4</a><a class="extend next" rel="next" href="/archives/page/3/">Next</a></nav>
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/archives/">Prev</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="page-number" href="/archives/page/4/">4</a><a class="page-number" href="/archives/page/5/">5</a><a class="extend next" rel="next" href="/archives/page/3/">Next</a></nav>
 
 <nav id="pagination">
   
@@ -971,9 +981,11 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>15</small></li>
+    <li><a href="/tags/Java/">Java</a><small>18</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
@@ -1028,6 +1040,10 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
   <ul class="entry">
     
       <li>
+        <a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a>
+      </li>
+    
+      <li>
         <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
       </li>
     
@@ -1069,10 +1085,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     
       <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
       </li>
     
   </ul>

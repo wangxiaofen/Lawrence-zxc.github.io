@@ -1,0 +1,486 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java在运行时动态增加枚举类型 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="java在运行时动态增加枚举类型"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-04-11T13:03:46.000Z"><a href="/2014/04/11/create-enum-instances-dynamically/">4月 11 2014</a></time>
+      
+      
+  
+    <h1 class="title">java在运行时动态增加枚举类型</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>最近在使用一个内部框架的时候，希望能够在运行时指定枚举类型，却发现这是一件挺麻烦的事情（不找别的替代方式，就是要动态增加enum的类型），方法也不正统，不过作为有趣的尝试，研究研究也无妨，下面的内容主要来自于<a href="http://niceideas.ch/roller2/badtrash/entry/java_create_enum_instances_dynamically" target="_blank" rel="external">《Java–create enum instances dynamically》</a>这样一篇文章。在一切开始前，如果你想问，为什么非要增加/改变enum类型？其实这是一个非常好的问题，多数情况下这是应对被避免的，但是这不在今天我的讨论范围内。</p>
+<p>一、方法 void addEnum(Class<t> enumType, String enumName)，用于增加一个枚举类型：</t></p>
+<pre><code>/**
+ * Add an enum instance <span class="keyword">to</span> the enum <span class="class"><span class="keyword">class</span> <span class="title">given</span> <span class="title">as</span> <span class="title">argument</span></span>
+ * 
+ * @param the type of the enum (implicit)
+ * @param enumType the <span class="class"><span class="keyword">class</span> <span class="title">of</span> <span class="title">the</span> <span class="title">enum</span> <span class="title">to</span> <span class="title">be</span> <span class="title">modified</span></span>
+ * @param enumName the name of the <span class="keyword">new</span> enum instance <span class="keyword">to</span> be added <span class="keyword">to</span> the <span class="class"><span class="keyword">class</span>.</span>
+ */
+@SuppressWarnings(<span class="string">"unchecked"</span>)
+<span class="keyword">public</span> static &lt;T extends Enum&lt;?&gt;&gt; void addEnum(<span class="class"><span class="keyword">Class</span>&lt;<span class="title">T</span>&gt; <span class="title">enumType</span>, <span class="title">String</span> <span class="title">enumName</span>) {</span>
+
+    // <span class="number">0</span>. Sanity checks
+    <span class="keyword">if</span> (!Enum.class.isAssignableFrom(enumType)) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"class "</span> + enumType + <span class="string">" is not an instance of Enum"</span>);
+    }
+    // <span class="number">1</span>. Lookup <span class="string">"$VALUES"</span> holder in enum <span class="class"><span class="keyword">class</span> <span class="title">and</span> <span class="title">get</span> <span class="title">previous</span> <span class="title">enum</span> <span class="title">instances</span></span>
+    <span class="keyword">Field</span> valuesField = <span class="literal">null</span>;
+    <span class="keyword">Field</span>[] fields = TestEnum.class.getDeclaredFields();
+    <span class="keyword">for</span> (<span class="keyword">Field</span> <span class="keyword">field</span> : fields) {
+        <span class="keyword">if</span> (<span class="keyword">field</span>.getName().contains(<span class="string">"$VALUES"</span>)) {
+            valuesField = <span class="keyword">field</span>;
+            break;
+        }
+    }
+    AccessibleObject.setAccessible(<span class="keyword">new</span> <span class="keyword">Field</span>[] { valuesField }, <span class="literal">true</span>);
+
+    <span class="keyword">try</span> {
+
+        // <span class="number">2</span>. Copy it 
+        T[] previousValues = (T[]) valuesField.get(enumType);
+        List values = <span class="keyword">new</span> ArrayList(Arrays.asList(previousValues));
+
+        // <span class="number">3</span>. build <span class="keyword">new</span> enum
+        T newValue = (T) makeEnum(enumType, // The target enum <span class="class"><span class="keyword">class</span> </span>
+                enumName, // THE <span class="keyword">NEW</span> ENUM INSTANCE <span class="keyword">TO</span> BE DYNAMICALLY ADDED 
+                values.size(),
+                <span class="keyword">new</span> <span class="class"><span class="keyword">Class</span>&lt;&gt;&lt;[] {}, // <span class="title">can</span> <span class="title">be</span> <span class="title">used</span> <span class="title">to</span> <span class="title">pass</span> <span class="title">values</span> <span class="title">to</span> <span class="title">the</span> <span class="title">enum</span> <span class="title">constuctor</span></span>
+                <span class="keyword">new</span> Object[] {}); // can be used <span class="keyword">to</span> pass values <span class="keyword">to</span> the enum constuctor
+
+        // <span class="number">4</span>. add <span class="keyword">new</span> value
+        values.add(newValue);
+
+        // <span class="number">5</span>. Set <span class="keyword">new</span> values <span class="keyword">field</span>
+        setFailsafeFieldValue(valuesField, <span class="literal">null</span>, 
+                values.toArray((T[]) Array.newInstance(enumType, <span class="number">0</span>)));
+
+        // <span class="number">6</span>. Clean enum cache
+        cleanEnumCache(enumType);
+
+    } <span class="keyword">catch</span> (Exception e) {
+        e.printStackTrace();
+        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage(), e);
+    }
+}
+</code></pre><p>基于反射，把枚举类的属性列表全部取出来，增加一个新的枚举类型以后再放回去。上面的第3、5、6步下面分别说明。</p>
+<p>二、在其中使用到了 makeEnum(Class&lt;?&gt; enumClass, String value, int ordinal, Class&lt;?&gt;[] additionalTypes, Object[] additionalValues) 这样一个方法：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> Object makeEnum(<span class="keyword">Class</span>&lt;?&gt; enumClass, String value, <span class="keyword">int</span> ordinal, 
+        <span class="keyword">Class</span>&lt;?&gt;[] additionalTypes, Object[] additionalValues) <span class="keyword">throws</span> Exception {
+    Object[] parms = <span class="keyword">new</span> Object[additionalValues.length + <span class="number">2</span>];
+    parms[<span class="number">0</span>] = value;
+    parms[<span class="number">1</span>] = Integer.valueOf(ordinal);
+    System.arraycopy(additionalValues, <span class="number">0</span>, parms, <span class="number">2</span>, additionalValues.length);
+    <span class="keyword">return</span> enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> ConstructorAccessor getConstructorAccessor(<span class="keyword">Class</span>&lt;?&gt; enumClass, 
+        <span class="keyword">Class</span>&lt;?&gt;[] additionalParameterTypes) <span class="keyword">throws</span> NoSuchMethodException {
+    <span class="keyword">Class</span>&lt;?&gt;[] parameterTypes = <span class="keyword">new</span> <span class="keyword">Class</span>[additionalParameterTypes.length + <span class="number">2</span>];
+    parameterTypes[<span class="number">0</span>] = String.<span class="keyword">class</span>;
+    parameterTypes[<span class="number">1</span>] = <span class="keyword">int</span>.<span class="keyword">class</span>;
+    System.arraycopy(additionalParameterTypes, <span class="number">0</span>, 
+            parameterTypes, <span class="number">2</span>, additionalParameterTypes.length);
+    <span class="keyword">return</span> reflectionFactory.newConstructorAccessor(
+            enumClass.getDeclaredConstructor(parameterTypes));
+}
+</code></pre><p>这是真正使用newInstance方法来创建新的枚举对象的方法，注意其中的构造器参数类型，第一个是String，第二个是int，这是需要符合enum内部实现的。</p>
+<p>三、setFailsafeFieldValue(Field field, Object target, Object value) throws NoSuchFieldException, IllegalAccessException，这个修改方法modifier并设值的方法：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setFailsafeFieldValue</span>(Field field, Object target, Object <span class="keyword">value</span>)
+         throws NoSuchFieldException, IllegalAccessException {
+
+    <span class="comment">// let's make the field accessible</span>
+    field.setAccessible(<span class="keyword">true</span>);
+
+    <span class="comment">// next we change the modifier in the Field instance to</span>
+    <span class="comment">// not be final anymore, thus tricking reflection into</span>
+    <span class="comment">// letting us modify the static final field</span>
+    Field modifiersField = Field.class.getDeclaredField(<span class="string">"modifiers"</span>);
+    modifiersField.setAccessible(<span class="keyword">true</span>);
+    <span class="keyword">int</span> modifiers = modifiersField.getInt(field);
+
+    <span class="comment">// blank out the final bit in the modifiers int</span>
+    modifiers &amp;= ~Modifier.FINAL;
+    modifiersField.setInt(field, modifiers);
+
+    FieldAccessor fa = reflectionFactory.newFieldAccessor(field, <span class="keyword">false</span>);
+    fa.<span class="keyword">set</span>(target, <span class="keyword">value</span>);
+}
+</code></pre><p>四、清除枚举缓存：cleanEnumCache(Class&lt;?&gt; enumClass) throws NoSuchFieldException, IllegalAccessException：</p>
+<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cleanEnumCache</span>(Class&lt;?&gt; enumClass) 
+        <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException {
+    blankField(enumClass, <span class="string">"enumConstantDirectory"</span>); <span class="comment">// Sun (Oracle?!?) JDK 1.5/6</span>
+    blankField(enumClass, <span class="string">"enumConstants"</span>); <span class="comment">// IBM JDK</span>
+}
+
+<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">blankField</span>(Class&lt;?&gt; enumClass, String fieldName) 
+        <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException {
+    <span class="keyword">for</span> (Field field : Class.class.getDeclaredFields()) {
+        <span class="keyword">if</span> (field.getName().contains(fieldName)) {
+            AccessibleObject.setAccessible(<span class="keyword">new</span> Field[] { field }, <span class="keyword">true</span>);
+            setFailsafeFieldValue(field, enumClass, <span class="keyword">null</span>);
+            <span class="keyword">break</span>;
+        }
+    }
+}
+</code></pre><p>最终的运行时测试代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">enum</span> TestEnum {</div><div class="line">    a,</div><div class="line">    b,</div><div class="line">    c;</div><div class="line">};</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line"> </div><div class="line">    <span class="comment">// Dynamically add 3 new enum instances d, e, f to TestEnum</span></div><div class="line">    addEnum(TestEnum.class , <span class="string">"d"</span>);</div><div class="line">    addEnum(TestEnum.class , <span class="string">"e"</span>);</div><div class="line">    addEnum(TestEnum.class , <span class="string">"f"</span>);</div><div class="line"> </div><div class="line">    <span class="comment">// Run a few tests just to show it works OK. </span></div><div class="line">    System.out.println(Arrays.deepToString(TestEnum.values()));</div><div class="line">    <span class="comment">// Shows : [a, b, c, d, e, f] </span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2014/04/28/python-mysql-restful/">python为mysql实现restful接口</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2014/04/11/create-enum-instances-dynamically/">
+                  http://lawrence-zxc.github.io/2014/04/11/create-enum-instances-dynamically/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2014/04/28/python-mysql-restful/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2014/03/21/nginx-gzip/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2014/04/11/create-enum-instances-dynamically/" data-title="java在运行时动态增加枚举类型" data-url="http://lawrence-zxc.github.io/2014/04/11/create-enum-instances-dynamically/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>5</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/前端/">前端</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>2</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/理财/">理财</a><small>1</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

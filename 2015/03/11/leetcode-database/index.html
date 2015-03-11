@@ -1,0 +1,500 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>LeetCode数据库题母解答 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="LeetCode数据库题母解答"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2015-03-11T09:15:34.000Z"><a href="/2015/03/11/leetcode-database/">3月 11 2015</a></time>
+      
+      
+  
+    <h1 class="title">LeetCode数据库题母解答</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在之前做程序算法题的途中发现，LeetCode上面推出了数据库解答，有十道题，于是这两天晚上时间就给做了。解答是次要主要的好处是，正好复习复习SQL一些查询语句的写法，比如自定义变量和常用函数。题目都比较简单，少做解释，以贴题目和答案为主。</p>
+<table>
+<thead>
+<tr>
+<th><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Title</a></th>
+<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Acceptance</a></th>
+<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Difficulty</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#combine-two-tables">Combine Two Tables</a></td>
+<td style="text-align:center">32.5%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#second-highest-salary">Second Highest Salary</a></td>
+<td style="text-align:center">23.8%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#nth-highest-salary">Nth Highest Salary</a></td>
+<td style="text-align:center">14.1%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#rank-scores">Rank Scores</a></td>
+<td style="text-align:center">20.7%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#consecutive-numbers">Consecutive Numbers</a></td>
+<td style="text-align:center">20.2%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#employees-earning-more-than-their-managers">Employees Earning More Than Their Managers</a></td>
+<td style="text-align:center">44.2%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#duplicate-emails">Duplicate Emails</a></td>
+<td style="text-align:center">38.0%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#customers-who-never-order">Customers Who Never Order</a></td>
+<td style="text-align:center">34.2%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#department-highest-salary">Department Highest Salary</a></td>
+<td style="text-align:center">19.2%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#department-top-three-salaries">Department Top Three Salaries</a></td>
+<td style="text-align:center">16.3%</td>
+<td style="text-align:center">Hard</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Combine_Two_Tables"><span id="combine-two-tables" style="color: #ff0000;">Combine Two Tables</span></h3>
+<p>【题目】</p>
+<p>Table: Person</p>
+<p>+——————-+————-+<br>| Column Name | Type    |<br>+——————-+————-+<br>| PersonId    | int     |<br>| FirstName   | varchar |<br>| LastName    | varchar |<br>+——————-+————-+<br>PersonId is the primary key column for this table.<br>Table: Address</p>
+<p>+——————-+————-+<br>| Column Name | Type    |<br>+——————-+————-+<br>| AddressId   | int     |<br>| PersonId    | int     |<br>| City        | varchar |<br>| State       | varchar |<br>+——————-+————-+<br>AddressId is the primary key column for this table.<br>Write a SQL query for a report that provides the following information for each person in the Person table, regardless if there is an address for each of those people:</p>
+<p>FirstName, LastName, City, State<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> p.FirstName, p.LastName, a.City, a.State <span class="keyword">from</span> Person p <span class="keyword">left</span> <span class="keyword">outer</span> <span class="keyword">join</span> Address a <span class="keyword">on</span> p.PersonId=a.PersonId;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Second_Highest_Salary"><span id="second-highest-salary" style="color: #ff0000;">Second Highest Salary</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to get the second highest salary from the Employee table.</p>
+<p>+——+————+<br>| Id | Salary |<br>+——+————+<br>| 1  | 100    |<br>| 2  | 200    |<br>| 3  | 300    |<br>+——+————+<br>For example, given the above Employee table, the second highest salary is 200. If there is no second highest salary, then the query should return null.</p>
+<p>【解答】 题目简单，但是如果和我一样，发现几个常用函数都不记得了，可以<a href="http://www.tutorialspoint.com/mysql/mysql-useful-functions.htm" target="_blank" rel="external">复习一下</a>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">IFNULL</span>( (<span class="keyword">select</span> e.Salary <span class="keyword">from</span> Employee e <span class="keyword">group</span> <span class="keyword">by</span> e.Salary <span class="keyword">order</span> <span class="keyword">by</span> e.Salary <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>, <span class="number">1</span>), <span class="literal">NULL</span>) SecondHighestSalary;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Nth_Highest_Salary"><span id="nth-highest-salary" style="color: #ff0000;">Nth Highest Salary</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to get the nth highest salary from the Employee table.</p>
+<p>+——+————+<br>| Id | Salary |<br>+——+————+<br>| 1  | 100    |<br>| 2  | 200    |<br>| 3  | 300    |<br>+——+————+<br>For example, given the above Employee table, the nth highest salary where n = 2 is 200. If there is no nth highest salary, then the query should return null.</p>
+<p>【解答】第n高，这就得用自定义变量了，平时很少用这东西，于是<a href="http://dev.mysql.com/doc/refman/5.0/en/user-variables.html" target="_blank" rel="external">复习了一下</a>先。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> getNthHighestSalary(N <span class="built_in">INT</span>) <span class="keyword">RETURNS</span> <span class="built_in">INT</span></span></div><div class="line"><span class="keyword">BEGIN</span></div><div class="line">    <span class="keyword">RETURN</span> (</div><div class="line">        <span class="keyword">select</span> <span class="keyword">IFNULL</span>(Salary, <span class="literal">NULL</span>) Salary <span class="keyword">from</span> (</div><div class="line">            <span class="keyword">select</span> @row_num := @row_num+<span class="number">1</span> Rank, Salary <span class="keyword">from</span> (</div><div class="line">                <span class="keyword">select</span> Salary <span class="keyword">from</span> Employee <span class="keyword">group</span> <span class="keyword">by</span> Salary <span class="keyword">desc</span></div><div class="line">            ) t1 <span class="keyword">join</span> (</div><div class="line">                <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">            ) t2</div><div class="line">        ) t <span class="keyword">where</span> t.Rank=N</div><div class="line">    );</div><div class="line"><span class="operator"><span class="keyword">END</span></span></div></pre></td></tr></table></figure>
+
+<h3 id="Rank_Scores"><span id="rank-scores" style="color: #ff0000;">Rank Scores</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to rank scores. If there is a tie between two scores, both should have the same ranking. Note that after a tie, the next ranking number should be the next consecutive integer value. In other words, there should be no “holes” between ranks.</p>
+<p>+——+———-+<br>| Id | Score |<br>+——+———-+<br>| 1  | 3.50  |<br>| 2  | 3.65  |<br>| 3  | 4.00  |<br>| 4  | 3.85  |<br>| 5  | 4.00  |<br>| 6  | 3.65  |<br>+——+———-+<br>For example, given the above Scores table, your query should generate the following report (order by highest score):<br>+———-+———+<br>| Score | Rank |<br>+———-+———+<br>| 4.00  | 1    |<br>| 4.00  | 1    |<br>| 3.85  | 2    |<br>| 3.65  | 3    |<br>| 3.65  | 3    |<br>| 3.50  | 4    |<br>+———-+———+<br>【解答】又是一道自定义变量的题目，这种模式应当熟悉，还是挺常见的。如果不能使用“set @var_name=0;”的话（要求用一句SQL搞定），那可以在子句里面定义“select @var_name:=0”，再在它的外面使用这个变量。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> s.Score, t.Rank <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> @row_num:=@row_num+<span class="number">1</span> Rank, Score <span class="keyword">from</span> (</div><div class="line">         <span class="keyword">select</span> Score <span class="keyword">from</span> Scores <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span></div><div class="line">    ) t1 <span class="keyword">join</span> (</div><div class="line">        <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) t, Scores s <span class="keyword">where</span> s.Score=t.Score <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span>, Rank <span class="keyword">asc</span>, Id;</div></pre></td></tr></table></figure>
+
+<h3 id="Consecutive_Numbers"><span id="consecutive-numbers" style="color: #ff0000;">Consecutive Numbers</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to find all numbers that appear at least three times consecutively.</p>
+<p>+——+——-+<br>| Id | Num |<br>+——+——-+<br>| 1  |  1  |<br>| 2  |  1  |<br>| 3  |  1  |<br>| 4  |  2  |<br>| 5  |  1  |<br>| 6  |  2  |<br>| 7  |  2  |<br>+——+——-+<br>For example, given the above Logs table, 1 is the only number that appears consecutively for at least three times.<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">DISTINCT</span>(l1.Num) <span class="keyword">from</span> <span class="keyword">Logs</span> l1, <span class="keyword">Logs</span> l2, <span class="keyword">Logs</span> l3 <span class="keyword">where</span> l1.Id+<span class="number">1</span>=l2.Id <span class="keyword">and</span> l1.Id+<span class="number">2</span>=l3.Id <span class="keyword">and</span> l1.Num=l2.Num <span class="keyword">and</span> l1.Num=l3.Num;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Employees_Earning_More_Than_Their_Managers"><span id="employees-earning-more-than-their-managers" style="color: #ff0000;">Employees Earning More Than Their Managers</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees including their managers. Every employee has an Id, and there is also a column for the manager Id.</p>
+<p>+——+———-+————+—————-+<br>| Id | Name  | Salary | ManagerId |<br>+——+———-+————+—————-+<br>| 1  | Joe   | 70000  | 3         |<br>| 2  | Henry | 80000  | 4         |<br>| 3  | Sam   | 60000  | NULL      |<br>| 4  | Max   | 90000  | NULL      |<br>+——+———-+————+—————-+<br>Given the Employee table, write a SQL query that finds out employees who earn more than their managers. For the above table, Joe is the only employee who earns more than his manager.</p>
+<p>+—————+<br>| Employee |<br>+—————+<br>| Joe      |<br>+—————+<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> e.Name <span class="keyword">from</span> Employee e, Employee m <span class="keyword">where</span> e.ManagerId=m.Id <span class="keyword">and</span> e.Salary&gt;m.Salary;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Duplicate_Emails"><span id="duplicate-emails" style="color: #ff0000;">Duplicate Emails</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to find all duplicate emails in a table named Person.</p>
+<p>+——+————-+<br>| Id | Email   |<br>+——+————-+<br>| 1  | a@b.com |<br>| 2  | c@d.com |<br>| 3  | a@b.com |<br>+——+————-+<br>For example, your query should return the following for the above table:</p>
+<p>+————-+<br>| Email   |<br>+————-+<br>| a@b.com |<br>+————-+<br>Note: All emails are in lowercase.<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">distinct</span>(p.Email) <span class="keyword">from</span> Person p, Person q <span class="keyword">where</span> p.Id!=q.Id <span class="keyword">and</span> p.Email=q.Email;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Customers_Who_Never_Order"><span id="customers-who-never-order" style="color: #ff0000;">Customers Who Never Order</span></h3>
+<p>【题目】</p>
+<p>Suppose that a website contains two tables, the Customers table and the Orders table. Write a SQL query to find all customers who never order anything.</p>
+<p>Table: Customers.</p>
+<p>+——+———-+<br>| Id | Name  |<br>+——+———-+<br>| 1  | Joe   |<br>| 2  | Henry |<br>| 3  | Sam   |<br>| 4  | Max   |<br>+——+———-+<br>Table: Orders.</p>
+<p>+——+——————+<br>| Id | CustomerId |<br>+——+——————+<br>| 1  | 3          |<br>| 2  | 1          |<br>+——+——————+<br>Using the above tables as example, return the following:</p>
+<p>+—————-+<br>| Customers |<br>+—————-+<br>| Henry     |<br>| Max       |<br>+—————-+<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> c.Name Customers <span class="keyword">from</span> Customers c <span class="keyword">where</span> c.Id <span class="keyword">not</span> <span class="keyword">in</span> (</span></div><div class="line">    <span class="keyword">select</span> CustomerId <span class="keyword">from</span> Orders</div><div class="line">)</div></pre></td></tr></table></figure>
+
+<h3 id="Department_Highest_Salary"><span id="department-highest-salary" style="color: #ff0000;">Department Highest Salary</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees. Every employee has an Id, a salary, and there is also a column for the department Id.</p>
+<p>+——+———-+————+———————+<br>| Id | Name  | Salary | DepartmentId |<br>+——+———-+————+———————+<br>| 1  | Joe   | 70000  | 1            |<br>| 2  | Henry | 80000  | 2            |<br>| 3  | Sam   | 60000  | 2            |<br>| 4  | Max   | 90000  | 1            |<br>+——+———-+————+———————+<br>The Department table holds all departments of the company.</p>
+<p>+——+—————+<br>| Id | Name     |<br>+——+—————+<br>| 1  | IT       |<br>| 2  | Sales    |<br>+——+—————+<br>Write a SQL query to find employees who have the highest salary in each of the departments. For the above tables, Max has the highest salary in the IT department and Henry has the highest salary in the Sales department.</p>
+<p>+——————+—————+————+<br>| Department | Employee | Salary |<br>+——————+—————+————+<br>| IT         | Max      | 90000  |<br>| Sales      | Henry    | 80000  |<br>+——————+—————+————+<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> d.Name Department, e.Name Employee, s.Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> <span class="keyword">MAX</span>(e.Salary) Salary, e.DepartmentId <span class="keyword">from</span> Employee e, Department d <span class="keyword">where</span> e.DepartmentId=d.Id <span class="keyword">group</span> <span class="keyword">by</span> e.DepartmentId</div><div class="line">) s, Employee e, Department d <span class="keyword">where</span> s.Salary=e.Salary <span class="keyword">and</span> e.DepartmentId=d.Id <span class="keyword">and</span> e.DepartmentId=s.DepartmentId;</div></pre></td></tr></table></figure>
+
+<h3 id="Department_Top_Three_Salaries"><span id="department-top-three-salaries" style="color: #ff0000;">Department Top Three Salaries</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees. Every employee has an Id, and there is also a column for the department Id.</p>
+<p>+——+———-+————+———————+<br>| Id | Name  | Salary | DepartmentId |<br>+——+———-+————+———————+<br>| 1  | Joe   | 70000  | 1            |<br>| 2  | Henry | 80000  | 2            |<br>| 3  | Sam   | 60000  | 2            |<br>| 4  | Max   | 90000  | 1            |<br>| 5  | Janet | 69000  | 1            |<br>| 6  | Randy | 85000  | 1            |<br>+——+———-+————+———————+<br>The Department table holds all departments of the company.</p>
+<p>+——+—————+<br>| Id | Name     |<br>+——+—————+<br>| 1  | IT       |<br>| 2  | Sales    |<br>+——+—————+<br>Write a SQL query to find employees who earn the top three salaries in each of the department. For the above tables, your SQL query should return the following rows.</p>
+<p>+——————+—————+————+<br>| Department | Employee | Salary |<br>+——————+—————+————+<br>| IT         | Max      | 90000  |<br>| IT         | Randy    | 85000  |<br>| IT         | Joe      | 70000  |<br>| Sales      | Henry    | 80000  |<br>| Sales      | Sam      | 60000  |<br>+——————+—————+————+<br>【解答】这道题拿MySql做其实是有点难了，如果我用Oracle，我就可以 rank() over(partition by xxx order by xxx desc) 这样搞了，但是MySql比较挫的地方在于没有这样分区操作的东西。不过最后还是借助了三个自定义变量搞定。意思就不解释了，还是好懂的：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> Department, Employee, Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span></div><div class="line">        <span class="keyword">IF</span>(@lastDep!=t1.Department, @<span class="keyword">count</span>:=<span class="number">0</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>), <span class="keyword">IF</span>(@lastDep=t1.Department <span class="keyword">and</span> @lastSalary!=t1.Salary, @<span class="keyword">count</span>:=@<span class="keyword">count</span>+<span class="number">1</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>) Cnt,</div><div class="line">        @lastDep:=t1.Department, @lastSalary:=t1.Salary,</div><div class="line">        t1.Department, t1.Employee, t1.Salary</div><div class="line">    <span class="keyword">from</span> (</div><div class="line">        <span class="keyword">select</span> d.Name Department, e.Name Employee, e.Salary</div><div class="line">        <span class="keyword">from</span> Department d, Employee e <span class="keyword">where</span> d.Id=e.DepartmentId <span class="keyword">order</span> <span class="keyword">by</span> Department <span class="keyword">asc</span>, Salary <span class="keyword">desc</span></div><div class="line">    ) t1, (</div><div class="line">            <span class="keyword">select</span> @lastDep:=<span class="literal">null</span>, @lastSalary:=<span class="number">0</span>, @<span class="keyword">count</span>:=<span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) f <span class="keyword">where</span> Cnt&lt;<span class="number">3</span>;</div></pre></td></tr></table></figure>
+
+<p>事后，我去看了看讨论区，发现一个漂亮的解答，没有用任何自定义变量，关键就是distinct(Salary)去和原Salary比较，过滤掉这个条件下出现次数大于3的情况：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> D.Name <span class="keyword">as</span> Department, E.Name <span class="keyword">as</span> Employee, E.Salary <span class="keyword">as</span> Salary </span></div><div class="line">  <span class="keyword">from</span> Employee E, Department D</div><div class="line">   <span class="keyword">where</span> (<span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span>(Salary)) <span class="keyword">from</span> Employee </div><div class="line">           <span class="keyword">where</span> DepartmentId = E.DepartmentId <span class="keyword">and</span> Salary &gt; E.Salary) <span class="keyword">in</span> (<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>)</div><div class="line">         <span class="keyword">and</span></div><div class="line">           E.DepartmentId = D.Id </div><div class="line">         <span class="keyword">order</span> <span class="keyword">by</span> E.DepartmentId, E.Salary <span class="keyword">DESC</span>;</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2015/03/11/leetcode-database/">
+                  http://lawrence-zxc.github.io/2015/03/11/leetcode-database/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/LeetCode/">LeetCode</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    
+    <a href="/2015/03/05/pingjiaapp/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2015/03/11/leetcode-database/" data-title="LeetCode数据库题母解答" data-url="http://lawrence-zxc.github.io/2015/03/11/leetcode-database/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>5</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/前端/">前端</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>2</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/理财/">理财</a><small>1</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>
