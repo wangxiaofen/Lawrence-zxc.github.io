@@ -93,190 +93,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2015-03-11T09:15:34.000Z"><a href="/2015/03/11/leetcode-database/">3月 11 2015</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在之前做程序算法题的途中发现，LeetCode上面推出了数据库解答，有十道题，于是这两天晚上时间就给做了。解答是次要主要的好处是，正好复习复习SQL一些查询语句的写法，比如自定义变量和常用函数。题目都比较简单，少做解释，以贴题目和答案为主。</p>
-<table>
-<thead>
-<tr>
-<th><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Title</a></th>
-<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Acceptance</a></th>
-<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Difficulty</a></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="#combine-two-tables">Combine Two Tables</a></td>
-<td style="text-align:center">32.5%</td>
-<td style="text-align:center">Easy</td>
-</tr>
-<tr>
-<td><a href="#second-highest-salary">Second Highest Salary</a></td>
-<td style="text-align:center">23.8%</td>
-<td style="text-align:center">Easy</td>
-</tr>
-<tr>
-<td><a href="#nth-highest-salary">Nth Highest Salary</a></td>
-<td style="text-align:center">14.1%</td>
-<td style="text-align:center">Medium</td>
-</tr>
-<tr>
-<td><a href="#rank-scores">Rank Scores</a></td>
-<td style="text-align:center">20.7%</td>
-<td style="text-align:center">Medium</td>
-</tr>
-<tr>
-<td><a href="#consecutive-numbers">Consecutive Numbers</a></td>
-<td style="text-align:center">20.2%</td>
-<td style="text-align:center">Medium</td>
-</tr>
-<tr>
-<td><a href="#employees-earning-more-than-their-managers">Employees Earning More Than Their Managers</a></td>
-<td style="text-align:center">44.2%</td>
-<td style="text-align:center">Easy</td>
-</tr>
-<tr>
-<td><a href="#duplicate-emails">Duplicate Emails</a></td>
-<td style="text-align:center">38.0%</td>
-<td style="text-align:center">Easy</td>
-</tr>
-<tr>
-<td><a href="#customers-who-never-order">Customers Who Never Order</a></td>
-<td style="text-align:center">34.2%</td>
-<td style="text-align:center">Easy</td>
-</tr>
-<tr>
-<td><a href="#department-highest-salary">Department Highest Salary</a></td>
-<td style="text-align:center">19.2%</td>
-<td style="text-align:center">Medium</td>
-</tr>
-<tr>
-<td><a href="#department-top-three-salaries">Department Top Three Salaries</a></td>
-<td style="text-align:center">16.3%</td>
-<td style="text-align:center">Hard</td>
-</tr>
-</tbody>
-</table>
-<h3 id="Combine_Two_Tables"><span id="combine-two-tables" style="color: #ff0000;">Combine Two Tables</span></h3>
-<p>【题目】</p>
-<p>Table: Person</p>
-<p>+——————-+————-+<br>| Column Name | Type    |<br>+——————-+————-+<br>| PersonId    | int     |<br>| FirstName   | varchar |<br>| LastName    | varchar |<br>+——————-+————-+<br>PersonId is the primary key column for this table.<br>Table: Address</p>
-<p>+——————-+————-+<br>| Column Name | Type    |<br>+——————-+————-+<br>| AddressId   | int     |<br>| PersonId    | int     |<br>| City        | varchar |<br>| State       | varchar |<br>+——————-+————-+<br>AddressId is the primary key column for this table.<br>Write a SQL query for a report that provides the following information for each person in the Person table, regardless if there is an address for each of those people:</p>
-<p>FirstName, LastName, City, State<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> p.FirstName, p.LastName, a.City, a.State <span class="keyword">from</span> Person p <span class="keyword">left</span> <span class="keyword">outer</span> <span class="keyword">join</span> Address a <span class="keyword">on</span> p.PersonId=a.PersonId;</span></div></pre></td></tr></table></figure>
-
-<h3 id="Second_Highest_Salary"><span id="second-highest-salary" style="color: #ff0000;">Second Highest Salary</span></h3>
-<p>【题目】</p>
-<p>Write a SQL query to get the second highest salary from the Employee table.</p>
-<p>+——+————+<br>| Id | Salary |<br>+——+————+<br>| 1  | 100    |<br>| 2  | 200    |<br>| 3  | 300    |<br>+——+————+<br>For example, given the above Employee table, the second highest salary is 200. If there is no second highest salary, then the query should return null.</p>
-<p>【解答】 题目简单，但是如果和我一样，发现几个常用函数都不记得了，可以<a href="http://www.tutorialspoint.com/mysql/mysql-useful-functions.htm" target="_blank" rel="external">复习一下</a>。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">IFNULL</span>( (<span class="keyword">select</span> e.Salary <span class="keyword">from</span> Employee e <span class="keyword">group</span> <span class="keyword">by</span> e.Salary <span class="keyword">order</span> <span class="keyword">by</span> e.Salary <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>, <span class="number">1</span>), <span class="literal">NULL</span>) SecondHighestSalary;</span></div></pre></td></tr></table></figure>
-
-<h3 id="Nth_Highest_Salary"><span id="nth-highest-salary" style="color: #ff0000;">Nth Highest Salary</span></h3>
-<p>【题目】</p>
-<p>Write a SQL query to get the nth highest salary from the Employee table.</p>
-<p>+——+————+<br>| Id | Salary |<br>+——+————+<br>| 1  | 100    |<br>| 2  | 200    |<br>| 3  | 300    |<br>+——+————+<br>For example, given the above Employee table, the nth highest salary where n = 2 is 200. If there is no nth highest salary, then the query should return null.</p>
-<p>【解答】第n高，这就得用自定义变量了，平时很少用这东西，于是<a href="http://dev.mysql.com/doc/refman/5.0/en/user-variables.html" target="_blank" rel="external">复习了一下</a>先。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> getNthHighestSalary(N <span class="built_in">INT</span>) <span class="keyword">RETURNS</span> <span class="built_in">INT</span></span></div><div class="line"><span class="keyword">BEGIN</span></div><div class="line">    <span class="keyword">RETURN</span> (</div><div class="line">        <span class="keyword">select</span> <span class="keyword">IFNULL</span>(Salary, <span class="literal">NULL</span>) Salary <span class="keyword">from</span> (</div><div class="line">            <span class="keyword">select</span> @row_num := @row_num+<span class="number">1</span> Rank, Salary <span class="keyword">from</span> (</div><div class="line">                <span class="keyword">select</span> Salary <span class="keyword">from</span> Employee <span class="keyword">group</span> <span class="keyword">by</span> Salary <span class="keyword">desc</span></div><div class="line">            ) t1 <span class="keyword">join</span> (</div><div class="line">                <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">            ) t2</div><div class="line">        ) t <span class="keyword">where</span> t.Rank=N</div><div class="line">    );</div><div class="line"><span class="operator"><span class="keyword">END</span></span></div></pre></td></tr></table></figure>
-
-<h3 id="Rank_Scores"><span id="rank-scores" style="color: #ff0000;">Rank Scores</span></h3>
-<p>【题目】</p>
-<p>Write a SQL query to rank scores. If there is a tie between two scores, both should have the same ranking. Note that after a tie, the next ranking number should be the next consecutive integer value. In other words, there should be no “holes” between ranks.</p>
-<p>+——+———-+<br>| Id | Score |<br>+——+———-+<br>| 1  | 3.50  |<br>| 2  | 3.65  |<br>| 3  | 4.00  |<br>| 4  | 3.85  |<br>| 5  | 4.00  |<br>| 6  | 3.65  |<br>+——+———-+<br>For example, given the above Scores table, your query should generate the following report (order by highest score):<br>+———-+———+<br>| Score | Rank |<br>+———-+———+<br>| 4.00  | 1    |<br>| 4.00  | 1    |<br>| 3.85  | 2    |<br>| 3.65  | 3    |<br>| 3.65  | 3    |<br>| 3.50  | 4    |<br>+———-+———+<br>【解答】又是一道自定义变量的题目，这种模式应当熟悉，还是挺常见的。如果不能使用“set @var_name=0;”的话（要求用一句SQL搞定），那可以在子句里面定义“select @var_name:=0”，再在它的外面使用这个变量。</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> s.Score, t.Rank <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> @row_num:=@row_num+<span class="number">1</span> Rank, Score <span class="keyword">from</span> (</div><div class="line">         <span class="keyword">select</span> Score <span class="keyword">from</span> Scores <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span></div><div class="line">    ) t1 <span class="keyword">join</span> (</div><div class="line">        <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) t, Scores s <span class="keyword">where</span> s.Score=t.Score <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span>, Rank <span class="keyword">asc</span>, Id;</div></pre></td></tr></table></figure>
-
-<h3 id="Consecutive_Numbers"><span id="consecutive-numbers" style="color: #ff0000;">Consecutive Numbers</span></h3>
-<p>【题目】</p>
-<p>Write a SQL query to find all numbers that appear at least three times consecutively.</p>
-<p>+——+——-+<br>| Id | Num |<br>+——+——-+<br>| 1  |  1  |<br>| 2  |  1  |<br>| 3  |  1  |<br>| 4  |  2  |<br>| 5  |  1  |<br>| 6  |  2  |<br>| 7  |  2  |<br>+——+——-+<br>For example, given the above Logs table, 1 is the only number that appears consecutively for at least three times.<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">DISTINCT</span>(l1.Num) <span class="keyword">from</span> <span class="keyword">Logs</span> l1, <span class="keyword">Logs</span> l2, <span class="keyword">Logs</span> l3 <span class="keyword">where</span> l1.Id+<span class="number">1</span>=l2.Id <span class="keyword">and</span> l1.Id+<span class="number">2</span>=l3.Id <span class="keyword">and</span> l1.Num=l2.Num <span class="keyword">and</span> l1.Num=l3.Num;</span></div></pre></td></tr></table></figure>
-
-<h3 id="Employees_Earning_More_Than_Their_Managers"><span id="employees-earning-more-than-their-managers" style="color: #ff0000;">Employees Earning More Than Their Managers</span></h3>
-<p>【题目】</p>
-<p>The Employee table holds all employees including their managers. Every employee has an Id, and there is also a column for the manager Id.</p>
-<p>+——+———-+————+—————-+<br>| Id | Name  | Salary | ManagerId |<br>+——+———-+————+—————-+<br>| 1  | Joe   | 70000  | 3         |<br>| 2  | Henry | 80000  | 4         |<br>| 3  | Sam   | 60000  | NULL      |<br>| 4  | Max   | 90000  | NULL      |<br>+——+———-+————+—————-+<br>Given the Employee table, write a SQL query that finds out employees who earn more than their managers. For the above table, Joe is the only employee who earns more than his manager.</p>
-<p>+—————+<br>| Employee |<br>+—————+<br>| Joe      |<br>+—————+<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> e.Name <span class="keyword">from</span> Employee e, Employee m <span class="keyword">where</span> e.ManagerId=m.Id <span class="keyword">and</span> e.Salary&gt;m.Salary;</span></div></pre></td></tr></table></figure>
-
-<h3 id="Duplicate_Emails"><span id="duplicate-emails" style="color: #ff0000;">Duplicate Emails</span></h3>
-<p>【题目】</p>
-<p>Write a SQL query to find all duplicate emails in a table named Person.</p>
-<p>+——+————-+<br>| Id | Email   |<br>+——+————-+<br>| 1  | a@b.com |<br>| 2  | c@d.com |<br>| 3  | a@b.com |<br>+——+————-+<br>For example, your query should return the following for the above table:</p>
-<p>+————-+<br>| Email   |<br>+————-+<br>| a@b.com |<br>+————-+<br>Note: All emails are in lowercase.<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">distinct</span>(p.Email) <span class="keyword">from</span> Person p, Person q <span class="keyword">where</span> p.Id!=q.Id <span class="keyword">and</span> p.Email=q.Email;</span></div></pre></td></tr></table></figure>
-
-<h3 id="Customers_Who_Never_Order"><span id="customers-who-never-order" style="color: #ff0000;">Customers Who Never Order</span></h3>
-<p>【题目】</p>
-<p>Suppose that a website contains two tables, the Customers table and the Orders table. Write a SQL query to find all customers who never order anything.</p>
-<p>Table: Customers.</p>
-<p>+——+———-+<br>| Id | Name  |<br>+——+———-+<br>| 1  | Joe   |<br>| 2  | Henry |<br>| 3  | Sam   |<br>| 4  | Max   |<br>+——+———-+<br>Table: Orders.</p>
-<p>+——+——————+<br>| Id | CustomerId |<br>+——+——————+<br>| 1  | 3          |<br>| 2  | 1          |<br>+——+——————+<br>Using the above tables as example, return the following:</p>
-<p>+—————-+<br>| Customers |<br>+—————-+<br>| Henry     |<br>| Max       |<br>+—————-+<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> c.Name Customers <span class="keyword">from</span> Customers c <span class="keyword">where</span> c.Id <span class="keyword">not</span> <span class="keyword">in</span> (</span></div><div class="line">    <span class="keyword">select</span> CustomerId <span class="keyword">from</span> Orders</div><div class="line">)</div></pre></td></tr></table></figure>
-
-<h3 id="Department_Highest_Salary"><span id="department-highest-salary" style="color: #ff0000;">Department Highest Salary</span></h3>
-<p>【题目】</p>
-<p>The Employee table holds all employees. Every employee has an Id, a salary, and there is also a column for the department Id.</p>
-<p>+——+———-+————+———————+<br>| Id | Name  | Salary | DepartmentId |<br>+——+———-+————+———————+<br>| 1  | Joe   | 70000  | 1            |<br>| 2  | Henry | 80000  | 2            |<br>| 3  | Sam   | 60000  | 2            |<br>| 4  | Max   | 90000  | 1            |<br>+——+———-+————+———————+<br>The Department table holds all departments of the company.</p>
-<p>+——+—————+<br>| Id | Name     |<br>+——+—————+<br>| 1  | IT       |<br>| 2  | Sales    |<br>+——+—————+<br>Write a SQL query to find employees who have the highest salary in each of the departments. For the above tables, Max has the highest salary in the IT department and Henry has the highest salary in the Sales department.</p>
-<p>+——————+—————+————+<br>| Department | Employee | Salary |<br>+——————+—————+————+<br>| IT         | Max      | 90000  |<br>| Sales      | Henry    | 80000  |<br>+——————+—————+————+<br>【解答】</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> d.Name Department, e.Name Employee, s.Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> <span class="keyword">MAX</span>(e.Salary) Salary, e.DepartmentId <span class="keyword">from</span> Employee e, Department d <span class="keyword">where</span> e.DepartmentId=d.Id <span class="keyword">group</span> <span class="keyword">by</span> e.DepartmentId</div><div class="line">) s, Employee e, Department d <span class="keyword">where</span> s.Salary=e.Salary <span class="keyword">and</span> e.DepartmentId=d.Id <span class="keyword">and</span> e.DepartmentId=s.DepartmentId;</div></pre></td></tr></table></figure>
-
-<h3 id="Department_Top_Three_Salaries"><span id="department-top-three-salaries" style="color: #ff0000;">Department Top Three Salaries</span></h3>
-<p>【题目】</p>
-<p>The Employee table holds all employees. Every employee has an Id, and there is also a column for the department Id.</p>
-<p>+——+———-+————+———————+<br>| Id | Name  | Salary | DepartmentId |<br>+——+———-+————+———————+<br>| 1  | Joe   | 70000  | 1            |<br>| 2  | Henry | 80000  | 2            |<br>| 3  | Sam   | 60000  | 2            |<br>| 4  | Max   | 90000  | 1            |<br>| 5  | Janet | 69000  | 1            |<br>| 6  | Randy | 85000  | 1            |<br>+——+———-+————+———————+<br>The Department table holds all departments of the company.</p>
-<p>+——+—————+<br>| Id | Name     |<br>+——+—————+<br>| 1  | IT       |<br>| 2  | Sales    |<br>+——+—————+<br>Write a SQL query to find employees who earn the top three salaries in each of the department. For the above tables, your SQL query should return the following rows.</p>
-<p>+——————+—————+————+<br>| Department | Employee | Salary |<br>+——————+—————+————+<br>| IT         | Max      | 90000  |<br>| IT         | Randy    | 85000  |<br>| IT         | Joe      | 70000  |<br>| Sales      | Henry    | 80000  |<br>| Sales      | Sam      | 60000  |<br>+——————+—————+————+<br>【解答】这道题拿MySql做其实是有点难了，如果我用Oracle，我就可以 rank() over(partition by xxx order by xxx desc) 这样搞了，但是MySql比较挫的地方在于没有这样分区操作的东西。不过最后还是借助了三个自定义变量搞定。意思就不解释了，还是好懂的：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> Department, Employee, Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span></div><div class="line">        <span class="keyword">IF</span>(@lastDep!=t1.Department, @<span class="keyword">count</span>:=<span class="number">0</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>), <span class="keyword">IF</span>(@lastDep=t1.Department <span class="keyword">and</span> @lastSalary!=t1.Salary, @<span class="keyword">count</span>:=@<span class="keyword">count</span>+<span class="number">1</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>) Cnt,</div><div class="line">        @lastDep:=t1.Department, @lastSalary:=t1.Salary,</div><div class="line">        t1.Department, t1.Employee, t1.Salary</div><div class="line">    <span class="keyword">from</span> (</div><div class="line">        <span class="keyword">select</span> d.Name Department, e.Name Employee, e.Salary</div><div class="line">        <span class="keyword">from</span> Department d, Employee e <span class="keyword">where</span> d.Id=e.DepartmentId <span class="keyword">order</span> <span class="keyword">by</span> Department <span class="keyword">asc</span>, Salary <span class="keyword">desc</span></div><div class="line">    ) t1, (</div><div class="line">            <span class="keyword">select</span> @lastDep:=<span class="literal">null</span>, @lastSalary:=<span class="number">0</span>, @<span class="keyword">count</span>:=<span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) f <span class="keyword">where</span> Cnt&lt;<span class="number">3</span>;</div></pre></td></tr></table></figure>
-
-<p>事后，我去看了看讨论区，发现一个漂亮的解答，没有用任何自定义变量，关键就是distinct(Salary)去和原Salary比较，过滤掉这个条件下出现次数大于3的情况：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> D.Name <span class="keyword">as</span> Department, E.Name <span class="keyword">as</span> Employee, E.Salary <span class="keyword">as</span> Salary </span></div><div class="line">  <span class="keyword">from</span> Employee E, Department D</div><div class="line">   <span class="keyword">where</span> (<span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span>(Salary)) <span class="keyword">from</span> Employee </div><div class="line">           <span class="keyword">where</span> DepartmentId = E.DepartmentId <span class="keyword">and</span> Salary &gt; E.Salary) <span class="keyword">in</span> (<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>)</div><div class="line">         <span class="keyword">and</span></div><div class="line">           E.DepartmentId = D.Id </div><div class="line">         <span class="keyword">order</span> <span class="keyword">by</span> E.DepartmentId, E.Salary <span class="keyword">DESC</span>;</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2015-03-05T03:03:45.000Z"><a href="/2015/03/05/pingjiaapp/">3月 5 2015</a></time>
       
       
@@ -851,6 +667,105 @@
 
 
   
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>我发现很多人没办法高效地解决问题的关键原因是不熟悉工具，不熟悉工具也还罢了，甚至还不知道怎么去找工具，这个问题就大条了。我想列下我能想到的一个Java程序员会用到的常用工具。</p>
+<p>一、编码工具</p>
+<p> 1.IDE：<a href="http://www.eclipse.org/" target="_blank" rel="external">Eclipse</a>或者<a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">IDEA</a>，熟悉尽可能多的快捷键，《<a href="https://www.google.com/#hl=zh-CN&amp;site=&amp;source=hp&amp;q=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;oq=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;aq=f&amp;aqi=g-l1&amp;aql=&amp;gs_l=hp.3..0i13.449l7739l0l7948l53l49l9l4l4l9l278l4511l14j15j7l36l0.&amp;bav=on.2,or.r_gc.r_pw.r_cp.,cf.osb&amp;fp=eef1a08d3fa904e4&amp;biw=1594&amp;bih=858" target="_blank" rel="external">Eclipse常见快捷键列表</a>》</p>
+<p> 2.插件：<br> (1) <a href="http://findbugs.sourceforge.net/" target="_blank" rel="external">Findbugs</a>，在release之前进行一次静态代码检查是必须的<br> (2) <a href="http://www.atlassian.com/software/clover/overview" target="_blank" rel="external">Clover</a>，关心你的单元测试覆盖率<br> (3) <a href="http://checkstyle.sourceforge.net/" target="_blank" rel="external">Checkstyle</a> 代码风格检查</p>
+<p> 3.构建和部署工具:ant或者maven，现在主流都是maven了吧，使用<a href="http://www.sonatype.org/nexus/" target="_blank" rel="external">nexus搭建maven私服</a>，再加上持续集成<a href="http://jenkins-ci.org/" target="_blank" rel="external">jenkins</a>。代码质量不用愁。</p>
+<p> 4.版本管理工具： svn或者git</p>
+<p> 5.<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">diff</a>和<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">patch</a></p>
+<p> 6.设置你的eclipse或者IDEA，如formatter,save actions以及code template等。代码风格，直接用google的也可以啊。《<a href="http://code.google.com/p/google-styleguide/" target="_blank" rel="external">Google style guide</a>》</p>
+<p> 7.掌握一个文本编辑器，Emacs或者VIM，熟悉常用快捷键。这在你需要在线编辑代码，或者编写其他语言代码时候特别有用。《<a href="http://linuxtoy.org/archives/why-emacs-vim-good.html" target="_blank" rel="external">神器圣战</a>》</p>
+<p>二、JDK相关</p>
+<p>1.jstat : 观察GC情况，如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstat -gcutil pid <span class="number">3078</span></div></pre></td></tr></table></figure>
+
+<p>2.jmap，查看heap情况，如查看存活对象列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -histo:live pid |grep com.company |less</div></pre></td></tr></table></figure>
+
+<p>或者dump内存用来分析：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -dump:file=test.bin pid</div></pre></td></tr></table></figure>
+
+<p>3.分析dump的堆文件，可以用jhat:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jhat test.bin</div></pre></td></tr></table></figure>
+
+<p>  分析完成后可以用浏览器查看堆的情况。这个工具的分析结果还比较原始，你还可以用Eclipse MAT插件进行图形化分析，或者IBM的<a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=4544bafe-c7a2-455f-9d43-eb866ea60091" target="_blank" rel="external">Heap Analyzer</a>.</p>
+<p>4.jvisualvm和jconsole： JVM自带的性能分析和监控工具，怎么用？请自己看<a href="http://docs.oracle.com/javase/6/docs/technotes/guides/visualvm/index.html" target="_blank" rel="external">文档</a>。</p>
+<p>5.jstack：分析线程堆栈，如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstack pid &gt; thread_dump</div></pre></td></tr></table></figure>
+
+<p>查看CPU最高的线程在干什么的方法结合top和jstack：<a href="http://www.iteye.com/topic/1114219" target="_blank" rel="external">http://www.iteye.com/topic/1114219</a></p>
+<p>6.更多JVM工具，参见官方文档：<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/" target="_blank" rel="external">http://docs.oracle.com/javase/6/docs/technotes/tools/</a></p>
+<p>7.学习使用btrace分析java运行时问题。《(Btrace使用简介)[<a href="http://rdc.taobao.com/team/jm/archives/509]》" target="_blank" rel="external">http://rdc.taobao.com/team/jm/archives/509]》</a></p>
+<p>8.GC日志分析工具：GC viewer、GC-console或者自己挑<a href="http://stackoverflow.com/questions/1839599/analyze-gc-logs-for-sun-hotspots-jvm-6" target="_blank" rel="external">这里</a>。</p>
+<p>9.性能分析工具，除了自带的jvisualvm外，还可以用商业的jprofiler。</p>
+<p>10.<a href="http://kenwublog.com/docs/java6-jvm-options-chinese-edition.htm" target="_blank" rel="external">JVM参数大全</a></p>
+<p>11.《<a href="http://hllvm.group.iteye.com/group/topic/27945" target="_blank" rel="external">JVM调优标准参数陷阱</a>》，iteye神贴。</p>
+<p>三、Linux工具</p>
+<p>1.熟悉<a href="http://www.commandlinefu.com/commands/browse/sort-by-votes" target="_blank" rel="external">常用的shell命令</a>，</p>
+<p>2.设置<a href="http://paulkeck.com/ssh/" target="_blank" rel="external">ssh免登陆</a></p>
+<p>3.使用htop替换top。</p>
+<p>4.熟悉下strace,gdb甚至systemtap来分析问题。</p>
+<p>5.熟悉vmstat,iostat,sar等性能统计工具。</p>
+<p>5.自动化部署脚本，<a href="http://docs.fabfile.org/en/1.4.1/index.html" target="_blank" rel="external">py-fabric</a>或者自荐下这个<a href="https://github.com/killme2008/clojure-control" target="_blank" rel="external">clojure-control</a>。</p>
+<p>四、其他</p>
+<p>1.掌握一门脚本语言，<a href="http://python.org/" target="_blank" rel="external">Python</a>或者<a href="http://www.ruby-lang.org/" target="_blank" rel="external">Ruby</a>，高效解决一些需要quick and dirty的任务：比如读写文件、导入导出数据库、网页爬虫等。注意不是python.com，咔咔。</p>
+<p><code>Python</code>推荐<a href="http://woodpecker.org.cn/" target="_blank" rel="external">啄木鸟社区</a>,<code>Ruby</code>推荐<a href="https://ruby-china.org/" target="_blank" rel="external">Ruby China</a></p>
+<p>2.使用Linux或者Mac os系统作为你的开发环境。</p>
+<p>3.升级你的“硬件工具”，双屏大屏显示器、SSD、8G内存甚至更多。</p>
+<p>4.你懂的：<a href="https://code.google.com/p/goagent/" target="_blank" rel="external">https://code.google.com/p/goagent/</a> ; <a href="https://github.com/justjavac/Google-IPs/blob/master/README.md" target="_blank" rel="external">https://github.com/justjavac/Google-IPs/blob/master/README.md</a></p>
+<p>五、如何查找工具？</p>
+<p>1.搜索引擎，google或者baidu，《<a href="http://www.williamlong.info/archives/728.html" target="_blank" rel="external">搜索技巧</a>》</p>
+<p>2.万能的stack overflow：<a href="http://stackoverflow.com/" target="_blank" rel="external">http://stackoverflow.com/</a></p>
+<p>3.虚心问牛人。</p>
+<p>六、最重要的是⋯⋯</p>
+<p>一颗永不停止学习的心。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -942,10 +857,6 @@
   <ul class="entry">
     
       <li>
-        <a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a>
-      </li>
-    
-      <li>
         <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
       </li>
     
@@ -987,6 +898,10 @@
     
       <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
       </li>
     
   </ul>

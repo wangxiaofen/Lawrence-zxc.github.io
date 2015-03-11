@@ -93,95 +93,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
-<pre><code><span class="title">RESTful</span> Web Services Cookbook
-想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
-
-RESTful API Design
-Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
-</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
-<p>API Design Tips</p>
-<p>每个实体对象仅需要两个URL </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
-
-<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
-<p>使用名词代替动词</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
-
-<p>正确使用HTTP方法 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
-
-<p>对象间的关联关系 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
-
-<p>数据分页 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>查询条件</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
-
-<p>返回需要的参数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
-
-<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
-
-<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
-
-<p>身份认证 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
-
-<p>版本管理 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
       
       
@@ -822,6 +733,60 @@ Stateless 无状态
 
 
   
+    <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-06-27T01:52:00.000Z"><a href="/2014/06/27/linux-ps/">6月 27 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ps -eo rss,pmem,pcpu,vsize,args |  sort -k <span class="number">1</span> -r -n | less</div></pre></td></tr></table></figure>
+
+<p>解析一下：<br><code>ps</code> 都知道，是linux,unix显示进程信息的,<br><code>-e</code> 是显示所有进程,<br><code>-o</code>是定制显示信息的格式</p>
+<p> <code>rss</code>: resident set size, 表示进程占用RAM(内存)的大小，单位是KB<br> <code>pmem</code>: %M, 占用内存的百分比 </p>
+<p> <code>pcpu</code>：%C，占用cpu的百分比<br> <code>vsize</code>: 表示进程占用的虚拟内存的大小，KB</p>
+<p> <code>args</code>：进程名（command） </p>
+<p> <code>sort</code>命令对ps结果进行排序<br>   <code>-k 1</code>:按第一个参数 rss进行排序</p>
+<p>   <code>-r</code>：逆序<br>   <code>-n</code>：numeric，按数字来排序</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+  
 
   <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -915,10 +880,6 @@ Stateless 无状态
   <ul class="entry">
     
       <li>
-        <a href="/2015/03/11/leetcode-database/">LeetCode数据库题母解答</a>
-      </li>
-    
-      <li>
         <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
       </li>
     
@@ -960,6 +921,10 @@ Stateless 无状态
     
       <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
       </li>
     
   </ul>
