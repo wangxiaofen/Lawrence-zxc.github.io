@@ -196,91 +196,232 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2012-10-16T06:52:41.000Z"><a href="/2012/10/16/maven-help/">10月 16 2012</a></time>
+        <time datetime="2012-07-10T04:28:13.000Z"><a href="/2012/07/10/show-busy-java-threads/">7月 10 2012</a></time>
       
       
   
-    <h1 class="title"><a href="/2012/10/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a></h1>
+    <h1 class="title"><a href="/2012/07/10/show-busy-java-threads/">shell命令排查Java的CPU性能问题</a></h1>
   
 
     </header>
     <div class="entry">
       
-        <p>由浅入深，主要介绍<code>maven的用途</code>、<code>核心概念</code>(Pom、Repositories、Artifact、Build Lifecycle、Goal)、<code>用法</code>(Archetype意义及创建各种项目)、<code>maven常用参数</code>和命令以及简单故障排除、<code>maven扩展</code>(eclipse、cobertura、findbugs、插件开发)、<code>maven配置</code>。<br>较长，可根据个人需要有选择性的查看，比如先看用法再回过头来看核心概念</p>
-<h3 id="1、maven的用途">1、maven的用途</h3>
-<p>maven是一个项目构建和管理的工具，提供了帮助管理、构建、文档、报告、依赖、scms、发布、分发的方法。可以方便的编译代码、进行依赖管理、管理二进制库等等。<br>maven的好处在于可以将项目过程规范化、自动化、高效化以及强大的可扩展性<br>利用maven自身及其插件还可以获得代码检查报告、单元测试覆盖率、实现持续集成等等。</p>
-<h3 id="2、maven的核心概念介绍">2、maven的核心概念介绍</h3>
-<p>2.1 Pom</p>
-<p>pom是指project object Model。pom是一个xml，在maven2里为pom.xml。是maven工作的基础，在执行task或者goal时，maven会去项目根目录下读取pom.xml获得需要的配置信息<br>pom文件中包含了项目的信息和maven build项目所需的配置信息，通常有项目信息(如版本、成员)、项目的依赖、插件和goal、build选项等等<br>pom是可以继承的，通常对于一个大型的项目或是多个module的情况，子模块的pom需要指定父模块的pom</p>
-<p>pom文件中节点含义如下：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">project 		<span class="comment">#pom文件的顶级元素</span></div><div class="line">modelVersion 		<span class="comment">#所使用的object model版本，为了确保稳定的使用，这个元素是强制性的。除非maven开发者升级模板，否则不需要修改</span></div><div class="line">groupId 		<span class="comment">#是项目创建团体或组织的唯一标志符，通常是域名倒写，如groupId  org.apache.maven.plugins就是为所有maven插件预留的</span></div><div class="line">artifactId 		<span class="comment">#是项目artifact唯一的基地址名</span></div><div class="line">packaging 		<span class="comment">#artifact打包的方式，如jar、war、ear等等。默认为jar。这个不仅表示项目最终产生何种后缀的文件，也表示build过程使用什么样的lifecycle。</span></div><div class="line"><span class="property">version</span> 		<span class="comment">#artifact的版本，通常能看见为类似0.0.1-SNAPSHOT，其中SNAPSHOT表示项目开发中，为开发版本</span></div><div class="line"><span class="property">name</span> 			<span class="comment">#表示项目的展现名，在maven生成的文档中使用</span></div><div class="line">url 			<span class="comment">#表示项目的地址，在maven生成的文档中使用</span></div><div class="line">description 		<span class="comment">#表示项目的描述，在maven生成的文档中使用</span></div><div class="line">dependencies 		<span class="comment">#表示依赖，在子节点dependencies中添加具体依赖的groupId artifactId和version</span></div><div class="line">build 			<span class="comment">#表示build配置</span></div><div class="line">parent 			<span class="comment">#表示父pom</span></div></pre></td></tr></table></figure>
+        <p>在排查Java的CPU性能问题时(<code>top us</code>值过高),要找出Java进程中消耗CPU多的线程,并查看它的线程栈,从而找出导致性能问题的方法调用。</p>
+<p>详细说明：top命令开启线程显示模式、按CPU使用率排序、记下Java进程里CPU高的线程号；手动转成十六进制（可以用printf %x 1234）；jstack，grep十六进制的线程id，找到线程栈。查问题时，会要多次这样操作，太繁琐。</p>
+<p>这个脚本的功能是，打印出在运行的Java进程中，消耗CPU最多的线程栈（缺省是5个线程）。</p>
+<h3 id="用法">用法</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt;</div><div class="line"><span class="comment"># 上面会从所有的Java进程中找出最消耗CPU的线程，这样用更方便。</span></div><div class="line"></div><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt; -p &lt;指定的Java Process&gt;</div></pre></td></tr></table></figure>
 
-<p>其中groupId:artifactId:version唯一确定了一个artifact</p>
-<p>2.2 Artifact</p>
-<p>这个有点不好解释，大致说就是一个项目将要产生的文件，可以是jar文件，源文件，二进制文件，war文件，甚至是pom文件。每个artifact都由groupId:artifactId:version组成的标识符唯一识别。需要被使用(依赖)的artifact都要放在仓库(见Repository)中</p>
-<p>2.3 Repositories</p>
-<p>Repositories是用来存储Artifact的。如果说我们的项目产生的Artifact是一个个小工具，那么Repositories就是一个仓库，里面有我们自己创建的工具，也可以储存别人造的工具，我们在项目中需要使用某种工具时，在pom中声明dependency，编译代码时就会根据dependency去下载工具（Artifact），供自己使用。<br>对于自己的项目完成后可以通过mvn install命令将项目放到仓库（Repositories）中<br>仓库分为本地仓库和远程仓库，远程仓库是指远程服务器上用于存储Artifact的仓库，本地仓库是指本机存储Artifact的仓库，对于windows机器本地仓库地址为系统用户的.m2/repository下面。<br>对于需要的依赖，在pom中添加dependency即可，可以在maven的仓库中搜索：<a href="http://mvnrepository.com/" target="_blank" rel="external">http://mvnrepository.com/</a></p>
-<p>2.4 Build Lifecycle</p>
-<p>是指一个项目build的过程。maven的Build Lifecycle分为三种，分别为default（处理项目的部署）、clean（处理项目的清理）、site（处理项目的文档生成）。他们都包含不同的lifecycle。<br>Build Lifecycle是由phases构成的，下面重点介绍default Build Lifecycle几个重要的phase</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">validate 		<span class="comment">#验证项目是否正确以及必须的信息是否可用</span></div><div class="line">compile 		<span class="comment">#编译源代码</span></div><div class="line">test 			<span class="comment">#测试编译后的代码，即执行单元测试代码</span></div><div class="line">package 		<span class="comment">#打包编译后的代码，在target目录下生成package文件</span></div><div class="line">integration-test 	<span class="comment">#处理package以便需要时可以部署到集成测试环境</span></div><div class="line">verify 			<span class="comment">#检验package是否有效并且达到质量标准</span></div><div class="line">install 		<span class="comment">#安装package到本地仓库，方便本地其它项目使用</span></div><div class="line">deploy 			<span class="comment">#部署，拷贝最终的package到远程仓库和替他开发这或项目共享，在集成或发布环境完成</span></div></pre></td></tr></table></figure>
+<h3 id="示例">示例</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">$ show-busy-java-threads.sh </div><div class="line">The stack of busy(<span class="number">57.0</span>%) thread(<span class="number">23355</span>/<span class="number">0</span>x5b3b) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-1"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005b5c5000 nid=<span class="number">0</span>x5b3b runnable [<span class="number">0</span>x000000004062c000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">127</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">662</span>)</div><div class="line"></div><div class="line">The stack of busy(<span class="number">26.1</span>%) thread(<span class="number">24018</span>/<span class="number">0</span>x5dd2) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-2"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005a968800 nid=<span class="number">0</span>x5dd2 runnable [<span class="number">0</span>x00000000420e9000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.util.Arrays.copyOf(Arrays.java:<span class="number">2882</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:<span class="number">100</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:<span class="number">572</span>)</div><div class="line">    at java.lang.StringBuffer.append(StringBuffer.java:<span class="number">320</span>)</div><div class="line">    - locked &lt;<span class="number">0</span>x00000007908d0030&gt; (a java.lang.StringBuffer)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">890</span>)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">869</span>)</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">126</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">...</div></pre></td></tr></table></figure>
 
-<p>以上的phase是有序的（注意实际两个相邻phase之间还有其他phase被省略，完整phase见lifecycle），下面一个phase的执行必须在上一个phase完成后<br>若直接以某一个phase为goal，将先执行完它之前的phase，如mvn install<br>将会先validate、compile、test、package、integration-test、verify最后再执行install phase</p>
-<p>2.5 Goal</p>
-<p>goal代表一个特定任务</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">A goal represents <span class="operator">a</span> specific task (finer than <span class="operator">a</span> build phase) which contributes <span class="built_in">to</span> <span class="operator">the</span> building <span class="operator">and</span> managing <span class="operator">of</span> <span class="operator">a</span> project.</div></pre></td></tr></table></figure>
+<p>上面的线程栈可以看出，CPU消耗最高的2个线程都在执行java.text.DateFormat.format，业务代码对应的方法是shared.monitor.schedule.AppMonitorDataAvgScheduler.run。可以基本确定：</p>
+<ul>
+<li>AppMonitorDataAvgScheduler.run调用DateFormat.format次数比较频繁。</li>
+<li>DateFormat.format比较慢。（这个可以由DateFormat.format的实现确定。）</li>
+</ul>
+<p>多个执行几次show-busy-java-threads.sh，如果上面情况高概率出现，则可以确定上面的判定。<br>因为调用越少代码执行越快，则出现在线程栈的概率就越低。</p>
+<p>分析shared.monitor.schedule.AppMonitorDataAvgScheduler.run实现逻辑和调用方式，以优化实现解决问题。</p>
+<p>show-busy-java-threads.sh脚本:</p>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># @Function</span>
+    <span class="comment"># Find out the highest cpu consumed threads of java, and print the stack of these threads.</span>
+    <span class="comment">#</span>
+    <span class="comment"># @Usage</span>
+    <span class="comment">#   $ ./show-busy-java-threads.sh</span>
+    <span class="comment">#</span>
+    <span class="comment"># @author zxc</span>
 
-<p>如</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mvn package   		<span class="comment">#表示打包的任务，通过上面的介绍我们知道，这个任务的执行会先执行package phase之前的phase</span></div><div class="line">mvn deploy    		<span class="comment">#表示部署的任务</span></div><div class="line">mvn clean install 	<span class="comment">#则表示先执行clean的phase（包含其他子phase），再执行install的phase</span></div></pre></td></tr></table></figure>
+    PROG=`basename <span class="variable">$0</span>`
+
+    <span class="function"><span class="title">usage</span></span>() {
+        cat &lt;&lt;EOF
+    Usage: <span class="variable">${PROG}</span> [OPTION]...
+    Find out the highest cpu consumed threads of java, and print the stack of these threads.
+    Example: <span class="variable">${PROG}</span> -c <span class="number">10</span>
+    Options:
+        -p, --pid       find out the highest cpu consumed threads from the specifed java process,
+                        default from all java process.
+        -c, --count     <span class="keyword">set</span> the thread count to show, default is <span class="number">5</span>
+        -h, --help      display this <span class="built_in">help</span> and <span class="keyword">exit</span>
+    EOF
+        <span class="keyword">exit</span> <span class="variable">$1</span>
+    }
+
+    ARGS=`getopt -n <span class="string">"<span class="variable">$PROG</span>"</span> <span class="operator">-a</span> -o c:p:h <span class="operator">-l</span> count:,pid:,<span class="built_in">help</span> -- <span class="string">"<span class="variable">$@</span>"</span>`
+    [ $? <span class="operator">-ne</span> <span class="number">0</span> ] &amp;&amp; usage <span class="number">1</span>
+    <span class="built_in">eval</span> <span class="keyword">set</span> -- <span class="string">"<span class="variable">${ARGS}</span>"</span>
+
+    <span class="keyword">while</span> <span class="literal">true</span>; <span class="keyword">do</span>
+        <span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span>
+        -c|--count)
+            count=<span class="string">"<span class="variable">$2</span>"</span>
+            shift <span class="number">2</span>
+            ;;
+        -p|--pid)
+            pid=<span class="string">"<span class="variable">$2</span>"</span>
+            shift <span class="number">2</span>
+            ;;
+        -h|--help)
+            usage
+            ;;
+        --)
+            shift
+            <span class="keyword">break</span>
+            ;;
+        <span class="keyword">esac</span>
+    <span class="keyword">done</span>
+    count=<span class="variable">${count:-5}</span>
+
+    <span class="function"><span class="title">redEcho</span></span>() {
+        [ -c /dev/stdout ] &amp;&amp; {
+            <span class="comment"># if stdout is console, turn on color output.</span>
+            <span class="built_in">echo</span> <span class="operator">-ne</span> <span class="string">"\033[1;31m"</span>
+            <span class="built_in">echo</span> -n <span class="string">"<span class="variable">$@</span>"</span>
+            <span class="built_in">echo</span> <span class="operator">-e</span> <span class="string">"\033[0m"</span>
+        } || <span class="built_in">echo</span> <span class="string">"<span class="variable">$@</span>"</span>
+    }
+
+    <span class="comment"># Check the existence of jstack command!</span>
+    <span class="keyword">if</span> ! which jstack &amp;&gt; /dev/null; <span class="keyword">then</span>
+        [ -z <span class="string">"<span class="variable">$JAVA_HOME</span>"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        ! [ <span class="operator">-f</span> <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack file does NOT exists!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        ! [ -x <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack is NOT executalbe!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        <span class="keyword">export</span> PATH=<span class="string">"<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span>"</span>
+    <span class="keyword">fi</span>
+
+    uuid=`date +%s`_<span class="variable">${RANDOM}</span>_$$
+
+    <span class="function"><span class="title">cleanupWhenExit</span></span>() {
+        rm /tmp/<span class="variable">${uuid}</span>_* &amp;&gt; /dev/null
+    }
+    trap <span class="string">"cleanupWhenExit"</span> EXIT
+
+    <span class="function"><span class="title">printStackOfThread</span></span>() {
+        <span class="keyword">while</span> <span class="built_in">read</span> threadLine ; <span class="keyword">do</span>
+            pid=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $1}'</span>`
+            threadId=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $2}'</span>`
+            threadId0x=`<span class="built_in">printf</span> %x <span class="variable">${threadId}</span>`
+            user=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $3}'</span>`
+            pcpu=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $5}'</span>`
+
+            jstackFile=/tmp/<span class="variable">${uuid}</span>_<span class="variable">${pid}</span>
+
+            [ ! <span class="operator">-f</span> <span class="string">"<span class="variable">${jstackFile}</span>"</span> ] &amp;&amp; {
+                jstack <span class="variable">${pid}</span> &gt; <span class="variable">${jstackFile}</span> || {
+                    redEcho <span class="string">"Fail to jstack java process <span class="variable">${pid}</span>!"</span>
+                    rm <span class="variable">${jstackFile}</span>
+                    <span class="keyword">continue</span>
+                }
+            }
+
+            redEcho <span class="string">"Busy(<span class="variable">${pcpu}</span>%) thread(<span class="variable">${threadId}</span>/0x<span class="variable">${threadId0x}</span>) stack of java process(<span class="variable">${pid}</span>) under user(<span class="variable">${user}</span>):"</span>
+            sed <span class="string">"/nid=0x<span class="variable">${threadId0x}</span> /,/^$/p"</span> -n <span class="variable">${jstackFile}</span>
+        <span class="keyword">done</span>
+    }
+
+    ps -Leo pid,lwp,user,comm,pcpu --no-headers | {
+        [ -z <span class="string">"<span class="variable">${pid}</span>"</span> ] &amp;&amp;
+        awk <span class="string">'$4=="java"{print $0}'</span> ||
+        awk -v <span class="string">"pid=<span class="variable">${pid}</span>"</span> <span class="string">'$1==pid,$4=="java"{print $0}'</span>
+    } | sort -k5 -r -n | head --lines <span class="string">"<span class="variable">${count}</span>"</span> | printStackOfThread
+</code></pre>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
 
 
-<h3 id="3、maven用法">3、maven用法</h3>
-<p>主要讲下Archetype以及几种常用项目的创建<br>maven创建项目是根据Archetype（原型）创建的。下面先介绍下Archetype<br>3.1 Archetype</p>
-<p>原型对于项目的作用就相当于模具对于工具的作用，我们想做一个锤子，将铁水倒入模具成型后，稍加修改就可以了。<br>类似我们可以根据项目类型的需要使用不同的Archetype创建项目。通过Archetype我们可以快速标准的创建项目。利用Archetype创建完项目后都有标准的文件夹目录结构<br>既然Archetype相当于模具，那么当然可以自己再造模具了啊，创建Archetype<br>下面介绍利用maven自带的集中Archetype创建项目。创建项目的goal为mvn archetype:generate，并且指定archetypeArtifactId，其中archetypeArtifactId见maven自带的archetypeArtifactId</p>
-<p>3.2 quick start工程</p>
-<p>创建一个简单的quick start项目，指定 -DarchetypeArtifactId为maven-archetype-quickstart，如下命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate -DgroupId=com.trinea.maven.test -DartifactId=maven-quickstart -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=<span class="literal">false</span></div></pre></td></tr></table></figure>
-
-<p>其中DgroupId指定groupId，DartifactId指定artifactId，DarchetypeArtifactId指定ArchetypeId，<br>DinteractiveMode表示是否使用交互模式，交互模式会让用户填写版本信息之类的，非交互模式采用默认值<br>这样我们便建好了一个简单的maven项目，目录结构如下：<br><img src="/img/maven1.jpg"></p>
-<p>现在我们可以利用2.4的build Lifecycle进行一些操作，先命令行到工程根目录下<br>编译 mvn compile<br>打包 mvn package，此时target目录下会出现maven-quickstart-1.0-SNAPSHOT.jar文件，即为打包后文件<br>打包并安装到本地仓库mvn install，此时本机仓库会新增maven-quickstart-1.0-SNAPSHOT.jar文件。</p>
-<p>3.3 web工程</p>
-<p>创建一个简单的web项目，只需要修 -DarchetypeArtifactId为maven-archetype-webapp即可，如下命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate -DgroupId=com.trinea.maven.web.test -DartifactId=maven-web -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=<span class="literal">false</span></div><div class="line">maven web start</div></pre></td></tr></table></figure>
-
-<p><img src="/img/maven2.jpg"><br>其他：<br>src\main\resources文件夹是用来存放资源文件的，maven工程默认没有resources文件夹，如果我们需要用到类似log4j.properties这样的配置文件，就需要在src\main文件夹下新建resources文件夹，并将log4j.properties放入其中。<br>test需要用到资源文件，类似放到src\test下<br>对于apache的log4j没有log4j.properties文件或是目录错误，会报如下异常</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">log4j:WARN No appenders could be found <span class="keyword">for</span> logger (org.apache.commons.httpclient.HttpClient).</div><div class="line">log4j:WARN Please initialize <span class="operator">the</span> log4j <span class="keyword">system</span> properly.</div></pre></td></tr></table></figure>
 
 
-<h3 id="4、maven常用参数和命令">4、maven常用参数和命令</h3>
-<p>主要介绍maven常用参数和命令以及简单故障排除<br>4.1 mvn常用参数</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">mvn <span class="operator">-e</span> 			<span class="comment">#显示详细错误</span></div><div class="line">mvn -U 			<span class="comment">#强制更新snapshot类型的插件或依赖库（否则maven一天只会更新一次snapshot依赖）</span></div><div class="line">mvn -o 			<span class="comment">#运行offline模式，不联网更新依赖</span></div><div class="line">mvn -N 			<span class="comment">#仅在当前项目模块执行命令，关闭reactor</span></div><div class="line">mvn -pl module_name 	<span class="comment">#在指定模块上执行命令</span></div><div class="line">mvn -ff 		<span class="comment">#在递归执行命令过程中，一旦发生错误就直接退出</span></div><div class="line">mvn -Dxxx=yyy 		<span class="comment">#指定java全局属性</span></div><div class="line">mvn -Pxxx 		<span class="comment">#引用profile xxx</span></div></pre></td></tr></table></figure>
 
 
-<p>4.2 首先是2.4 Build Lifecycle中介绍的命令</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn test-compile 	<span class="comment">#编译测试代码</span></div><div class="line">mvn test 		<span class="comment">#运行程序中的单元测试</span></div><div class="line">mvn compile 		<span class="comment">#编译项目</span></div><div class="line">mvn package 		<span class="comment">#打包，此时target目录下会出现maven-quickstart-1.0-SNAPSHOT.jar文件，即为打包后文件</span></div><div class="line">mvn install 		<span class="comment">#打包并安装到本地仓库，此时本机仓库会新增maven-quickstart-1.0-SNAPSHOT.jar文件。</span></div></pre></td></tr></table></figure>
 
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-07-07T09:34:56.000Z"><a href="/2012/07/07/monitor-host/">7月 7 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/07/07/monitor-host/">简单的linux服务器监控脚本</a></h1>
+  
 
-<p>每个phase都可以作为goal，也可以联合，如之前介绍的mvn clean install</p>
-<p>4.3 maven 日用三板斧</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate 	<span class="comment">#创建maven项目</span></div><div class="line">mvn package 		<span class="comment">#打包，上面已经介绍过了</span></div><div class="line">mvn package -Prelease 	<span class="comment">#打包，并生成部署用的包，比如deploy/*.tgz</span></div><div class="line">mvn install 		<span class="comment">#打包并安装到本地库</span></div><div class="line">mvn eclipse:eclipse 	<span class="comment">#生成eclipse项目文件</span></div><div class="line">mvn eclipse:clean 	<span class="comment">#清除eclipse项目文件</span></div><div class="line">mvn site 		<span class="comment">#生成项目相关信息的网站</span></div></pre></td></tr></table></figure>
+    </header>
+    <div class="entry">
+      
+        <h3 id="monitor-host-sh脚本代码:">monitor-host.sh脚本代码:</h3>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># @Function</span>
+    <span class="comment"># monitor host:network io memory cpu </span>
+    <span class="comment">#</span>
+    <span class="comment"># @Usage</span>
+    <span class="comment">#   $ ./monitor-host.sh</span>
+    <span class="comment">#</span>
+    <span class="comment"># @author zxc</span>
 
-<p>4.4 maven插件常用参数</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn <span class="variable">-Dwtpversion=</span><span class="number">2.0</span> 		<span class="comment">#指定maven版本</span></div><div class="line">mvn -Dmaven.test.<span class="variable">skip=</span><span class="constant">true</span> 	<span class="comment">#如果命令包含了test phase，则忽略单元测试</span></div><div class="line">mvn <span class="variable">-DuserProp=</span>filePath 	<span class="comment">#指定用户自定义配置文件位置</span></div><div class="line">mvn <span class="variable">-DdownloadSources=</span><span class="constant">true</span> -Declipse.<span class="variable">addVersionToProjectName=</span><span class="constant">true</span> eclipse:eclipse 		</div><div class="line"><span class="comment">#生成eclipse项目文件，尝试从仓库下载源代码，并且生成的项目包含模块版本（注意如果使用公用POM，上述的开关缺省已打开）</span></div></pre></td></tr></table></figure>
+    DELAY=<span class="number">10</span>
+    COUNT=<span class="number">60</span>
 
+    LOG_PATH=<span class="string">'monitor_path'</span>
 
-<p>4.5 maven简单故障排除</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn -Dsurefire.<span class="variable">useFile=</span><span class="constant">false</span>   			<span class="comment">#如果执行单元测试出错，用该命令可以在console输出失败的单元测试及相关信息</span></div><div class="line">set <span class="variable">MAVEN_OPTS=</span>-Xmx512m -XX:<span class="variable">MaxPermSize=</span><span class="number">256</span>m 	<span class="comment">#调大jvm内存和持久代，maven/jvm out of memory error</span></div><div class="line">mvn -X maven log level 				<span class="comment">#设定为debug在运行</span></div><div class="line">mvndebug 					<span class="comment">#运行jpda允许remote debug</span></div><div class="line">mvn –help 					<span class="comment">#这个就不说了...</span></div></pre></td></tr></table></figure>
+    <span class="keyword">if</span> ! [ <span class="operator">-d</span> <span class="variable">$LOG_PATH</span> ]; <span class="keyword">then</span>
+        mkdir -p <span class="variable">$LOG_PATH</span>
+    <span class="keyword">fi</span>
 
-<p>5、maven扩展<br>maven常用插件配置和使用</p>
-<p>6、maven配置</p>
-<p>为了修改maven创建项目默认以来的jdk版本，看了下maven配置<br>maven2.0默认使用jdk1.5导致反省、@override 等annotation不可用。可用两种方法修改jdk版本<br>第一种：修改项目的pom.xml，影响单个项目，治标不治本</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">build</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">plugins</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">plugin</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>maven-compiler-plugin<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">configuration</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">source</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">source</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">target</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">target</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">encoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="title">encoding</span>&gt;</span></div><div class="line">            <span class="tag">&lt;/<span class="title">configuration</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="title">plugin</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">plugins</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">build</span>&gt;</span></div></pre></td></tr></table></figure>
+    cur_date=<span class="string">"`date +%Y%m%d`"</span>
 
-<p>pom中增加build配置，指定java版本为1.6<br>第二种：修改maven配置，影响maven建立的所有项目<br>到maven安装目录的conf文件夹下，修改settings.xml文件，如下：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">profiles</span>&gt;</span>   </div><div class="line">    <span class="tag">&lt;<span class="title">profile</span>&gt;</span>     </div><div class="line">      <span class="tag">&lt;<span class="title">id</span>&gt;</span>jdk-1.6<span class="tag">&lt;/<span class="title">id</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;<span class="title">activation</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">activeByDefault</span>&gt;</span>true<span class="tag">&lt;/<span class="title">activeByDefault</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">jdk</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">jdk</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;/<span class="title">activation</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;<span class="title">properties</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.source</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.source</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.target</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.target</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.compilerVersion</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.compilerVersion</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;/<span class="title">properties</span>&gt;</span>       </div><div class="line">    <span class="tag">&lt;/<span class="title">profile</span>&gt;</span>      </div><div class="line"><span class="tag">&lt;/<span class="title">profiles</span>&gt;</span></div></pre></td></tr></table></figure>
+    top_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/top_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    memory_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/memory_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    cpu_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/cpu_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    io_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/io_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    network_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/network_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
 
-<p>这样便能对所有默认的maven项目指定jdk为1.6</p>
-<p>参考资料：<br>Maven官方文档：<a href="http://maven.apache.org/guides/index.html" target="_blank" rel="external">http://maven.apache.org/guides/index.html</a><br>maven安装：<a href="http://maven.apache.org/download.html" target="_blank" rel="external">http://maven.apache.org/download.html</a></p>
+    <span class="comment"># total performance check</span>
+    top -b <span class="operator">-d</span> <span class="variable">$DELAY</span> -n <span class="variable">$COUNT</span> &gt; <span class="variable">$top_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
 
+    <span class="comment"># memory check</span>
+    vmstat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$memory_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># cpu check</span>
+    sar -u <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$cpu_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># IO check</span>
+    iostat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$io_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># network check</span>
+    sar -n DEV <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$network_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+</code></pre>
       
     </div>
     <footer>
@@ -370,6 +511,126 @@
 
 <p>相当于登陆到example.com机器上，执行<code>uname</code>命令，结果输出到控制台，退出</p>
 <p><a href="http://rssminer.net" target="_blank" rel="external">Rssminer</a> 用此来部署代码后，重启服务</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-05-16T06:52:41.000Z"><a href="/2012/05/16/maven-help/">5月 16 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/05/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>由浅入深，主要介绍<code>maven的用途</code>、<code>核心概念</code>(Pom、Repositories、Artifact、Build Lifecycle、Goal)、<code>用法</code>(Archetype意义及创建各种项目)、<code>maven常用参数</code>和命令以及简单故障排除、<code>maven扩展</code>(eclipse、cobertura、findbugs、插件开发)、<code>maven配置</code>。<br>较长，可根据个人需要有选择性的查看，比如先看用法再回过头来看核心概念</p>
+<h3 id="1、maven的用途">1、maven的用途</h3>
+<p>maven是一个项目构建和管理的工具，提供了帮助管理、构建、文档、报告、依赖、scms、发布、分发的方法。可以方便的编译代码、进行依赖管理、管理二进制库等等。<br>maven的好处在于可以将项目过程规范化、自动化、高效化以及强大的可扩展性<br>利用maven自身及其插件还可以获得代码检查报告、单元测试覆盖率、实现持续集成等等。</p>
+<h3 id="2、maven的核心概念介绍">2、maven的核心概念介绍</h3>
+<p>2.1 Pom</p>
+<p>pom是指project object Model。pom是一个xml，在maven2里为pom.xml。是maven工作的基础，在执行task或者goal时，maven会去项目根目录下读取pom.xml获得需要的配置信息<br>pom文件中包含了项目的信息和maven build项目所需的配置信息，通常有项目信息(如版本、成员)、项目的依赖、插件和goal、build选项等等<br>pom是可以继承的，通常对于一个大型的项目或是多个module的情况，子模块的pom需要指定父模块的pom</p>
+<p>pom文件中节点含义如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">project 		<span class="comment">#pom文件的顶级元素</span></div><div class="line">modelVersion 		<span class="comment">#所使用的object model版本，为了确保稳定的使用，这个元素是强制性的。除非maven开发者升级模板，否则不需要修改</span></div><div class="line">groupId 		<span class="comment">#是项目创建团体或组织的唯一标志符，通常是域名倒写，如groupId  org.apache.maven.plugins就是为所有maven插件预留的</span></div><div class="line">artifactId 		<span class="comment">#是项目artifact唯一的基地址名</span></div><div class="line">packaging 		<span class="comment">#artifact打包的方式，如jar、war、ear等等。默认为jar。这个不仅表示项目最终产生何种后缀的文件，也表示build过程使用什么样的lifecycle。</span></div><div class="line"><span class="property">version</span> 		<span class="comment">#artifact的版本，通常能看见为类似0.0.1-SNAPSHOT，其中SNAPSHOT表示项目开发中，为开发版本</span></div><div class="line"><span class="property">name</span> 			<span class="comment">#表示项目的展现名，在maven生成的文档中使用</span></div><div class="line">url 			<span class="comment">#表示项目的地址，在maven生成的文档中使用</span></div><div class="line">description 		<span class="comment">#表示项目的描述，在maven生成的文档中使用</span></div><div class="line">dependencies 		<span class="comment">#表示依赖，在子节点dependencies中添加具体依赖的groupId artifactId和version</span></div><div class="line">build 			<span class="comment">#表示build配置</span></div><div class="line">parent 			<span class="comment">#表示父pom</span></div></pre></td></tr></table></figure>
+
+<p>其中groupId:artifactId:version唯一确定了一个artifact</p>
+<p>2.2 Artifact</p>
+<p>这个有点不好解释，大致说就是一个项目将要产生的文件，可以是jar文件，源文件，二进制文件，war文件，甚至是pom文件。每个artifact都由groupId:artifactId:version组成的标识符唯一识别。需要被使用(依赖)的artifact都要放在仓库(见Repository)中</p>
+<p>2.3 Repositories</p>
+<p>Repositories是用来存储Artifact的。如果说我们的项目产生的Artifact是一个个小工具，那么Repositories就是一个仓库，里面有我们自己创建的工具，也可以储存别人造的工具，我们在项目中需要使用某种工具时，在pom中声明dependency，编译代码时就会根据dependency去下载工具（Artifact），供自己使用。<br>对于自己的项目完成后可以通过mvn install命令将项目放到仓库（Repositories）中<br>仓库分为本地仓库和远程仓库，远程仓库是指远程服务器上用于存储Artifact的仓库，本地仓库是指本机存储Artifact的仓库，对于windows机器本地仓库地址为系统用户的.m2/repository下面。<br>对于需要的依赖，在pom中添加dependency即可，可以在maven的仓库中搜索：<a href="http://mvnrepository.com/" target="_blank" rel="external">http://mvnrepository.com/</a></p>
+<p>2.4 Build Lifecycle</p>
+<p>是指一个项目build的过程。maven的Build Lifecycle分为三种，分别为default（处理项目的部署）、clean（处理项目的清理）、site（处理项目的文档生成）。他们都包含不同的lifecycle。<br>Build Lifecycle是由phases构成的，下面重点介绍default Build Lifecycle几个重要的phase</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">validate 		<span class="comment">#验证项目是否正确以及必须的信息是否可用</span></div><div class="line">compile 		<span class="comment">#编译源代码</span></div><div class="line">test 			<span class="comment">#测试编译后的代码，即执行单元测试代码</span></div><div class="line">package 		<span class="comment">#打包编译后的代码，在target目录下生成package文件</span></div><div class="line">integration-test 	<span class="comment">#处理package以便需要时可以部署到集成测试环境</span></div><div class="line">verify 			<span class="comment">#检验package是否有效并且达到质量标准</span></div><div class="line">install 		<span class="comment">#安装package到本地仓库，方便本地其它项目使用</span></div><div class="line">deploy 			<span class="comment">#部署，拷贝最终的package到远程仓库和替他开发这或项目共享，在集成或发布环境完成</span></div></pre></td></tr></table></figure>
+
+<p>以上的phase是有序的（注意实际两个相邻phase之间还有其他phase被省略，完整phase见lifecycle），下面一个phase的执行必须在上一个phase完成后<br>若直接以某一个phase为goal，将先执行完它之前的phase，如mvn install<br>将会先validate、compile、test、package、integration-test、verify最后再执行install phase</p>
+<p>2.5 Goal</p>
+<p>goal代表一个特定任务</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">A goal represents <span class="operator">a</span> specific task (finer than <span class="operator">a</span> build phase) which contributes <span class="built_in">to</span> <span class="operator">the</span> building <span class="operator">and</span> managing <span class="operator">of</span> <span class="operator">a</span> project.</div></pre></td></tr></table></figure>
+
+<p>如</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">mvn package   		<span class="comment">#表示打包的任务，通过上面的介绍我们知道，这个任务的执行会先执行package phase之前的phase</span></div><div class="line">mvn deploy    		<span class="comment">#表示部署的任务</span></div><div class="line">mvn clean install 	<span class="comment">#则表示先执行clean的phase（包含其他子phase），再执行install的phase</span></div></pre></td></tr></table></figure>
+
+
+<h3 id="3、maven用法">3、maven用法</h3>
+<p>主要讲下Archetype以及几种常用项目的创建<br>maven创建项目是根据Archetype（原型）创建的。下面先介绍下Archetype<br>3.1 Archetype</p>
+<p>原型对于项目的作用就相当于模具对于工具的作用，我们想做一个锤子，将铁水倒入模具成型后，稍加修改就可以了。<br>类似我们可以根据项目类型的需要使用不同的Archetype创建项目。通过Archetype我们可以快速标准的创建项目。利用Archetype创建完项目后都有标准的文件夹目录结构<br>既然Archetype相当于模具，那么当然可以自己再造模具了啊，创建Archetype<br>下面介绍利用maven自带的集中Archetype创建项目。创建项目的goal为mvn archetype:generate，并且指定archetypeArtifactId，其中archetypeArtifactId见maven自带的archetypeArtifactId</p>
+<p>3.2 quick start工程</p>
+<p>创建一个简单的quick start项目，指定 -DarchetypeArtifactId为maven-archetype-quickstart，如下命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate -DgroupId=com.trinea.maven.test -DartifactId=maven-quickstart -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=<span class="literal">false</span></div></pre></td></tr></table></figure>
+
+<p>其中DgroupId指定groupId，DartifactId指定artifactId，DarchetypeArtifactId指定ArchetypeId，<br>DinteractiveMode表示是否使用交互模式，交互模式会让用户填写版本信息之类的，非交互模式采用默认值<br>这样我们便建好了一个简单的maven项目，目录结构如下：<br><img src="/img/maven1.jpg"></p>
+<p>现在我们可以利用2.4的build Lifecycle进行一些操作，先命令行到工程根目录下<br>编译 mvn compile<br>打包 mvn package，此时target目录下会出现maven-quickstart-1.0-SNAPSHOT.jar文件，即为打包后文件<br>打包并安装到本地仓库mvn install，此时本机仓库会新增maven-quickstart-1.0-SNAPSHOT.jar文件。</p>
+<p>3.3 web工程</p>
+<p>创建一个简单的web项目，只需要修 -DarchetypeArtifactId为maven-archetype-webapp即可，如下命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate -DgroupId=com.trinea.maven.web.test -DartifactId=maven-web -DarchetypeArtifactId=maven-archetype-webapp -DinteractiveMode=<span class="literal">false</span></div><div class="line">maven web start</div></pre></td></tr></table></figure>
+
+<p><img src="/img/maven2.jpg"><br>其他：<br>src\main\resources文件夹是用来存放资源文件的，maven工程默认没有resources文件夹，如果我们需要用到类似log4j.properties这样的配置文件，就需要在src\main文件夹下新建resources文件夹，并将log4j.properties放入其中。<br>test需要用到资源文件，类似放到src\test下<br>对于apache的log4j没有log4j.properties文件或是目录错误，会报如下异常</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">log4j:WARN No appenders could be found <span class="keyword">for</span> logger (org.apache.commons.httpclient.HttpClient).</div><div class="line">log4j:WARN Please initialize <span class="operator">the</span> log4j <span class="keyword">system</span> properly.</div></pre></td></tr></table></figure>
+
+
+<h3 id="4、maven常用参数和命令">4、maven常用参数和命令</h3>
+<p>主要介绍maven常用参数和命令以及简单故障排除<br>4.1 mvn常用参数</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">mvn <span class="operator">-e</span> 			<span class="comment">#显示详细错误</span></div><div class="line">mvn -U 			<span class="comment">#强制更新snapshot类型的插件或依赖库（否则maven一天只会更新一次snapshot依赖）</span></div><div class="line">mvn -o 			<span class="comment">#运行offline模式，不联网更新依赖</span></div><div class="line">mvn -N 			<span class="comment">#仅在当前项目模块执行命令，关闭reactor</span></div><div class="line">mvn -pl module_name 	<span class="comment">#在指定模块上执行命令</span></div><div class="line">mvn -ff 		<span class="comment">#在递归执行命令过程中，一旦发生错误就直接退出</span></div><div class="line">mvn -Dxxx=yyy 		<span class="comment">#指定java全局属性</span></div><div class="line">mvn -Pxxx 		<span class="comment">#引用profile xxx</span></div></pre></td></tr></table></figure>
+
+
+<p>4.2 首先是2.4 Build Lifecycle中介绍的命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn test-compile 	<span class="comment">#编译测试代码</span></div><div class="line">mvn test 		<span class="comment">#运行程序中的单元测试</span></div><div class="line">mvn compile 		<span class="comment">#编译项目</span></div><div class="line">mvn package 		<span class="comment">#打包，此时target目录下会出现maven-quickstart-1.0-SNAPSHOT.jar文件，即为打包后文件</span></div><div class="line">mvn install 		<span class="comment">#打包并安装到本地仓库，此时本机仓库会新增maven-quickstart-1.0-SNAPSHOT.jar文件。</span></div></pre></td></tr></table></figure>
+
+
+<p>每个phase都可以作为goal，也可以联合，如之前介绍的mvn clean install</p>
+<p>4.3 maven 日用三板斧</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">mvn archetype:generate 	<span class="comment">#创建maven项目</span></div><div class="line">mvn package 		<span class="comment">#打包，上面已经介绍过了</span></div><div class="line">mvn package -Prelease 	<span class="comment">#打包，并生成部署用的包，比如deploy/*.tgz</span></div><div class="line">mvn install 		<span class="comment">#打包并安装到本地库</span></div><div class="line">mvn eclipse:eclipse 	<span class="comment">#生成eclipse项目文件</span></div><div class="line">mvn eclipse:clean 	<span class="comment">#清除eclipse项目文件</span></div><div class="line">mvn site 		<span class="comment">#生成项目相关信息的网站</span></div></pre></td></tr></table></figure>
+
+<p>4.4 maven插件常用参数</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn <span class="variable">-Dwtpversion=</span><span class="number">2.0</span> 		<span class="comment">#指定maven版本</span></div><div class="line">mvn -Dmaven.test.<span class="variable">skip=</span><span class="constant">true</span> 	<span class="comment">#如果命令包含了test phase，则忽略单元测试</span></div><div class="line">mvn <span class="variable">-DuserProp=</span>filePath 	<span class="comment">#指定用户自定义配置文件位置</span></div><div class="line">mvn <span class="variable">-DdownloadSources=</span><span class="constant">true</span> -Declipse.<span class="variable">addVersionToProjectName=</span><span class="constant">true</span> eclipse:eclipse 		</div><div class="line"><span class="comment">#生成eclipse项目文件，尝试从仓库下载源代码，并且生成的项目包含模块版本（注意如果使用公用POM，上述的开关缺省已打开）</span></div></pre></td></tr></table></figure>
+
+
+<p>4.5 maven简单故障排除</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">mvn -Dsurefire.<span class="variable">useFile=</span><span class="constant">false</span>   			<span class="comment">#如果执行单元测试出错，用该命令可以在console输出失败的单元测试及相关信息</span></div><div class="line">set <span class="variable">MAVEN_OPTS=</span>-Xmx512m -XX:<span class="variable">MaxPermSize=</span><span class="number">256</span>m 	<span class="comment">#调大jvm内存和持久代，maven/jvm out of memory error</span></div><div class="line">mvn -X maven log level 				<span class="comment">#设定为debug在运行</span></div><div class="line">mvndebug 					<span class="comment">#运行jpda允许remote debug</span></div><div class="line">mvn –help 					<span class="comment">#这个就不说了...</span></div></pre></td></tr></table></figure>
+
+<p>5、maven扩展<br>maven常用插件配置和使用</p>
+<p>6、maven配置</p>
+<p>为了修改maven创建项目默认以来的jdk版本，看了下maven配置<br>maven2.0默认使用jdk1.5导致反省、@override 等annotation不可用。可用两种方法修改jdk版本<br>第一种：修改项目的pom.xml，影响单个项目，治标不治本</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">build</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">plugins</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">plugin</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>maven-compiler-plugin<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span></div><div class="line">            <span class="tag">&lt;<span class="title">configuration</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">source</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">source</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">target</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">target</span>&gt;</span></div><div class="line">                <span class="tag">&lt;<span class="title">encoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="title">encoding</span>&gt;</span></div><div class="line">            <span class="tag">&lt;/<span class="title">configuration</span>&gt;</span></div><div class="line">        <span class="tag">&lt;/<span class="title">plugin</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">plugins</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">build</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>pom中增加build配置，指定java版本为1.6<br>第二种：修改maven配置，影响maven建立的所有项目<br>到maven安装目录的conf文件夹下，修改settings.xml文件，如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">profiles</span>&gt;</span>   </div><div class="line">    <span class="tag">&lt;<span class="title">profile</span>&gt;</span>     </div><div class="line">      <span class="tag">&lt;<span class="title">id</span>&gt;</span>jdk-1.6<span class="tag">&lt;/<span class="title">id</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;<span class="title">activation</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">activeByDefault</span>&gt;</span>true<span class="tag">&lt;/<span class="title">activeByDefault</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">jdk</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">jdk</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;/<span class="title">activation</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;<span class="title">properties</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.source</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.source</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.target</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.target</span>&gt;</span>       </div><div class="line">        <span class="tag">&lt;<span class="title">maven.compiler.compilerVersion</span>&gt;</span>1.6<span class="tag">&lt;/<span class="title">maven.compiler.compilerVersion</span>&gt;</span>       </div><div class="line">      <span class="tag">&lt;/<span class="title">properties</span>&gt;</span>       </div><div class="line">    <span class="tag">&lt;/<span class="title">profile</span>&gt;</span>      </div><div class="line"><span class="tag">&lt;/<span class="title">profiles</span>&gt;</span></div></pre></td></tr></table></figure>
+
+<p>这样便能对所有默认的maven项目指定jdk为1.6</p>
+<p>参考资料：<br>Maven官方文档：<a href="http://maven.apache.org/guides/index.html" target="_blank" rel="external">http://maven.apache.org/guides/index.html</a><br>maven安装：<a href="http://maven.apache.org/download.html" target="_blank" rel="external">http://maven.apache.org/download.html</a></p>
 
       
     </div>
@@ -1731,25 +1992,25 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>19</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>11</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>12</small></li>
   
-    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>2</small></li>
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
     <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
-    <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
+    <li><a href="/tags/Mongodb/">Mongodb</a><small>0</small></li>
   
-    <li><a href="/tags/Mysql/">Mysql</a><small>3</small></li>
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
   
-    <li><a href="/tags/Oracle/">Oracle</a><small>5</small></li>
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
@@ -1757,17 +2018,17 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/其他/">其他</a><small>1</small></li>
   
-    <li><a href="/tags/前端/">前端</a><small>1</small></li>
+    <li><a href="/tags/前端/">前端</a><small>0</small></li>
   
     <li><a href="/tags/开始/">开始</a><small>4</small></li>
   
-    <li><a href="/tags/技术/">技术</a><small>2</small></li>
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
     <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
   
     <li><a href="/tags/架构/">架构</a><small>2</small></li>
   
-    <li><a href="/tags/理财/">理财</a><small>1</small></li>
+    <li><a href="/tags/理财/">理财</a><small>0</small></li>
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
