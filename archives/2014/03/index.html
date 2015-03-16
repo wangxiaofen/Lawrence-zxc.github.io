@@ -75,77 +75,20 @@
 <h2 class="archive-title">2014/3</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-03-21T04:00:35.000Z"><a href="/2014/03/21/nginx-gzip/">3月 21 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-03-21T04:00:35.000Z"><a href="/2014/03/21/nginx-gzip/">3月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<p>网站的访问量如果越来越高，那么就需要考虑带宽的问题了，因为流量会提升一些费用成本，没有经过压缩的文本也会影响网页的加载速度。当然我目前对这个考虑还是远了，因为流量对我来说还没感受到那么大的问题。只是考虑用户提升访问速度。</p>
-<p>当然了gzip压缩在当前HTTP传输来说还是主流的，所有的服务器应该都能启用gzip压缩才对。</p>
-<p>对于Nginx来启用gzip很简单。打开nginx.conf配置进行编辑：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="title">http</span> {   <span class="comment">#在http里面进行设置</span></div><div class="line"> </div><div class="line">    <span class="comment">#开启gzip压缩</span></div><div class="line">    <span class="title">gzip</span>  <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment">#启用gzip压缩最小长度必须大于1kB，否则不启用压缩</span></div><div class="line">    <span class="title">gzip_min_length</span> <span class="number">1k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的缓冲区</span></div><div class="line">    <span class="title">gzip_buffers</span> <span class="number">4</span> <span class="number">16k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的等级，0-9之间，数字越大，压缩率越高，但是cpu消耗也大。</span></div><div class="line">    <span class="title">gzip_comp_level</span> <span class="number">9</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 启用gzip的文件类型，一般text、css、json、javascript、xml进行压缩，image最好不要压缩了吧？</span></div><div class="line">    <span class="title">gzip_types</span> text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;</div><div class="line"> </div><div class="line">    <span class="comment"># 和http头有关系，加个vary头，给代理服务器用的，有的浏览器支持压缩，有的不支持。</span></div><div class="line">    <span class="comment"># 因此，为避免浪费不支持的也压缩，需要根据客户端的HTTP头来判断，是否需要压缩。</span></div><div class="line">    <span class="title">gzip_vary</span> <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 好吧，IE6对gzip压缩不太好，但是应该要淘汰IE6了吧，你的受众是IE6用户，那么你也太没有魅力了。</span></div><div class="line">    <span class="comment">#gzip_disable "MSIE [1-6]\.";</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>推荐一个：<a href="http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google" target="_blank" rel="external">http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google</a> page speed。<br>还有一个，阿里测<a href="http://alibench.com/" target="_blank" rel="external">http://alibench.com/</a></p>
-<h4 id="参考文章">参考文章</h4>
-<ul>
-<li><a href="http://blog.csdn.net/xzknet/article/details/7416148" target="_blank" rel="external">http://blog.csdn.net/xzknet/article/details/7416148</a></li>
-<li><a href="http://www.veryhuo.com/a/view/51706.html" target="_blank" rel="external">http://www.veryhuo.com/a/view/51706.html</a></li>
-<li><a href="http://willko.iteye.com/blog/667091" target="_blank" rel="external">http://willko.iteye.com/blog/667091</a></li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -163,7 +106,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -172,6 +115,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

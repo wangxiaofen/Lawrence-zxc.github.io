@@ -75,298 +75,31 @@
 <h2 class="archive-title">2014/4</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-04-28T05:45:35.000Z"><a href="/2014/04/28/python-mysql-restful/">4月 28 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/04/28/python-mysql-restful/">python为mysql实现restful接口</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-04-28T05:45:35.000Z"><a href="/2014/04/28/python-mysql-restful/">4月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/04/28/python-mysql-restful/">python为mysql实现restful接口</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近在做游戏服务分层的时候，一直想把mysql的访问独立成一个单独的服务DBGate，原因如下:</p>
-<ul>
-<li>请求收拢到DBGate，可以使DBGate变为无状态的，方便横向扩展</li>
-<li>当请求量或者存储量变大时，mysql需要做分库分表，DBGate可以内部直接处理，外界无感知</li>
-<li>通过restful限制对数据请求的形式，仅支持简单的get/post/patch/put 进行增删改查，并不支持复杂查询。这个也是和游戏业务的特性有关，如果网站等需要复杂查询的业务，对此并不适合</li>
-<li>DBGate使用多进程模式，方便控制与mysql之间的链接数，进行mysql访问量阀值保护</li>
-<li>方便在DBGate上进行访问量统计，慢查询统计、权限控制等等一系列逻辑</li>
-<li>目前是使用python，以后要使用其他语言进行mysql操作时，只要进行标准的http请求即可，不会出现不兼容的情况<br>当然坏处也是有的：</li>
-<li>首当其冲就是单次请求的响应时间变长，毕竟中间加了一层服务，并且还是http格式</li>
-<li>部署上比原来复杂了一些，很多对mysql直接操作的思维需要进行转变，一开始可能会有些不适</li>
-</ul>
-<p>不过总的来说，还是利大于弊，所以最终还是决定搭建DBGate</p>
-<p>当然，我们不可能去手工挨个写每个库表对应的restful服务，值得庆幸的是django和flask都提供了对应的解决方案，我们一个个介绍.</p>
-<p>Flask<br>参考链接: flask-restless</p>
-<p>flask-restless使用方法比较简单，我直接贴一下代码即可:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># -*- coding: utf-8 -*-</span></div><div class="line"> </div><div class="line"><span class="keyword">import</span> datetime</div><div class="line"><span class="keyword">from</span> flask <span class="keyword">import</span> Flask</div><div class="line"><span class="keyword">from</span> flask_sqlalchemy <span class="keyword">import</span> SQLAlchemy</div><div class="line"><span class="keyword">from</span> flask_restless <span class="keyword">import</span> APIManager</div><div class="line"> </div><div class="line"> </div><div class="line">app = Flask(__name__)</div><div class="line">db = SQLAlchemy(app)</div><div class="line">restless = APIManager(app, flask_sqlalchemy_db=db)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(db.Model)</span>:</span></div><div class="line">    <span class="string">"""</span></div><div class="line">    user</div><div class="line">    """</div><div class="line"> </div><div class="line">    id = db.Column(db.Integer, primary_key=<span class="keyword">True</span>)</div><div class="line">    username = db.Column(db.String(<span class="number">255</span>), unique=<span class="keyword">True</span>, nullable=<span class="keyword">False</span>)</div><div class="line">    password = db.Column(db.String(<span class="number">255</span>), nullable=<span class="keyword">False</span>)</div><div class="line">    create_time = db.Column(db.DateTime, nullable=<span class="keyword">False</span>, default=datetime.datetime.utcnow)</div><div class="line">    login_time = db.Column(db.DateTime)</div><div class="line"> </div><div class="line"> </div><div class="line">restless.create_api(User, methods=[<span class="string">'GET'</span>, <span class="string">'POST'</span>, <span class="string">'DELETE'</span>, <span class="string">'PATCH'</span>, <span class="string">'PUT'</span>], results_per_page=<span class="number">100</span>)</div><div class="line"> </div><div class="line">db.create_all()</div><div class="line"> </div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    app.run(port=<span class="number">25000</span>)</div></pre></td></tr></table></figure>
-
-<p>其对应的restful操作如下:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">获取用户列表:   GET /user</div><div class="line">添加用户:       POST /user</div><div class="line">获取单个用户:   GET /user/<span class="number">1</span></div><div class="line">覆盖单个用户:   PUT /user/<span class="number">1</span></div><div class="line">修改单个用户:   PATCH /user/<span class="number">1</span></div></pre></td></tr></table></figure>
-
-<p>注意:</p>
-<ul>
-<li>在http请求中，记得加入header: Content-Type: application/json</li>
-<li>flask-restless中，PUT和PATCH一样，都是传入什么字段，只修改什么字段，不会完全覆盖</li>
-</ul>
-<p>Django<br>参考链接: Django REST framework</p>
-<p>Django用起来要更复杂一些，也因为django版自带了一个可视化的操作页面，如下:<br><img src="/img/django1.png"></p>
-<ol>
-<li>在settings中添加:</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">REST_FRAMEWORK = {</div><div class="line">    <span class="comment"># Use hyperlinked styles by default.</span></div><div class="line">    <span class="comment"># Only used if the `serializer_class` attribute is not set on a view.</span></div><div class="line">    <span class="string">'DEFAULT_MODEL_SERIALIZER_CLASS'</span>:</div><div class="line">        <span class="string">'rest_framework.serializers.HyperlinkedModelSerializer'</span>,</div><div class="line"> </div><div class="line">    <span class="comment"># Use Django's standard `django.contrib.auth` permissions,</span></div><div class="line">    <span class="comment"># or allow read-only access for unauthenticated users.</span></div><div class="line">    <span class="string">'DEFAULT_PERMISSION_CLASSES'</span>: [</div><div class="line">        <span class="comment">#'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',</span></div><div class="line">        <span class="string">'rest_framework.permissions.IsAdminUser'</span>,</div><div class="line">    ]</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<ol>
-<li><p>通过startapp建立一个app: demo</p>
-</li>
-<li><p>修改demo的models:</p>
-</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span><span class="params">(models.Model)</span>:</span></div><div class="line">    <span class="comment"># key是保留字</span></div><div class="line">    password = models.IntegerField()</div><div class="line">    nick = models.CharField(max_length=<span class="number">255</span>)</div><div class="line">    create_time = models.DateTimeField(default=datetime.datetime.now)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下新建serializers.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> serializers</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserSerializer</span><span class="params">(serializers.ModelSerializer)</span>:</span></div><div class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Meta</span>:</span></div><div class="line">        model = User</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下修改views.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render</div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> viewsets</div><div class="line"> </div><div class="line"><span class="keyword">from</span> serializers <span class="keyword">import</span> UserSerializer</div><div class="line"><span class="keyword">from</span> models <span class="keyword">import</span> User</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserViewSet</span><span class="params">(viewsets.ModelViewSet)</span>:</span></div><div class="line">    queryset = User.objects.all()</div><div class="line">    serializer_class = UserSerializer</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在demo下新建urls.py</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> os.path</div><div class="line"><span class="keyword">from</span> django.conf.urls <span class="keyword">import</span> patterns, include, url</div><div class="line"><span class="keyword">from</span> django.conf.urls.static <span class="keyword">import</span> static</div><div class="line"><span class="keyword">from</span> django.conf <span class="keyword">import</span> settings</div><div class="line"><span class="keyword">import</span> views</div><div class="line"> </div><div class="line"><span class="keyword">from</span> rest_framework <span class="keyword">import</span> routers</div><div class="line"> </div><div class="line">appname = os.path.basename(os.path.dirname(os.path.abspath(__file__)))</div><div class="line"> </div><div class="line">router = routers.DefaultRouter()</div><div class="line">router.register(<span class="string">'users'</span>, views.UserViewSet, appname)</div><div class="line"> </div><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">                       url(<span class="string">r'^'</span>, include(router.urls)),</div><div class="line">)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>在mysite.urls下include demo.urls和rest_framework.urls</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">urlpatterns = patterns(<span class="string">''</span>,</div><div class="line">    url(<span class="string">r'^demo/'</span>, include(<span class="string">'demo.urls'</span>)),</div><div class="line">    url(<span class="string">r'^admin/'</span>, include(admin.site.urls)),</div><div class="line">    url(<span class="string">r'^api-auth/'</span>, include(<span class="string">'rest_framework.urls'</span>, namespace=<span class="string">'rest_framework'</span>))</div><div class="line">)</div></pre></td></tr></table></figure>
-
-<ol>
-<li>执行初始化数据操作:</li>
-</ol>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">python manage.py syncdb</div></pre></td></tr></table></figure>
-
-<p>之后访问: <a href="http://127.0.0.1:8000/demo" target="_blank" rel="external">http://127.0.0.1:8000/demo</a> 即可看到如下界面了:<br><img src="/img/django2.png"></p>
-<p>对应的测试代码如下:</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> json</div><div class="line"><span class="keyword">import</span> requests</div><div class="line"><span class="keyword">from</span> urlparse <span class="keyword">import</span> urljoin</div><div class="line"> </div><div class="line">BASE_URL = <span class="string">'http://127.0.0.1:16500/'</span></div><div class="line">AUTH = (<span class="string">'admin'</span>, <span class="string">'admin'</span>)</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user_list</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span></div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_post_user_list</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">0</span>,</div><div class="line">        nick=<span class="string">'oo'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    rsp = requests.post(urljoin(BASE_URL, <span class="string">'/demo/users/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    }, data=json.dumps(json_data))</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_get_user</span><span class="params">()</span>:</span></div><div class="line">    rsp = requests.get(urljoin(BASE_URL, <span class="string">'/demo/users/1'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">    })</div><div class="line">    <span class="keyword">assert</span> rsp.ok</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_put_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">100</span>,</div><div class="line">        nick=<span class="string">'xx'</span>,</div><div class="line">        create_time=<span class="string">'2014-03-3T03:3:3'</span></div><div class="line">    )</div><div class="line">    <span class="comment"># 注意最后的 /</span></div><div class="line">    rsp = requests.put(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div><div class="line"> </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">test_patch_user</span><span class="params">()</span>:</span></div><div class="line">    json_data = dict(</div><div class="line">        password=<span class="number">300</span>,</div><div class="line">        )</div><div class="line">    rsp = requests.patch(urljoin(BASE_URL, <span class="string">'/demo/users/1/'</span>), auth=AUTH, headers={</div><div class="line">        <span class="string">'Accept'</span>: <span class="string">'application/json'</span>,</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span>,</div><div class="line">        }, data=json.dumps(json_data),</div><div class="line">    )</div><div class="line">    <span class="keyword">assert</span> rsp.ok, rsp.status_code</div></pre></td></tr></table></figure>
-
-<p>Django REST framework 是严格区分PUT和PATCH的，这一点和flask-restless 不一样，需要注意。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-04-11T13:03:46.000Z"><a href="/2014/04/11/create-enum-instances-dynamically/">4月 11 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/04/11/create-enum-instances-dynamically/">java在运行时动态增加枚举类型</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-04-11T13:03:46.000Z"><a href="/2014/04/11/create-enum-instances-dynamically/">4月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/04/11/create-enum-instances-dynamically/">java在运行时动态增加枚举类型</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近在使用一个内部框架的时候，希望能够在运行时指定枚举类型，却发现这是一件挺麻烦的事情（不找别的替代方式，就是要动态增加enum的类型），方法也不正统，不过作为有趣的尝试，研究研究也无妨，下面的内容主要来自于<a href="http://niceideas.ch/roller2/badtrash/entry/java_create_enum_instances_dynamically" target="_blank" rel="external">《Java–create enum instances dynamically》</a>这样一篇文章。在一切开始前，如果你想问，为什么非要增加/改变enum类型？其实这是一个非常好的问题，多数情况下这是应对被避免的，但是这不在今天我的讨论范围内。</p>
-<p>一、方法 void addEnum(Class<t> enumType, String enumName)，用于增加一个枚举类型：</t></p>
-<pre><code>/**
- * Add an enum instance <span class="keyword">to</span> the enum <span class="class"><span class="keyword">class</span> <span class="title">given</span> <span class="title">as</span> <span class="title">argument</span></span>
- * 
- * @param the type of the enum (implicit)
- * @param enumType the <span class="class"><span class="keyword">class</span> <span class="title">of</span> <span class="title">the</span> <span class="title">enum</span> <span class="title">to</span> <span class="title">be</span> <span class="title">modified</span></span>
- * @param enumName the name of the <span class="keyword">new</span> enum instance <span class="keyword">to</span> be added <span class="keyword">to</span> the <span class="class"><span class="keyword">class</span>.</span>
- */
-@SuppressWarnings(<span class="string">"unchecked"</span>)
-<span class="keyword">public</span> static &lt;T extends Enum&lt;?&gt;&gt; void addEnum(<span class="class"><span class="keyword">Class</span>&lt;<span class="title">T</span>&gt; <span class="title">enumType</span>, <span class="title">String</span> <span class="title">enumName</span>) {</span>
-
-    // <span class="number">0</span>. Sanity checks
-    <span class="keyword">if</span> (!Enum.class.isAssignableFrom(enumType)) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"class "</span> + enumType + <span class="string">" is not an instance of Enum"</span>);
-    }
-    // <span class="number">1</span>. Lookup <span class="string">"$VALUES"</span> holder in enum <span class="class"><span class="keyword">class</span> <span class="title">and</span> <span class="title">get</span> <span class="title">previous</span> <span class="title">enum</span> <span class="title">instances</span></span>
-    <span class="keyword">Field</span> valuesField = <span class="literal">null</span>;
-    <span class="keyword">Field</span>[] fields = TestEnum.class.getDeclaredFields();
-    <span class="keyword">for</span> (<span class="keyword">Field</span> <span class="keyword">field</span> : fields) {
-        <span class="keyword">if</span> (<span class="keyword">field</span>.getName().contains(<span class="string">"$VALUES"</span>)) {
-            valuesField = <span class="keyword">field</span>;
-            break;
-        }
-    }
-    AccessibleObject.setAccessible(<span class="keyword">new</span> <span class="keyword">Field</span>[] { valuesField }, <span class="literal">true</span>);
-
-    <span class="keyword">try</span> {
-
-        // <span class="number">2</span>. Copy it 
-        T[] previousValues = (T[]) valuesField.get(enumType);
-        List values = <span class="keyword">new</span> ArrayList(Arrays.asList(previousValues));
-
-        // <span class="number">3</span>. build <span class="keyword">new</span> enum
-        T newValue = (T) makeEnum(enumType, // The target enum <span class="class"><span class="keyword">class</span> </span>
-                enumName, // THE <span class="keyword">NEW</span> ENUM INSTANCE <span class="keyword">TO</span> BE DYNAMICALLY ADDED 
-                values.size(),
-                <span class="keyword">new</span> <span class="class"><span class="keyword">Class</span>&lt;&gt;&lt;[] {}, // <span class="title">can</span> <span class="title">be</span> <span class="title">used</span> <span class="title">to</span> <span class="title">pass</span> <span class="title">values</span> <span class="title">to</span> <span class="title">the</span> <span class="title">enum</span> <span class="title">constuctor</span></span>
-                <span class="keyword">new</span> Object[] {}); // can be used <span class="keyword">to</span> pass values <span class="keyword">to</span> the enum constuctor
-
-        // <span class="number">4</span>. add <span class="keyword">new</span> value
-        values.add(newValue);
-
-        // <span class="number">5</span>. Set <span class="keyword">new</span> values <span class="keyword">field</span>
-        setFailsafeFieldValue(valuesField, <span class="literal">null</span>, 
-                values.toArray((T[]) Array.newInstance(enumType, <span class="number">0</span>)));
-
-        // <span class="number">6</span>. Clean enum cache
-        cleanEnumCache(enumType);
-
-    } <span class="keyword">catch</span> (Exception e) {
-        e.printStackTrace();
-        <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e.getMessage(), e);
-    }
-}
-</code></pre><p>基于反射，把枚举类的属性列表全部取出来，增加一个新的枚举类型以后再放回去。上面的第3、5、6步下面分别说明。</p>
-<p>二、在其中使用到了 makeEnum(Class&lt;?&gt; enumClass, String value, int ordinal, Class&lt;?&gt;[] additionalTypes, Object[] additionalValues) 这样一个方法：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> Object makeEnum(<span class="keyword">Class</span>&lt;?&gt; enumClass, String value, <span class="keyword">int</span> ordinal, 
-        <span class="keyword">Class</span>&lt;?&gt;[] additionalTypes, Object[] additionalValues) <span class="keyword">throws</span> Exception {
-    Object[] parms = <span class="keyword">new</span> Object[additionalValues.length + <span class="number">2</span>];
-    parms[<span class="number">0</span>] = value;
-    parms[<span class="number">1</span>] = Integer.valueOf(ordinal);
-    System.arraycopy(additionalValues, <span class="number">0</span>, parms, <span class="number">2</span>, additionalValues.length);
-    <span class="keyword">return</span> enumClass.cast(getConstructorAccessor(enumClass, additionalTypes).newInstance(parms));
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> ConstructorAccessor getConstructorAccessor(<span class="keyword">Class</span>&lt;?&gt; enumClass, 
-        <span class="keyword">Class</span>&lt;?&gt;[] additionalParameterTypes) <span class="keyword">throws</span> NoSuchMethodException {
-    <span class="keyword">Class</span>&lt;?&gt;[] parameterTypes = <span class="keyword">new</span> <span class="keyword">Class</span>[additionalParameterTypes.length + <span class="number">2</span>];
-    parameterTypes[<span class="number">0</span>] = String.<span class="keyword">class</span>;
-    parameterTypes[<span class="number">1</span>] = <span class="keyword">int</span>.<span class="keyword">class</span>;
-    System.arraycopy(additionalParameterTypes, <span class="number">0</span>, 
-            parameterTypes, <span class="number">2</span>, additionalParameterTypes.length);
-    <span class="keyword">return</span> reflectionFactory.newConstructorAccessor(
-            enumClass.getDeclaredConstructor(parameterTypes));
-}
-</code></pre><p>这是真正使用newInstance方法来创建新的枚举对象的方法，注意其中的构造器参数类型，第一个是String，第二个是int，这是需要符合enum内部实现的。</p>
-<p>三、setFailsafeFieldValue(Field field, Object target, Object value) throws NoSuchFieldException, IllegalAccessException，这个修改方法modifier并设值的方法：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setFailsafeFieldValue</span>(Field field, Object target, Object <span class="keyword">value</span>)
-         throws NoSuchFieldException, IllegalAccessException {
-
-    <span class="comment">// let's make the field accessible</span>
-    field.setAccessible(<span class="keyword">true</span>);
-
-    <span class="comment">// next we change the modifier in the Field instance to</span>
-    <span class="comment">// not be final anymore, thus tricking reflection into</span>
-    <span class="comment">// letting us modify the static final field</span>
-    Field modifiersField = Field.class.getDeclaredField(<span class="string">"modifiers"</span>);
-    modifiersField.setAccessible(<span class="keyword">true</span>);
-    <span class="keyword">int</span> modifiers = modifiersField.getInt(field);
-
-    <span class="comment">// blank out the final bit in the modifiers int</span>
-    modifiers &amp;= ~Modifier.FINAL;
-    modifiersField.setInt(field, modifiers);
-
-    FieldAccessor fa = reflectionFactory.newFieldAccessor(field, <span class="keyword">false</span>);
-    fa.<span class="keyword">set</span>(target, <span class="keyword">value</span>);
-}
-</code></pre><p>四、清除枚举缓存：cleanEnumCache(Class&lt;?&gt; enumClass) throws NoSuchFieldException, IllegalAccessException：</p>
-<pre><code><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">cleanEnumCache</span>(Class&lt;?&gt; enumClass) 
-        <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException {
-    blankField(enumClass, <span class="string">"enumConstantDirectory"</span>); <span class="comment">// Sun (Oracle?!?) JDK 1.5/6</span>
-    blankField(enumClass, <span class="string">"enumConstants"</span>); <span class="comment">// IBM JDK</span>
-}
-
-<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">blankField</span>(Class&lt;?&gt; enumClass, String fieldName) 
-        <span class="keyword">throws</span> NoSuchFieldException, IllegalAccessException {
-    <span class="keyword">for</span> (Field field : Class.class.getDeclaredFields()) {
-        <span class="keyword">if</span> (field.getName().contains(fieldName)) {
-            AccessibleObject.setAccessible(<span class="keyword">new</span> Field[] { field }, <span class="keyword">true</span>);
-            setFailsafeFieldValue(field, enumClass, <span class="keyword">null</span>);
-            <span class="keyword">break</span>;
-        }
-    }
-}
-</code></pre><p>最终的运行时测试代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">enum</span> TestEnum {</div><div class="line">    a,</div><div class="line">    b,</div><div class="line">    c;</div><div class="line">};</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line"> </div><div class="line">    <span class="comment">// Dynamically add 3 new enum instances d, e, f to TestEnum</span></div><div class="line">    addEnum(TestEnum.class , <span class="string">"d"</span>);</div><div class="line">    addEnum(TestEnum.class , <span class="string">"e"</span>);</div><div class="line">    addEnum(TestEnum.class , <span class="string">"f"</span>);</div><div class="line"> </div><div class="line">    <span class="comment">// Run a few tests just to show it works OK. </span></div><div class="line">    System.out.println(Arrays.deepToString(TestEnum.values()));</div><div class="line">    <span class="comment">// Shows : [a, b, c, d, e, f] </span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -384,7 +117,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -393,6 +126,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

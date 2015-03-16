@@ -75,162 +75,42 @@
 <h2 class="archive-title">2011</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-12-26T13:45:29.000Z"><a href="/2011/12/26/concurrenthashmap/">12月 26 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/12/26/concurrenthashmap/">由ConcurrentHashMap的一个NullPointerException异常引起的错误</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2011-12-11T08:53:37.000Z"><a href="/2011/12/11/transient-volatile-strictfp/">12月 11 2011</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2011/12/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="Transient_-_声明一个实例变量，当对象存储或序列化时，它的值不需要维持">Transient - 声明一个实例变量，当对象存储或序列化时，它的值不需要维持</h3>
-<p>Java的serialization提供了一种持久化对象实例的机制。当持久化对象时，可能有一个特殊的对象数据成员，我们不想<br>用serialization机制来保存它。为了在一个特定对象的一个域上关闭serialization，可以在这个域前加上关键字transient。<br>transient是Java语言的关键字，用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候，transient型变量的值不包括在串行化的表示中，然而非transient型的变量是被包括进去的。</p>
-<p>Reference:</p>
-<p><a href="http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html" target="_blank" rel="external">http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html</a></p>
-<h3 id="Volatile_-_修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。">Volatile - 修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。</h3>
-<p>该变量声明为volatile（不稳定的），这就指示JVM，这个变量是不稳定的，每次使用它都到主存中进行读取。一般说来，多任务环境下各任务间共享的标志都应该加volatile修饰。</p>
-<p>volatile修饰变量。在每次被线程访问时，都强迫从共享内存中重读该成员变量的值。而且，当成员变量发生变化时，强迫线程将变化值回写到共享内存。这样在任何时刻，两个不同的线程总是看到某个成员变量的同一个值。</p>
-<p>Reference: </p>
-<p><a href="http://developer.51cto.com/art/201105/264855.htm" target="_blank" rel="external">http://developer.51cto.com/art/201105/264855.htm</a></p>
-<p><a href="http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html" target="_blank" rel="external">http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html</a></p>
-<h3 id="Strictfp_-_确保浮点运算，其意思是FP-strict，即_strict_float_point_(精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。">Strictfp - 确保浮点运算，其意思是FP-strict，即 strict float point (精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。</h3>
-<p>你可以将一个类、接口以及方法声明为strictfp，但是不允许对接口中的方法以及构造函数声明strictfp关键字。</p>
-<h3 id="native">native</h3>
-<p>native是方法修饰符。Native方法是由另外一种语言（如c/c++，FORTRAN，汇编）实现的本地方法。因为在外部实现了方法，所以在java代码中，就不需要声明了，有点类似于借口方法。Native可以和其他一些修饰符连用，但是abstract方法和Interface方法不能用native来修饰。</p>
-<p>为什么需要使用native method？请参考：<br><a href="http://www.javaeye.com/topic/72543" target="_blank" rel="external">http://www.javaeye.com/topic/72543</a> java Native Method初涉  </p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-12-11T08:53:37.000Z"><a href="/2011/12/11/transient-volatile-strictfp/">12月 11 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/12/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-11-13T02:15:01.000Z"><a href="/2011/11/13/hello-world/">11月 13 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/11/13/hello-world/">Hello World</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2011-11-13T02:15:01.000Z"><a href="/2011/11/13/hello-world/">11月 13 2011</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2011/11/13/hello-world/">Hello World</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
-<h3 id="for_Java">for Java</h3>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">System.out.println(<span class="string">"Hello World!"</span>);</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Shell">for Shell</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"Hello World!"</span></div><div class="line"><span class="built_in">printf</span> <span class="string">"Hello world!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_JavaScript">for JavaScript</h3>
-<figure class="highlight JavaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">"Hello World!"</span>);</div><div class="line"><span class="built_in">document</span>.write(<span class="string">"Hello, world!"</span>);</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Css">for Css</h3>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*<span class="pseudo">:before</span>,</div><div class="line">*<span class="pseudo">:after</span> <span class="rules">{ <span class="rule"><span class="attribute">content</span>:<span class="value"><span class="string">'hello word!'</span> </span></span></span>}</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Python">for Python</h3>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line">print(<span class="string">"hello world!"</span>)</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Ruby">for Ruby</h3>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">puts <span class="string">"Hello World!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_C">for C</h3>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main() {</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, world!"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<h3 id="for_Perl">for Perl</h3>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">print</span> <span class="string">"Hello, World.\n"</span>;</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -248,7 +128,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -257,6 +137,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

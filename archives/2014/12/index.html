@@ -75,74 +75,20 @@
 <h2 class="archive-title">2014/12</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-12-12T02:50:46.000Z"><a href="/2014/12/12/oracle-tmp-tablespace/">12月 12 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-12-12T02:50:46.000Z"><a href="/2014/12/12/oracle-tmp-tablespace/">12月 12 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
-<h3 id="查询临时表空间">查询临时表空间</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                         512</div></pre></td></tr></table></figure>
-
-<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                           256</div></pre></td></tr></table></figure>
-
-<h3 id="重新设定临时表空间容量">重新设定临时表空间容量</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">SQL&gt; alter database tempfile '/home/database/oracle/oradata/zuobian/temp01.dbf' resize 1024M;</div><div class="line">Database altered</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -160,7 +106,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -169,6 +115,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

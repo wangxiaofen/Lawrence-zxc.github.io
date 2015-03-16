@@ -75,741 +75,119 @@
 <h2 class="archive-title tag">Linux</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2015-01-02T03:04:47.000Z"><a href="/2015/01/02/linux-shell-xml/">1月 2 2015</a></time>
+            
+              <h1 class="title"><a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2015-01-02T03:04:47.000Z"><a href="/2015/01/02/linux-shell-xml/">1月 2 2015</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在Linux下如何用<code>Shell</code>脚本读写<code>XML</code>? 现有一个config.xml</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="pi">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">config</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">server-ip</span>&gt;</span>192.168.0.107<span class="tag">&lt;/<span class="title">server-ip</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">server-port</span>&gt;</span>6379<span class="tag">&lt;/<span class="title">server-port</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">repository-temp-path</span>&gt;</span>/Users/zxc/workspace/redis/<span class="tag">&lt;/<span class="title">repository-temp-path</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">config</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>需要修改里面的<code>server-ip</code>, <code>server-port</code> 和 <code>import-path</code>,用Shell脚本的参数$1,$2,$3来写入。</p>
-<p><br></p>
-<h3 id="方法1:用sed命令实现">方法1:用sed命令实现</h3>
-<p>首先想到的就是用sed正则匹配替换实现，写了一个shell脚本，是这样的：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/sh</span></div><div class="line"><span class="keyword">if</span> [ <span class="variable">$#</span> <span class="operator">-ne</span> <span class="number">3</span> ];<span class="keyword">then</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"usage: argument 1:IP_Address 2:Server_PORT 3:Temp_PATH"</span></div><div class="line"><span class="keyword">exit</span> <span class="number">1</span></div><div class="line"><span class="keyword">fi</span></div><div class="line">IP=<span class="variable">$1</span></div><div class="line">PORT=<span class="variable">$2</span></div><div class="line">DIRT=<span class="variable">$3</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Change values in config.xml..."</span></div><div class="line"></div><div class="line">sed <span class="string">"s/&lt;server-ip&gt;.*&lt;\/server-ip&gt;/&lt;server-ip&gt;<span class="variable">${IP}</span>&lt;\/server-ip&gt;/;s/&lt;server-port&gt;.*&lt;\/server-port&gt;/&lt;server-port&gt;<span class="variable">${PORT}</span>&lt;\/server-port&gt;/;s/&lt;repository-temp-path&gt;.*&lt;\/repository-temp-path&gt;/&lt;repository-temp-path&gt;<span class="variable">${DIRT}</span>&lt;\/repository-temp-path&gt;/"</span> config.xml &gt; config.xml</div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Done."</span></div></pre></td></tr></table></figure>
-
-<p>测试下来调用$ ./abc.sh 192.168.1.6 9909 \/home\/abc”是可以的，但环境变量不行，例如：$ ./abc.sh 192.168.1.6 9909 $HOME\/abc”，因为首先环境变量被解析了，所以存在反斜杠转义字符和sed替换冲突的问题。<br>用另外一个思路实现</p>
-<p><br></p>
-<h3 id="方法2:是直接输出该xml的内容，测试下来很管用，使用很方便，不存在反斜杠转义字符的问题和环境变量的问题：">方法2:是直接输出该xml的内容，测试下来很管用，使用很方便，不存在反斜杠转义字符的问题和环境变量的问题：</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/sh</span></div><div class="line"><span class="keyword">if</span> [ <span class="variable">$#</span> <span class="operator">-ne</span> <span class="number">3</span> ];<span class="keyword">then</span></div><div class="line"><span class="built_in">echo</span> <span class="string">"usage: argument 1:IP_Address 2:Server_PORT 3:Temp_PATH"</span></div><div class="line"><span class="keyword">exit</span> <span class="number">1</span></div><div class="line"><span class="keyword">fi</span></div><div class="line">IP=<span class="variable">$1</span></div><div class="line">PORT=<span class="variable">$2</span></div><div class="line">DIRT=<span class="variable">$3</span></div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Change values in config.xml..."</span></div><div class="line"></div><div class="line">cat &lt;&lt;EOF &gt;config.xml</div><div class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span>?&gt;</div><div class="line">&lt;config&gt;</div><div class="line">   &lt;server-ip&gt;<span class="variable">${IP}</span>&lt;/server-ip&gt;</div><div class="line">   &lt;server-port&gt;<span class="variable">${PORT}</span>&lt;/server-port&gt;</div><div class="line">   &lt;repository-temp-path&gt;<span class="variable">${DIRT}</span>&lt;/repository-temp-path&gt;</div><div class="line">&lt;/config&gt;</div><div class="line">EOF  </div><div class="line"></div><div class="line"><span class="built_in">echo</span> <span class="string">"Done."</span></div></pre></td></tr></table></figure>
-
-<p><br></p>
-<h3 id="方法3：用XMLStarlet">方法3：用XMLStarlet</h3>
-<p>XML + shell = XMLStarlet</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">$ xmlstarlet ed -u /config/server-ip -v <span class="number">192.168</span>.<span class="number">1.6</span> -u /config/server-port -v <span class="number">9909</span> -u /config/repository-temp-path -v /home/bbb input.xml</div><div class="line">&lt;?xml version=<span class="string">"1.0"</span> encoding=<span class="string">"UTF-8"</span>?&gt;</div><div class="line">&lt;config&gt;</div><div class="line">  &lt;server-ip&gt;<span class="number">192.168</span>.<span class="number">0.107</span>&lt;/server-ip&gt;</div><div class="line">  &lt;server-port&gt;<span class="number">6379</span>&lt;/server-port&gt;</div><div class="line">  &lt;repository-temp-path&gt;/Users/zxc/workspace/redis/&lt;/repository-temp-path&gt;</div><div class="line">&lt;/config&gt;</div></pre></td></tr></table></figure>
-
-<p><br></p>
-<h3 id="方法4：用xsltproc">方法4：用xsltproc</h3>
-<p>很多Linux比如CentOS默认已安装<code>xsltproc</code>，所以用xslt可以很方便的把一个xml转换为另外一个xml。<a href="http://xmlsoft.org/XSLT/xsltproc.html" target="_blank" rel="external">具体用法</a>。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>在需要使用负载均衡的server中增加</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
-
-<p>每个设备的状态设置为:</p>
-<ul>
-<li>1.down 表示单前的server暂时不参与负载</li>
-<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
-<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
-<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
-<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-06-27T01:52:00.000Z"><a href="/2014/06/27/linux-ps/">6月 27 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-03-21T04:00:35.000Z"><a href="/2014/03/21/nginx-gzip/">3月 21 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2013-11-10T07:49:30.000Z"><a href="/2013/11/10/git-pro/">11月 10 2013</a></time>
+            
+              <h1 class="title"><a href="/2013/11/10/git-pro/">Git配置和常用命令</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2013-02-11T08:09:32.000Z"><a href="/2013/02/11/git-help/">2月 11 2013</a></time>
+            
+              <h1 class="title"><a href="/2013/02/11/git-help/">git使用帮助</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-28T07:55:32.000Z"><a href="/2014/10/28/load-balancing/">10月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近需要给一个现网server增加过载保护的功能，借此机会也思考了很多，简单谈谈我对这两个概念的理解和实现方法。</p>
-<p>一.负载均衡<br>简单来说，就是按照目标server的参数进行合理分配，这个参数可以是失败率，也可以是响应时间，也可以是请求量，甚至是随机数。<br>我们来按照从简单到复杂逐个看一下几种实现。</p>
-<p>1.轮询式<br>逻辑比较简单，直接看代码：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">vector&lt;Server*&gt; vecServer;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    Server* server = vecServer[curIndex % vecServer.size()];</div><div class="line">    curIndex ++;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>如上代码就是一个简单的轮询式分配方法，这种方法优点实现简单，cpu计算少，缺点就是无法动态判断server的状态，当后端有一台server挂掉的时候，会至少1/vecServer.size()的请求。（最为严重的情况是由于单台后端server的超时导致前段全部挂死）。而且这种分配方法有一个bug，就是当每次请求结束后就释放内存，那么curIndex永远都只会为0，即每次都请求第一个server。</p>
-<p>2.定死权重式<br>这种方式适用于那种需要实现就规定后端server的权重，比如A比Bserver的响应速度快，我们希望A接受的请求比B多。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">//假设A，B, C server的权重分别为 10 5 2</div><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    //server 指针</div><div class="line">    Server* server;</div><div class="line">    //权重</div><div class="line">    int weight;</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">vecServer.push_back(A);</div><div class="line">vecServer.push_back(B);</div><div class="line">vecServer.push_back(C);</div><div class="line"> </div><div class="line">vector&lt;int&gt; vecWeight;</div><div class="line">for (unsigned i = 0; i &lt; vecServer.size(); i++)</div><div class="line">{</div><div class="line">    vecWeight.insert(vecWeight.end(),vecServer[i]-&gt;weight,i);</div><div class="line">}</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    index = vecWeight[random() % vecWeight.size()];</div><div class="line">    Server* server = vecServer[index].server;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面的代码也比较好理解，一共有两个数组，一个是server信息数组vecServer，一个是权重数组vecWeight。在分配server时，先通过权重数组vecWeight获取到server信息数组的下标，然后分配server。<br>这样的做法在我1年半写的一个项目是有使用的，经过统计效果是很不错的，基本是访问量是严格按照权重比分配的。这样做的cpu消耗也不高，但是缺点也是显而易见的，就是还是没有办法动态调整权重，需要人为去修改。所以我们接下来看第三种。</p>
-<p>3.动态调整权重<br>要讨论这种方法前，我们先要明确几个希望使用他的原因：</p>
-<ul>
-<li>1.我们希望server能够自动按照运行状态进行按照权重的选择</li>
-<li>2.我们不希望手工去配置权重变化</li>
-</ul>
-<p>然后是我们实现方法，很明显，我们需要一个基准来告诉我们这台server是否是正常的。这个基准是什么，是历史累计的平均值。比如如果是按照响应时间分配权重，那么就是所有后端server历史累计的平均响应时间，如果是错误率也是如此。<br>那么一旦调整了权重，我们什么时候来调整权重呢，调整比例是怎样呢？按照我的经验，一般是隔一段固定时间才进行调整，如果正常但是权重过低，那么就按照20%的比例恢复；如果server不正常，那么直接按照当前server响应时间/历史平均响应时间进行降权。这里的逻辑之所以不一样是有原因的，因为服务出现问题的时候，我们是能够知道这坏的程度有多少的，就是当前server响应时间/历史平均响应时间进行降权；但是要恢复的时候，你并不能保证server能够支撑到多大的访问量，所以只能按照20%放量来试。也避免滚雪球效应的发生。<br>我们来看一下代码。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">vector&lt;ServerInfo*&gt; vecServer;</div><div class="line">int total_rsp_time = 0;</div><div class="line">int total_req_count = 0;</div><div class="line"> </div><div class="line">unsigned int comWeight = 100;</div><div class="line">unsigned int MaxWeight = 1000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    float total_rsp_avg_time = (float)total_rsp_time / (float)total_req_count;</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_rsp_avg_time = (float)it-&gt;_rsp_time / (float)it-&gt;_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt = int(comWeight*total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_wt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_wt = it-&gt;_cur_wt &lt; MaxWeight ? it-&gt;_cur_wt : MaxWeight;</div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>以上基本展示了动态调整的过程，代码可能只是起演示作用，很多比如越界的检测都没有做，大家参照就好~</p>
-<p>OK，到这里我们基本就结束了负载均衡的讨论了，但是还有一个话题：过载保护。</p>
-<p>二.过载保护<br>关于过载保护其实经常适合负载均衡结合在一起使用的，但有两个问题：</p>
-<ul>
-<li>1.过载参照的基准是谁。<br>  是上面代码中的total_rsp_avg_time吗？<br>  不是，因为除非所有机器的正常性能完全一样，<br>  否则不可以拿total_rsp_avg_time来作为某台机器的负载基准。<br>  而能拿来做参照的，只有这台server自身的历史累计值。</li>
-<li>2.怎么实现过载保护。其实很简单，我们定义两个值_cur_max_queue_cnt和_queue_req_cnt，<br>  意义分别是这个server上在一段时间内允许分配的最多次数和当前已经排队的个数。<br>  _cur_max_queue_cnt值是通过当前时间段响应时间和历史累计时间算出来的。<br>  每次使用分配的server前，都要判断一下_queue_req_cnt是否达到了_cur_max_queue_cnt，<br>  如果达到了，分配失败。否则分配成功并且_queue_req_cnt++。</li>
-</ul>
-<p>代码如下：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div></pre></td><td class="code"><pre><div class="line">typedef struct _serverinfo</div><div class="line">{</div><div class="line">    unsigned        _svr_ip;            //目标主机</div><div class="line">    float           _cfg_wt;            //配置的权重</div><div class="line">    float           _cur_wt;            //当前实际权重</div><div class="line">    int             _req_count;         //请求数</div><div class="line">    float           _rsp_time;    //请求总响应时间</div><div class="line">    float           _rsp_avg_time;      //请求平均响应时间</div><div class="line">    int             _rsp_error;         //请求错误数</div><div class="line"> </div><div class="line">    int             _total_req_count;           //总的请求数</div><div class="line">    float           _total_rsp_avg_time;        //总的请求平均响应时间</div><div class="line">    int             _total_rsp_error;           //总的请求错误数</div><div class="line">    float           _total_rsp_time;        //总的请求时间</div><div class="line"> </div><div class="line">    float           _cur_max_queue_cnt; //当前实际允许的最大排队请求数</div><div class="line">    int             _queue_req_cnt;         //当前排队请求数</div><div class="line"> </div><div class="line">}ServerInfo;</div><div class="line"> </div><div class="line">float comxQueueSize = 1000;</div><div class="line">float maxQueueSize = 10000;</div><div class="line">while(1)</div><div class="line">{</div><div class="line">    //按照文中第二种方式进行server分配</div><div class="line"> </div><div class="line">    if(serverInfo._queue_req_cnt &gt; serverInfo._cur_max_queue_cnt)</div><div class="line">    {</div><div class="line">        //分配失败</div><div class="line">        continue;</div><div class="line">    }</div><div class="line">    serverInfo._queue_req_cnt ++;</div><div class="line">    </div><div class="line">    serverInfo._req_count++;</div><div class="line">    serverInfo._rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    serverInfo._total_req_count++;</div><div class="line">    serverInfo._total_rsp_time+=rsp_time;//响应时间</div><div class="line"> </div><div class="line">    total_req_count++;</div><div class="line">    total_rsp_time += rsp_time; </div><div class="line"> </div><div class="line">    if(! 需要重建权重)</div><div class="line">    {</div><div class="line">        continue;   </div><div class="line">    }</div><div class="line"> </div><div class="line">    //按照第三种方法重新分配权重</div><div class="line">    //按照文中第二种方式重建权重数组</div><div class="line"> </div><div class="line">    //其实和上面的循环合并成一个</div><div class="line">    for(vector&lt;ServerInfo*&gt;::iterator it = vecServer.begin();it!=vecServer.end();++it)</div><div class="line">    {</div><div class="line">        it-&gt;_total_rsp_avg_time = (float)it-&gt;_total_rsp_time / (float)it-&gt;_total_req_count;</div><div class="line">        if(it-&gt;_rsp_avg_time &gt; it-&gt;_total_rsp_avg_time)</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt = int(comxQueueSize*it-&gt;_total_rsp_avg_time/it-&gt;_rsp_avg_time);  </div><div class="line">        }</div><div class="line">        else</div><div class="line">        {</div><div class="line">            it-&gt;_cur_max_queue_cnt *= 1.2;</div><div class="line">        }</div><div class="line">        it-&gt;_cur_max_queue_cnt = it-&gt;_cur_max_queue_cnt &lt; maxQueueSize ? it-&gt;_cur_max_queue_cnt : maxQueueSize;</div><div class="line">        it-&gt;_queue_req_cnt = 0;</div><div class="line">    }</div><div class="line">    </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面的代码为了演示方便，所以把两个for循环拆开了，实际上是应该合到一个里面写的。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python</span></div><div class="line"></div><div class="line"><span class="comment">#################################################</span></div><div class="line"><span class="comment">#         左边网开发环境SwitchHosts Tools</span></div><div class="line"><span class="comment">#   (初始化开发环境,安装相关开发软件,服务器）</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#    V1.0      Writen by: zxc       Date:2014-10-11</span></div><div class="line"><span class="comment">##################################################</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> re</div><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span></div><div class="line">    hostsmap = {}</div><div class="line">    envlist = []</div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)</div><div class="line">    current_env = <span class="string">''</span></div><div class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> hosts:</div><div class="line">        line = line.strip()</div><div class="line">        env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)</div><div class="line">        <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            current_env = env_p.group(<span class="number">1</span>)</div><div class="line">            <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:</div><div class="line">                <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env</div><div class="line">            envlist.append(current_env)</div><div class="line">            hostsmap[current_env] = [] </div><div class="line">            <span class="keyword">continue</span></div><div class="line">        <span class="keyword">if</span> current_env == <span class="string">''</span>:</div><div class="line">            <span class="keyword">continue</span></div><div class="line">        hostsmap[current_env].append(line)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line">    iter_idx = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)</div><div class="line">        iter_idx = iter_idx+<span class="number">1</span></div><div class="line">    hostsmapCount = {}</div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:</div><div class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):</div><div class="line">                <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">                    hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span></div><div class="line">                <span class="keyword">else</span>:</div><div class="line">                    hostsmapCount[env] = <span class="number">1</span></div><div class="line">    current_env = <span class="keyword">None</span></div><div class="line">    max_count = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">        <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:</div><div class="line">            current_env = env </div><div class="line">            max_count = hostsmapCount[env]</div><div class="line">    <span class="keyword">if</span> max_count == <span class="number">0</span>:</div><div class="line">        current_env = <span class="string">'base'</span></div><div class="line">    <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env</div><div class="line">    env = envlist[int(sys.stdin.readline().strip())]</div><div class="line">    writehosts(env, envlist, hostsmap)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span></div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)</div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        hosts.write(<span class="string">'### %s ###'</span> % env_iter)</div><div class="line">        hosts.write(<span class="string">'\n'</span>)</div><div class="line">        desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)</div><div class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:</div><div class="line">            <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):</div><div class="line">                item = item[<span class="number">1</span> : len(item)]</div><div class="line">            <span class="keyword">if</span> desc:</div><div class="line">                hosts.write(<span class="string">'%s'</span> % item.strip())</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                hosts.write(<span class="string">'# %s'</span> % item.strip())</div><div class="line">            hosts.write(<span class="string">'\n'</span>)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span></div><div class="line">    example = <span class="string">"""&gt; cat /etc/hosts</span></div><div class="line">### base ###</div><div class="line">127.0.0.1 localhost</div><div class="line">127.0.0.1 zxc-rMBP</div><div class="line">255.255.255.255    broadcasthost</div><div class="line">::1             localhost</div><div class="line">fe80::1%lo0    localhost</div><div class="line">91.213.30.151   www.google.com</div><div class="line">91.213.30.151   www.google.com.hk</div><div class="line">91.213.30.151   accounts.google.com</div><div class="line">91.213.30.151   accounts.google.com.hk</div><div class="line">91.213.30.151   mail.google.com</div><div class="line">91.213.30.151   mail.google.com.hk</div><div class="line">91.213.30.151   plus.google.com</div><div class="line">91.213.30.151   plus.google.com.hk</div><div class="line">### server190 ###</div><div class="line">192.168.0.190  web.zuobian.com</div><div class="line">### server150 ###</div><div class="line">192.168.0.150  web.zuobian.com</div><div class="line">### localdev ###</div><div class="line">127.0.0.1   web.zuobian.com</div><div class="line">### run ###</div><div class="line">"""</div><div class="line">    <span class="keyword">print</span> example</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):</div><div class="line">        <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span></div><div class="line">        print_example()</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    switchhosts()</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-06-27T01:52:00.000Z"><a href="/2014/06/27/linux-ps/">6月 27 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/06/27/linux-ps/">按进程消耗内存多少排序</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ps -eo rss,pmem,pcpu,vsize,args |  sort -k <span class="number">1</span> -r -n | less</div></pre></td></tr></table></figure>
-
-<p>解析一下：<br><code>ps</code> 都知道，是linux,unix显示进程信息的,<br><code>-e</code> 是显示所有进程,<br><code>-o</code>是定制显示信息的格式</p>
-<p> <code>rss</code>: resident set size, 表示进程占用RAM(内存)的大小，单位是KB<br> <code>pmem</code>: %M, 占用内存的百分比 </p>
-<p> <code>pcpu</code>：%C，占用cpu的百分比<br> <code>vsize</code>: 表示进程占用的虚拟内存的大小，KB</p>
-<p> <code>args</code>：进程名（command） </p>
-<p> <code>sort</code>命令对ps结果进行排序<br>   <code>-k 1</code>:按第一个参数 rss进行排序</p>
-<p>   <code>-r</code>：逆序<br>   <code>-n</code>：numeric，按数字来排序</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-03-21T04:00:35.000Z"><a href="/2014/03/21/nginx-gzip/">3月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/03/21/nginx-gzip/">nginx启用gzip压缩</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<p>网站的访问量如果越来越高，那么就需要考虑带宽的问题了，因为流量会提升一些费用成本，没有经过压缩的文本也会影响网页的加载速度。当然我目前对这个考虑还是远了，因为流量对我来说还没感受到那么大的问题。只是考虑用户提升访问速度。</p>
-<p>当然了gzip压缩在当前HTTP传输来说还是主流的，所有的服务器应该都能启用gzip压缩才对。</p>
-<p>对于Nginx来启用gzip很简单。打开nginx.conf配置进行编辑：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="title">http</span> {   <span class="comment">#在http里面进行设置</span></div><div class="line"> </div><div class="line">    <span class="comment">#开启gzip压缩</span></div><div class="line">    <span class="title">gzip</span>  <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment">#启用gzip压缩最小长度必须大于1kB，否则不启用压缩</span></div><div class="line">    <span class="title">gzip_min_length</span> <span class="number">1k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的缓冲区</span></div><div class="line">    <span class="title">gzip_buffers</span> <span class="number">4</span> <span class="number">16k</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># gzip压缩的等级，0-9之间，数字越大，压缩率越高，但是cpu消耗也大。</span></div><div class="line">    <span class="title">gzip_comp_level</span> <span class="number">9</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 启用gzip的文件类型，一般text、css、json、javascript、xml进行压缩，image最好不要压缩了吧？</span></div><div class="line">    <span class="title">gzip_types</span> text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;</div><div class="line"> </div><div class="line">    <span class="comment"># 和http头有关系，加个vary头，给代理服务器用的，有的浏览器支持压缩，有的不支持。</span></div><div class="line">    <span class="comment"># 因此，为避免浪费不支持的也压缩，需要根据客户端的HTTP头来判断，是否需要压缩。</span></div><div class="line">    <span class="title">gzip_vary</span> <span class="built_in">on</span>;</div><div class="line"> </div><div class="line">    <span class="comment"># 好吧，IE6对gzip压缩不太好，但是应该要淘汰IE6了吧，你的受众是IE6用户，那么你也太没有魅力了。</span></div><div class="line">    <span class="comment">#gzip_disable "MSIE [1-6]\.";</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>推荐一个：<a href="http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google" target="_blank" rel="external">http://gtmetrix.com/可以对页面访问速度进行一个打分，类似google</a> page speed。<br>还有一个，阿里测<a href="http://alibench.com/" target="_blank" rel="external">http://alibench.com/</a></p>
-<h4 id="参考文章">参考文章</h4>
-<ul>
-<li><a href="http://blog.csdn.net/xzknet/article/details/7416148" target="_blank" rel="external">http://blog.csdn.net/xzknet/article/details/7416148</a></li>
-<li><a href="http://www.veryhuo.com/a/view/51706.html" target="_blank" rel="external">http://www.veryhuo.com/a/view/51706.html</a></li>
-<li><a href="http://willko.iteye.com/blog/667091" target="_blank" rel="external">http://willko.iteye.com/blog/667091</a></li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2013-11-10T07:49:30.000Z"><a href="/2013/11/10/git-pro/">11月 10 2013</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2013/11/10/git-pro/">Git配置和常用命令</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>Git是一个分布式版本控制／软件配置管理软件，原来是linux内核开发者林纳斯·托瓦兹（Linus Torvalds）为了更好地管理linux内核开发而创立的。</p>
-<h3 id="Git配置">Git配置</h3>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> user.name <span class="string">"Lawrence-zxc"</span></div><div class="line">git config --<span class="keyword">global</span> user.email <span class="string">"zhangxiongcai337@gmail.com"</span></div><div class="line">git config --<span class="keyword">global</span> color.ui <span class="literal">true</span></div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.co checkout</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.ci commit</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.st status</div><div class="line">git config --<span class="keyword">global</span> <span class="keyword">alias</span>.br branch</div><div class="line">git config -l  <span class="preprocessor"># 列举所有配置</span></div></pre></td></tr></table></figure>
-
-<p>用户的git配置文件在<code>~/.gitconfig</code>，我的配置：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line">  /Users/zxc/workspace/blog  ❤  cat ~/.gitconfig </div><div class="line">[user]</div><div class="line">    <span class="variable">email =</span> zhangxiongcai337@gmail.com</div><div class="line">    <span class="variable">name =</span> Lawrence-zxc</div><div class="line">[color]</div><div class="line">    <span class="variable">ui =</span> auto</div><div class="line">[color <span class="string">"branch"</span>]</div><div class="line">    <span class="variable">current =</span> yellow reverse</div><div class="line">    <span class="variable">local =</span> yellow</div><div class="line">    <span class="variable">remote =</span> green</div><div class="line">[color <span class="string">"diff"</span>]</div><div class="line">    <span class="variable">meta =</span> yellow bold</div><div class="line">    <span class="variable">frag =</span> magenta bold</div><div class="line">    <span class="variable">old =</span> red bold</div><div class="line">    <span class="variable">new =</span> green bold</div><div class="line">[color <span class="string">"status"</span>]</div><div class="line">    <span class="variable">added =</span> yellow</div><div class="line">    <span class="variable">changed =</span> green</div><div class="line">    <span class="variable">untracked =</span> cyan</div><div class="line">[alias]</div><div class="line">    <span class="variable">st =</span> <span class="string">"status"</span></div><div class="line">    <span class="variable">co =</span> checkout</div><div class="line">    <span class="variable">ls =</span> <span class="string">"ls-files"</span></div><div class="line">    <span class="variable">ci =</span> commit</div><div class="line">    <span class="variable">br =</span> branch</div><div class="line">    <span class="variable">rt =</span> reset --hard</div><div class="line">    <span class="variable">unstage =</span> reset HEAD</div><div class="line">    <span class="variable">uncommit =</span> reset --soft HEAD^</div><div class="line">    <span class="variable">l =</span> log <span class="variable">--pretty=</span>oneline --abbrev-commit --graph --decorate</div><div class="line">    <span class="variable">amend =</span> commit --amend </div><div class="line">    <span class="variable">who =</span> shortlog -n -s --no-merges </div><div class="line">    <span class="variable">g =</span> grep -n --color -E </div><div class="line">    <span class="variable">cp =</span> cherry-pick -x </div><div class="line">    <span class="variable">cb =</span> checkout -b </div><div class="line">[core]</div><div class="line">    <span class="variable">filemode =</span> <span class="constant">true</span></div></pre></td></tr></table></figure>
-
-<h3 id="Git常用命令">Git常用命令</h3>
-<p>查看、帮助命令</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git help &lt;command&gt;</span>  <span class="comment"># 显示command的help</span></span></div><div class="line">git show            <span class="comment"># 显示某次提交的内容</span></div><div class="line">git show <span class="variable">$id</span></div></pre></td></tr></table></figure>
-
-<p>查看提交记录</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">git <span class="keyword">log</span></div><div class="line">git <span class="keyword">log</span> &lt;file&gt;      <span class="comment"># 查看该文件每次提交记录</span></div><div class="line">git <span class="keyword">log</span> -p &lt;file&gt;   <span class="comment"># 显示版本历史，以及版本间的内容差异</span></div><div class="line">git <span class="keyword">log</span> -p -<span class="number">2</span>       <span class="comment"># 查看最近两次详细修改内容的diff</span></div><div class="line">git <span class="keyword">log</span> --<span class="keyword">stat</span>      <span class="comment"># 查看提交统计信息</span></div><div class="line">git <span class="keyword">log</span> --since=<span class="string">"6 hours"</span>  <span class="comment"># 显示最近6小时提交</span></div><div class="line">git <span class="keyword">log</span> --before=<span class="string">"2 days"</span>  <span class="comment"># 显示2天前提交</span></div><div class="line">git <span class="keyword">log</span> -<span class="number">1</span> HEAD~<span class="number">3</span>          <span class="comment"># 显示比HEAD早3个提交的那个提交</span></div><div class="line">git <span class="keyword">log</span> -<span class="number">1</span> HEAD^^^</div><div class="line">git reflog                 <span class="comment"># 查看操作记录</span></div></pre></td></tr></table></figure>
-
-<p>添加、提交、删除、找回，重置修改文件</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git co  -- &lt;file&gt;</span>   <span class="comment"># 抛弃工作区修改</span></span></div><div class="line"><span class="input"><span class="prompt">git co  .           # 抛弃工作区修改</span></span></div><div class="line">git co HEAD &lt;file&gt;  <span class="comment"># 抛弃工作目录区中文件的修改</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git add &lt;file&gt;</span>      <span class="comment"># 将工作文件修改提交到本地暂存区</span></span></div><div class="line">git add .           <span class="comment"># 将所有修改过的工作文件提交暂存区</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git rm &lt;file&gt;</span>       <span class="comment"># 从版本库中删除文件</span></span></div><div class="line"><span class="input"><span class="prompt">git rm &lt;file&gt;</span> --cached  <span class="comment"># 从版本库中删除文件，但不删除文件</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git reset &lt;file&gt;</span>    <span class="comment"># 从暂存区恢复到工作文件</span></span></div><div class="line"><span class="input"><span class="prompt">git reset -- .      # 从暂存区恢复到工作文件</span></span></div><div class="line">git reset --hard  HEAD^ # 恢复最近一次提交过的状态，即放弃上次提交后的所有本次修改</div><div class="line">git reset --hard &lt;commit id&gt;  <span class="comment"># 恢复到某一次提交的状态</span></div><div class="line"><span class="input"><span class="prompt">git reset HEAD &lt;file&gt;</span> <span class="comment"># 抛弃暂存区中文件的修改</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">git ci &lt;<span class="built_in">file</span>&gt;</div><div class="line">git ci .</div><div class="line">git ci -<span class="operator">a</span>           <span class="comment"># 将git add, git rm和git ci等操作都合并在一起做</span></div><div class="line">git ci -am <span class="string">"some comments"</span></div><div class="line">git ci <span class="comment">--amend      # 修改最后一次提交记录</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git revert &lt;$id&gt;</span>    <span class="comment"># 恢复某次提交的状态，恢复动作本身也创建了一次提交对象</span></span></div><div class="line">git revert <span class="constant">HEAD</span>     <span class="comment"># 恢复最后一次提交的状态</span></div></pre></td></tr></table></figure>
-
-<p>查看文件diff</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git diff &lt;file&gt;</span>     <span class="comment"># 比较当前文件和暂存区文件差异</span></span></div><div class="line"><span class="input"><span class="prompt">git diff</span></span></div><div class="line">git diff &lt;$id1&gt; &lt;<span class="variable">$id2</span>&gt;      <span class="comment"># 比较两次提交之间的差异</span></div><div class="line">git diff &lt;branch1&gt;..&lt;branch2&gt;   <span class="comment"># 在两个分支之间比较 </span></div><div class="line">git diff --staged   <span class="comment"># 比较暂存区和版本库差异</span></div><div class="line">git diff --cached   <span class="comment"># 比较暂存区和版本库差异</span></div><div class="line">git diff --stat     <span class="comment"># 仅仅比较统计信息</span></div></pre></td></tr></table></figure>
-
-<h3 id="Git_本地分支管理">Git 本地分支管理</h3>
-<p>查看、切换、创建和删除分支</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git br -r           # 查看远程分支</span></span></div><div class="line">git br -v           # 查看各个分支最后提交信息</div><div class="line">git br -a           # 列出所有分支</div><div class="line">git br --merged     # 查看已经被合并到当前分支的分支</div><div class="line">git br --no-merged  # 查看尚未被合并到当前分支的分支</div><div class="line">git br &lt;new_branch&gt; <span class="comment"># 基于当前分支创建新的分支</span></div><div class="line"><span class="input"><span class="prompt">git br &lt;new_branch&gt;</span>  &lt;start_point&gt;      <span class="comment"># 基于另一个起点（分支名称，提交名称或则标签名称），创建新的分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -f &lt;existing_branch&gt;</span>  &lt;start_point&gt;  <span class="comment"># 创建同名新分支，覆盖已有分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -d &lt;branch&gt;</span>  <span class="comment"># 删除某个分支</span></span></div><div class="line"><span class="input"><span class="prompt">git br -D &lt;branch&gt;</span>  <span class="comment"># 强制删除某个分支 (未被合并的分支被删除的时候需要强制)</span></span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git co &lt;branch&gt;</span>         <span class="comment"># 切换到某个分支</span></span></div><div class="line"><span class="input"><span class="prompt">git co -b &lt;new_branch&gt;</span>  <span class="comment"># 创建新的分支，并且切换过去</span></span></div><div class="line"><span class="input"><span class="prompt">git co -b &lt;new_branch&gt;</span> &lt;branch&gt;       <span class="comment"># 基于branch创建新的new_branch</span></span></div><div class="line"><span class="input"><span class="prompt">git co -m &lt;existing_branch&gt;</span> &lt;new_branch&gt;  <span class="comment"># 移动或重命名分支，当新分支不存在时</span></span></div><div class="line"><span class="input"><span class="prompt">git co -M &lt;existing_branch&gt;</span> &lt;new_branch&gt;  <span class="comment"># 移动或重命名分支，当新分支存在时就覆盖</span></span></div><div class="line"><span class="input"><span class="prompt"></span></span></div><div class="line">git co $id               # 把某次历史提交记录checkout出来，但无分支信息，切换到其他分支会自动删除</div><div class="line">git co $id -b &lt;new_branch&gt;       <span class="comment"># 把某次历史提交记录checkout出来，创建成一个分支</span></div></pre></td></tr></table></figure>
-
-<p>分支合并和rebase</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git merge &lt;branch&gt;</span>                  <span class="comment"># 将branch分支合并到当前分支</span></span></div><div class="line"><span class="input"><span class="prompt">git merge origin/master --no-ff     # 不要Fast-Foward合并，这样可以生成merge提交</span></span></div><div class="line">git merge --no-commit &lt;branch&gt;      <span class="comment"># 合并但不提交</span></div><div class="line"><span class="input"><span class="prompt">git merge --squash &lt;branch&gt;</span>         <span class="comment"># 把一条分支上的内容合并到另一个分支上的一个提交</span></span></div><div class="line"><span class="input"><span class="prompt"></span></span></div><div class="line">git rebase master &lt;branch&gt;          <span class="comment"># 将master rebase到branch，相当于：</span></div><div class="line"><span class="input"><span class="prompt">git co &lt;branch&gt;</span> && git rebase master && git co master && git merge &lt;branch&gt;</span></div></pre></td></tr></table></figure>
-
-<p>Git补丁管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git diff &gt; ../sync.<span class="keyword">patch</span>         <span class="preprocessor"># 生成补丁</span></div><div class="line">git apply ../sync.<span class="keyword">patch</span>          <span class="preprocessor"># 打补丁</span></div><div class="line">git apply --check ../sync.<span class="keyword">patch</span>  <span class="preprocessor"># 测试补丁能否成功</span></div><div class="line">git format-<span class="keyword">patch</span> -X              <span class="preprocessor"># 根据提交的log生成patch，X为数字，表示最近的几个日志</span></div></pre></td></tr></table></figure>
-
-<p>Git暂存管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git stash                        <span class="comment"># 暂存</span></div><div class="line">git stash <span class="keyword">list</span>                   <span class="comment"># 列所有stash</span></div><div class="line">git stash apply                  <span class="comment"># 恢复暂存的内容</span></div><div class="line">git stash drop                   <span class="comment"># 删除暂存区</span></div></pre></td></tr></table></figure>
-
-<p>Git远程分支管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">git pull                         <span class="comment"># 抓取远程仓库所有分支更新并合并到本地</span></div><div class="line">git pull --no-ff                 <span class="comment"># 抓取远程仓库所有分支更新并合并到本地，不要快进合并</span></div><div class="line">git fetch origin                 <span class="comment"># 抓取远程仓库所有更新</span></div><div class="line">git fetch origin remote-branch:local-branch <span class="comment">#抓取remote-branch分支的更新</span></div><div class="line">git fetch origin --tags          <span class="comment"># 抓取远程上的所有分支</span></div><div class="line">git checkout -b <span class="variable">&lt;new-branch&gt;</span> <span class="variable">&lt;remote_tag&gt;</span> <span class="comment"># 抓取远程上的分支</span></div><div class="line">git merge origin/master          <span class="comment"># 将远程主分支合并到本地当前分支</span></div><div class="line">git co --track origin/branch     <span class="comment"># 跟踪某个远程分支创建相应的本地分支</span></div><div class="line">git co -b <span class="variable">&lt;local_branch&gt;</span> origin/<span class="variable">&lt;remote_branch&gt;</span>  <span class="comment"># 基于远程分支创建本地分支，功能同上</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="input"><span class="prompt">git push                         # push所有分支</span></span></div><div class="line">git push origin master           # 将本地主分支推到远程主分支</div><div class="line">git push -u origin master        # 将本地主分支推到远程(如无远程主分支则创建，用于初始化远程仓库)</div><div class="line">git push origin &lt;local_branch&gt;   <span class="comment"># 创建远程分支， origin是远程仓库名</span></div><div class="line">git push origin &lt;local_branch&gt;<span class="symbol">:&lt;remote_branch&gt;</span>  <span class="comment"># 创建远程分支</span></div><div class="line"><span class="input"><span class="prompt">git push origin :&lt;remote_branch&gt;</span>  <span class="comment">#先删除本地分支(git br -d &lt;branch&gt;)，然后再push删除远程分支</span></span></div></pre></td></tr></table></figure>
-
-<p>Git远程仓库管理</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">git remote -v                    <span class="comment"># 查看远程服务器地址和仓库名称</span></div><div class="line">git remote show origin           <span class="comment"># 查看远程服务器仓库状态</span></div><div class="line">git remote <span class="built_in">add</span> origin git@github:XXX/test.git         <span class="comment"># 添加远程仓库地址</span></div><div class="line">git remote <span class="built_in">set</span>-url origin git@github.com:XXX/test.git <span class="comment"># 设置远程仓库地址(用于修改远程仓库地址)</span></div><div class="line">git remote rm &lt;repository&gt;       <span class="comment"># 删除远程仓库</span></div><div class="line">git remote <span class="built_in">set</span>-head origin master   <span class="comment"># 设置远程仓库的HEAD指向master分支</span></div><div class="line"></div><div class="line">git branch <span class="comment">--set-upstream master origin/master</span></div><div class="line">git branch <span class="comment">--set-upstream develop origin/develop</span></div></pre></td></tr></table></figure>
-
-<h3 id="实例">实例</h3>
-<p>打patch过程</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">git <span class="built_in">add</span> .</div><div class="line">git status</div><div class="line">git diff <span class="comment">--cached &gt;XXX.patch</span></div><div class="line">git ci -m <span class="string">'add patch'</span></div></pre></td></tr></table></figure>
-
-<h3 id="分支策略">分支策略</h3>
-<p>在实际开发中，我们应该按照几个基本原则进行分支管理：</p>
-<p>首先，master分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；</p>
-<p>那在哪干活呢？干活都在dev分支上，也就是说，dev分支是不稳定的，到某个时候，比如1.0版本发布时，再把dev分支合并到master上，在master分支发布1.0版本；</p>
-<p>你和你的小伙伴们每个人都在dev分支上干活，每个人都有自己的分支，时不时地往dev分支上合并就可以了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2013-02-11T08:09:32.000Z"><a href="/2013/02/11/git-help/">2月 11 2013</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2013/02/11/git-help/">git使用帮助</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p><br></p>
-<h3 id="使用http协议">使用http协议</h3>
-<p>对于较新版本的git，比如1.7.9以上，我们推荐使用http协议来访问git仓库，不需配置ssh key，使用注册用户名和密码就可以访问。</p>
-<p>使用git credential-cache来记住用户名和密码：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config <span class="subst">--</span><span class="built_in">global</span> credential<span class="built_in">.</span>helper <span class="keyword">cache</span></div></pre></td></tr></table></figure>
-
-<p>git<br>如果需要设置cache的时间，设置记住用户名和密码的时间(秒为单位)：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> credential.helper <span class="string">'cache --timeout=10000000'</span></div></pre></td></tr></table></figure>
-
-<p>git默认的postbuffer是比较小的，在push一个大的commit会出现错误，设置postbuffer，相关链接看<a href="http://stackoverflow.com/questions/2702731/git-fails-when-pushing-commit-to-github" target="_blank" rel="external">这里</a>：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> http.postBuffer <span class="number">524288000</span></div></pre></td></tr></table></figure>
-
-<p>在使用多个账户的情况下，为了避免混淆用户，可以使用@yourname来强制指定，比如：</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git clone http<span class="variable">s:</span>//Lawrence-zxc@github.<span class="keyword">com</span>/Lawrence-zxc/github.git</div></pre></td></tr></table></figure>
-
-<h3 id="管理ssh_key">管理ssh key</h3>
-<p>ssh 公钥密钥对是一切安全的基础，就像第一道防盗门。Github出于安全的考虑，一概通过ssh协议交换数据，保护好ssh密钥是一个程序员应该有的安全意识，希望您通过<code>1password</code>之类的工具妥善保存，此外最好能定期的更新密钥。</p>
-<p>多人共用密钥是严格不支持的！</p>
-<p>如果您第一次使用，按照以下的方式配置ssh密码：</p>
-<p>快速入门：</p>
-<p>如果您使用任何类unix系统，第一次配置 ssh 公钥密钥，请按照步骤，复制灰色背景字符，在终端执行命令，和编辑文件</p>
-<p>如果不存在<code>~/.ssh/id_rsa</code>，执行以下命令，生成 ssh 密钥</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span></div><div class="line">cat ~/.ssh/id_rsa.pub</div></pre></td></tr></table></figure>
-
-<p>点击ssh public key 管理，输入标识保存公钥</p>
-<p>[可选]如果你要生成特定 ssh 密钥只用于github（是第一步的另外可选方案）</p>
-<p>执行以下命令，生成 ssh 密钥, 保存在 <code>~/.ssh/github.com_rsa</code></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span> <span class="operator">-f</span> ~/.ssh/github.com_rsa;</div></pre></td></tr></table></figure>
-
-<p>编辑 ssh 客户端配置文件 <code>~/.ssh/config</code>，使用您熟悉的编辑器，在后面添加</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Host github.com</div><div class="line"> User </div><div class="line"> IdentityFile ~/.ssh/github.com_rsa</div><div class="line"> PreferredAuthentications publickey</div></pre></td></tr></table></figure>
-
-
-<p>查看 ssh 公钥，使用 cat 命令，或者用编辑器打开，请复制 ssh 公钥的文本内容</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat ~/.ssh/github.com_rsa.pub</div></pre></td></tr></table></figure>
-
-<p>点击ssh public key 管理，输入标识保存公钥</p>
-<p>ssh 公钥配置之后就可以长期使用了，请保护好密钥。点击创建仓库，详细仓库说明有助于推广</p>
-<p>你已经可以使用 github 来托管代码了，以下是示范的操作，详细信息请开始git的学习</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your_name/repo_name</div><div class="line"><span class="variable">$ </span>cd repo_name;</div><div class="line"><span class="variable">$ </span>vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span> .</div><div class="line"><span class="variable">$ </span>git push -u origin master</div></pre></td></tr></table></figure>
-
-
-<p>配置 user.name, user.mail ，两者对后台统计，信息push有重要的作用，选择您注册的用户名和email按照下面配置</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ git config --global <span class="literal">user</span>.name <span class="string">"your_name"</span></div><div class="line">$ git config --global <span class="literal">user</span>.email <span class="string">"your_email"</span></div></pre></td></tr></table></figure>
-
-
-<p>如果不想 global，在每个仓库里面执行 git config ，去掉 —global 参数</p>
-<h3 id="管理仓库">管理仓库</h3>
-<p>仓库是开发的基础容器，一切活动都源于仓库。如果您想让别人知道您的仓库，最好是<br>良好的命名，简单概要。<br>适当的注释，让人知道您的仓库做什么的，解决什么问题。<br>最重要的当然是不断的开发成为优秀的项目。<br>仓库除了代码之外，其他的数据都是被严格限制的，您务必理解这一点。</p>
-<p>clone·push·pull代码</p>
-<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your/repo</div><div class="line"><span class="variable">$ </span>cd repo; vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span></div><div class="line"><span class="variable">$ </span>git push -u origin master</div><div class="line"><span class="variable">$ </span>git pull</div></pre></td></tr></table></figure>
-
-<h3 id="git外部学习资源">git外部学习资源</h3>
-<ul>
-<li>Git Official Site<a href="http://book.git-scm.com/" target="_blank" rel="external">http://book.git-scm.com/</a></li>
-<li>Git Community Book 中文版<a href="http://gitbook.liuhui998.com/index.html" target="_blank" rel="external">http://gitbook.liuhui998.com/index.html</a></li>
-<li>Pro Git 简体中文版<a href="http://git.oschina.net/progit/" target="_blank" rel="external">http://git.oschina.net/progit/</a></li>
-<li>Git权威指南 相关blog<a href="http://www.worldhello.net/" target="_blank" rel="external">http://www.worldhello.net/</a></li>
-<li>Markdown 语法<a href="http://qingbo.net/picky/502-markdown-syntax.html" target="_blank" rel="external">http://qingbo.net/picky/502-markdown-syntax.html</a></li>
-<li>假如你没什么事情可以做了，还可以看看<a href="http://blog.gitshell.com/" target="_blank" rel="external">http://blog.gitshell.com/</a></li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -827,7 +205,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -836,6 +214,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

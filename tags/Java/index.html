@@ -75,884 +75,229 @@
 <h2 class="archive-title tag">Java</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-11-27T02:57:11.000Z"><a href="/2014/11/27/spring-mvc-wizard/">11月 27 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-27T02:57:11.000Z"><a href="/2014/11/27/spring-mvc-wizard/">11月 27 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>近期项目需要用到向导式的跳转页面效果，本项目又是用spring mvc实现的，刚开始想到用spring的<code>webflow</code>，不过<code>webflow</code>太过笨重，对于我们不是很复杂的跳转来说好像有种“杀鸡焉用牛刀”的感觉，于是就网上搜索看有没有类似的解决方案，网上的答案一般都是叫你继承<code>AbstractWizardFormContoller</code>这个类来实现，但对于<code>spring mvc3.0.x</code>这个类将不再使用，转而推荐使用<code>注解</code>的方式来实现，于是参考<code>官方文档</code>，用注解方式实现了向导式页面。</p>
-<p>下面是代码示例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"/wizard.htm"</span>)    </div><div class="line"><span class="annotation">@SessionAttributes</span>(<span class="string">"bean"</span>)  <span class="comment">//需要保存在session中的变量</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestWizardController</span></span>{  </div><div class="line">    </div><div class="line">  <span class="annotation">@Resource</span>(name = <span class="string">"beanService"</span>)  </div><div class="line">  <span class="keyword">private</span> BeanService beanService;    </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step1</span>(<span class="keyword">final</span> ModelMap modelMap){  </div><div class="line">    modelMap.addAttribute(<span class="string">"bean"</span>, <span class="keyword">new</span> Bean());  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step1"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=2"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step2</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step2"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_step=3"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">step3</span>(<span class="keyword">final</span> @<span class="title">ModelAttribute</span>("bean") Bean bean,  </div><div class="line">                      <span class="keyword">final</span> Errors errors){  </div><div class="line">    <span class="keyword">return</span> <span class="string">"step3"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_finish"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processFinish</span>(@<span class="title">ModelAttribute</span>("bean")Bean bean,  </div><div class="line">                              <span class="keyword">final</span> Errors errors,  </div><div class="line">                              <span class="keyword">final</span> ModelMap modelMap,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">  </div><div class="line">    beanService.add(bean);     </div><div class="line">    status.setComplete();  </div><div class="line">    <span class="keyword">return</span> <span class="string">"success"</span>;  </div><div class="line">  }  </div><div class="line">    </div><div class="line">  <span class="annotation">@RequestMapping</span>(params = <span class="string">"_cancel"</span>)  </div><div class="line">  <span class="keyword">public</span> String <span class="title">processCancel</span>(<span class="keyword">final</span> HttpServletRequest request,  </div><div class="line">                              <span class="keyword">final</span> HttpServletResponse response,  </div><div class="line">                              <span class="keyword">final</span> SessionStatus status){  </div><div class="line">     status.setComplete();  </div><div class="line">     <span class="keyword">return</span> <span class="string">"cancel"</span>;  </div><div class="line">  }  </div><div class="line">      </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>其中起到最大作用的就是<code>@SessionAttributes</code>这个注解，它定义了一个在<code>session</code>范围内的变量，这个变量可以在不同的页面跳转时保持状态。</p>
-<p>第一次访问 <a href="http://www.example.com/wizard.htm" target="_blank" rel="external">http://www.example.com/wizard.htm</a> 时进入step1方法，其后提交的表单action后面都要加上相应的参数，如：</p>
-<p>step1页面 </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=2"</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>step2页面 </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_step=3"</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>step3页面 </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">form</span> <span class="attribute">action</span>=<span class="value">"http://www.example.com/wizard.htm?_finish"</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-11-26T08:03:16.000Z"><a href="/2014/11/26/spring-mvc-xss/">11月 26 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-11-12T04:19:34.000Z"><a href="/2014/11/12/ibatis1/">11月 12 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-26T08:03:16.000Z"><a href="/2014/11/26/spring-mvc-xss/">11月 26 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>关于xss的介绍可以看 <a href="http://www.cnblogs.com/luminji/archive/2012/05/22/2507185.html" target="_blank" rel="external">Asp.net安全架构之1：xss（跨站脚本）</a>和 <a href="http://www.cnblogs.com/kingthy/archive/2011/08/20/2147355.html" target="_blank" rel="external">腾讯微博的XSS攻击漏洞</a> 网页，</p>
-<p>具体我就讲讲Spring MVC里面的预防：</p>
-<h3 id="第一种方法,使用Spring_MVC">第一种方法,使用Spring MVC</h3>
-<p>web.xml加上：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">context-param</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-name</span>&gt;</span>defaultHtmlEscape<span class="tag">&lt;/<span class="title">param-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">param-value</span>&gt;</span>true<span class="tag">&lt;/<span class="title">param-value</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">context-param</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>Forms加上：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">spring:htmlEscape</span> <span class="attribute">defaultHtmlEscape</span>=<span class="value">"true"</span> /&gt;</span></div></pre></td></tr></table></figure>
-
-
-<p>更多信息查看<a href="https://www.owasp.org/index.php/Main_Page" target="_blank" rel="external">OWASP</a>的<a href="https://www.owasp.org/index.php/XSS_%28Cross_Site_Scripting%29_Prevention_Cheat_Sheet" target="_blank" rel="external">页面</a></p>
-<p><br></p>
-<h3 id="第二种方法是手动escape">第二种方法是手动escape</h3>
-<p>例如用户可以输入：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;script&gt;alert();<span class="xml"><span class="tag">&lt;/<span class="title">script</span>&gt;</span></span></div></pre></td></tr></table></figure>
-
-<p>或者输入</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">h2</span>&gt;</span>abc<span class="tag">&lt;<span class="title">h2</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>,如果有异常,显然有xss漏洞。<br>首先添加一个jar包:<code>commons-lang-2.5.jar</code>,然后在后台调用这些函数：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">StringEscapeUtils.escapeHtml(string); </div><div class="line">StringEscapeUtils.escapeJavaScript(string); </div><div class="line">StringEscapeUtils.escapeSql(string);</div></pre></td></tr></table></figure>
-
-<p>前台js调用escape函数即可。</p>
-<p><br></p>
-<h3 id="第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的">第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的</h3>
-<p>例如：&lt; &gt; ‘ “ \ /  # &amp;<br>方法是实现一个自定义的<code>HttpServletRequestWrapper</code>，然后在Filter里面调用它，替换掉getParameter函数即可。<br>首先添加一个<code>XssHttpServletRequestWrapper</code>:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.Enumeration;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequestWrapper;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssHttpServletRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{  </div><div class="line">    <span class="keyword">public</span> <span class="title">XssHttpServletRequestWrapper</span>(HttpServletRequest servletRequest) {</div><div class="line">        <span class="keyword">super</span>(servletRequest);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String[] <span class="title">getParameterValues</span>(String parameter) {</div><div class="line">      String[] values = <span class="keyword">super</span>.getParameterValues(parameter);</div><div class="line">      <span class="keyword">if</span> (values==<span class="keyword">null</span>)  {</div><div class="line">                  <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">          }</div><div class="line">      <span class="keyword">int</span> count = values.length;</div><div class="line">      String[] encodedValues = <span class="keyword">new</span> String[count];</div><div class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) {</div><div class="line">                 encodedValues[i] = cleanXSS(values[i]);</div><div class="line">       }</div><div class="line">      <span class="keyword">return</span> encodedValues;</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getParameter</span>(String parameter) {</div><div class="line">          String value = <span class="keyword">super</span>.getParameter(parameter);</div><div class="line">          <span class="keyword">if</span> (value == <span class="keyword">null</span>) {</div><div class="line">                 <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                  }</div><div class="line">          <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getHeader</span>(String name) {</div><div class="line">        String value = <span class="keyword">super</span>.getHeader(name);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> String <span class="title">cleanXSS</span>(String value) {</div><div class="line">                <span class="comment">//You'll need to remove the spaces from the html entities below</span></div><div class="line">        value = value.replaceAll(<span class="string">"&lt;"</span>, <span class="string">"& lt;"</span>).replaceAll(<span class="string">"&gt;"</span>, <span class="string">"& gt;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"\\("</span>, <span class="string">"& #40;"</span>).replaceAll(<span class="string">"\\)"</span>, <span class="string">"& #41;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"'"</span>, <span class="string">"& #39;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"eval\\((.*)\\)"</span>, <span class="string">""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']"</span>, <span class="string">"\"\""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"script"</span>, <span class="string">""</span>);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    }</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>然后添加一个过滤器XssFilter ：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.Filter;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterChain;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletException;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line">    FilterConfig filterConfig = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span>(FilterConfig filterConfig) <span class="keyword">throws</span> ServletException {</div><div class="line">        <span class="keyword">this</span>.filterConfig = filterConfig;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span>() {</div><div class="line">        <span class="keyword">this</span>.filterConfig = <span class="keyword">null</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response,</div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException {</div><div class="line">        chain.doFilter(<span class="keyword">new</span> XssHttpServletRequestWrapper(</div><div class="line">                (HttpServletRequest) request), response);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>最后在web.xml里面配置一下，所有的请求的getParameter会被替换，如果参数里面含有<code>敏感词</code>会被替换掉：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>com.ibm.web.beans.XssFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="title">dispatcher</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p> (这个Filter也可以防止SQL注入攻击) </p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-12T04:19:34.000Z"><a href="/2014/11/12/ibatis1/">11月 12 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>开发中ibatis会用到： $ 和 # 符号。</p>
-<p>一、区别</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$aaa$ 输出参数是以字符串方式直接输出 123</div><div class="line"></div><div class="line">#aaa# 输出参数是以Parameter方式输出 @aaa</div></pre></td></tr></table></figure>
-
-<p>二、实例</p>
-<p>SQL :</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">&lt;select id="selectMetaMandao"  parameterClass="java.util.HashMap" resultMap="WaasmetaMandaoMap" &gt;  </div><div class="line">    SELECT $subCategory$ rchannel,sum(mandao) mandao from</div><div class="line">    ( SELECT nvl(channel,'-') channel,ROUND(count(1)*0.1131) mandao  FROM WAAS_VIEW_USER_RESULT a </div><div class="line">    AND not EXISTS (</div><div class="line">    SELECT msgid</div><div class="line">      FROM DT_XMS_MT b</div><div class="line">     WHERE EXISTS</div><div class="line">           (SELECT MSGID FROM WAAS_VIEW_USER_RESULT WHERE STATUS = 'SUCCESS' AND msgid = b.msgid)</div><div class="line">    AND msgid = a.msgid)</div><div class="line">       GROUP BY channel) d LEFT JOIN waas_channel_summary c ON d.channel = c.original_channel </div><div class="line">    &lt;isNotEmpty property="channel"&gt;</div><div class="line">            WHERE c.original_channel LIKE '%'||#channel#||'%' </div><div class="line">     &lt;/isNotEmpty&gt;</div><div class="line">       GROUP BY $subCategory$</div><div class="line">&lt;/select&gt;</div></pre></td></tr></table></figure>
-
-<p>代码 :</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"queryMeta"</span>)</div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">selectMeta</span>(HttpServletRequest request, HttpServletResponse response) {</div><div class="line">    String channel = request.getParameter(<span class="string">"channel"</span>);</div><div class="line">    Map&lt;String, Object&gt; param = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();</div><div class="line">    <span class="comment">//以参数方式输出, 相当于一个变量 (活的)</span></div><div class="line">    param.put(<span class="string">"channel"</span>, channel); </div><div class="line">    <span class="comment">//以字符串方式输出, 直接输出(死的)</span></div><div class="line">    param.put(<span class="string">"subCategory"</span>, channel == <span class="keyword">null</span> ? <span class="string">"primary_category"</span> : <span class="string">"ORIGINAL_CHANNEL"</span>); </div><div class="line">    List&lt;WAASUserMOTypeResult&gt; data = wumtService.selectMeta(param);</div><div class="line">    <span class="comment">//因为楼上这个List查完之后重新封装的, 所以无序, 要对List里面的对象进行排序, 如下</span></div><div class="line">    Collections.sort(data, <span class="keyword">new</span> Comparator&lt;WAASUserMOTypeResult&gt;() {</div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span>(WAASUserMOTypeResult o1, WAASUserMOTypeResult o2) {</div><div class="line">            <span class="keyword">return</span> o2.getShijia() - o1.getShijia(); <span class="comment">//排序字段, 倒序</span></div><div class="line">        }</div><div class="line">    });</div><div class="line">	</div><div class="line">    ......</div><div class="line">	</div><div class="line">    renderJson(response, resultJson.toString());</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>实现效果:</p>
-<p>如果传channel参数, 则根据原始媒体(ORIGINAL_CHANNEL)分组, 不传则根据合并后的大媒体(primary_category) 分组.</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/24/java-regex/">正则表达式匹配中文</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>我发现很多人没办法高效地解决问题的关键原因是不熟悉工具，不熟悉工具也还罢了，甚至还不知道怎么去找工具，这个问题就大条了。我想列下我能想到的一个Java程序员会用到的常用工具。</p>
-<p>一、编码工具</p>
-<p> 1.IDE：<a href="http://www.eclipse.org/" target="_blank" rel="external">Eclipse</a>或者<a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">IDEA</a>，熟悉尽可能多的快捷键，《<a href="https://www.google.com/#hl=zh-CN&amp;site=&amp;source=hp&amp;q=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;oq=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;aq=f&amp;aqi=g-l1&amp;aql=&amp;gs_l=hp.3..0i13.449l7739l0l7948l53l49l9l4l4l9l278l4511l14j15j7l36l0.&amp;bav=on.2,or.r_gc.r_pw.r_cp.,cf.osb&amp;fp=eef1a08d3fa904e4&amp;biw=1594&amp;bih=858" target="_blank" rel="external">Eclipse常见快捷键列表</a>》</p>
-<p> 2.插件：<br> (1) <a href="http://findbugs.sourceforge.net/" target="_blank" rel="external">Findbugs</a>，在release之前进行一次静态代码检查是必须的<br> (2) <a href="http://www.atlassian.com/software/clover/overview" target="_blank" rel="external">Clover</a>，关心你的单元测试覆盖率<br> (3) <a href="http://checkstyle.sourceforge.net/" target="_blank" rel="external">Checkstyle</a> 代码风格检查</p>
-<p> 3.构建和部署工具:ant或者maven，现在主流都是maven了吧，使用<a href="http://www.sonatype.org/nexus/" target="_blank" rel="external">nexus搭建maven私服</a>，再加上持续集成<a href="http://jenkins-ci.org/" target="_blank" rel="external">jenkins</a>。代码质量不用愁。</p>
-<p> 4.版本管理工具： svn或者git</p>
-<p> 5.<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">diff</a>和<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">patch</a></p>
-<p> 6.设置你的eclipse或者IDEA，如formatter,save actions以及code template等。代码风格，直接用google的也可以啊。《<a href="http://code.google.com/p/google-styleguide/" target="_blank" rel="external">Google style guide</a>》</p>
-<p> 7.掌握一个文本编辑器，Emacs或者VIM，熟悉常用快捷键。这在你需要在线编辑代码，或者编写其他语言代码时候特别有用。《<a href="http://linuxtoy.org/archives/why-emacs-vim-good.html" target="_blank" rel="external">神器圣战</a>》</p>
-<p>二、JDK相关</p>
-<p>1.jstat : 观察GC情况，如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstat -gcutil pid <span class="number">3078</span></div></pre></td></tr></table></figure>
-
-<p>2.jmap，查看heap情况，如查看存活对象列表：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -histo:live pid |grep com.company |less</div></pre></td></tr></table></figure>
-
-<p>或者dump内存用来分析：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -dump:file=test.bin pid</div></pre></td></tr></table></figure>
-
-<p>3.分析dump的堆文件，可以用jhat:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jhat test.bin</div></pre></td></tr></table></figure>
-
-<p>  分析完成后可以用浏览器查看堆的情况。这个工具的分析结果还比较原始，你还可以用Eclipse MAT插件进行图形化分析，或者IBM的<a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=4544bafe-c7a2-455f-9d43-eb866ea60091" target="_blank" rel="external">Heap Analyzer</a>.</p>
-<p>4.jvisualvm和jconsole： JVM自带的性能分析和监控工具，怎么用？请自己看<a href="http://docs.oracle.com/javase/6/docs/technotes/guides/visualvm/index.html" target="_blank" rel="external">文档</a>。</p>
-<p>5.jstack：分析线程堆栈，如</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstack pid &gt; thread_dump</div></pre></td></tr></table></figure>
-
-<p>查看CPU最高的线程在干什么的方法结合top和jstack：<a href="http://www.iteye.com/topic/1114219" target="_blank" rel="external">http://www.iteye.com/topic/1114219</a></p>
-<p>6.更多JVM工具，参见官方文档：<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/" target="_blank" rel="external">http://docs.oracle.com/javase/6/docs/technotes/tools/</a></p>
-<p>7.学习使用btrace分析java运行时问题。《(Btrace使用简介)[<a href="http://rdc.taobao.com/team/jm/archives/509]》" target="_blank" rel="external">http://rdc.taobao.com/team/jm/archives/509]》</a></p>
-<p>8.GC日志分析工具：GC viewer、GC-console或者自己挑<a href="http://stackoverflow.com/questions/1839599/analyze-gc-logs-for-sun-hotspots-jvm-6" target="_blank" rel="external">这里</a>。</p>
-<p>9.性能分析工具，除了自带的jvisualvm外，还可以用商业的jprofiler。</p>
-<p>10.<a href="http://kenwublog.com/docs/java6-jvm-options-chinese-edition.htm" target="_blank" rel="external">JVM参数大全</a></p>
-<p>11.《<a href="http://hllvm.group.iteye.com/group/topic/27945" target="_blank" rel="external">JVM调优标准参数陷阱</a>》，iteye神贴。</p>
-<p>三、Linux工具</p>
-<p>1.熟悉<a href="http://www.commandlinefu.com/commands/browse/sort-by-votes" target="_blank" rel="external">常用的shell命令</a>，</p>
-<p>2.设置<a href="http://paulkeck.com/ssh/" target="_blank" rel="external">ssh免登陆</a></p>
-<p>3.使用htop替换top。</p>
-<p>4.熟悉下strace,gdb甚至systemtap来分析问题。</p>
-<p>5.熟悉vmstat,iostat,sar等性能统计工具。</p>
-<p>5.自动化部署脚本，<a href="http://docs.fabfile.org/en/1.4.1/index.html" target="_blank" rel="external">py-fabric</a>或者自荐下这个<a href="https://github.com/killme2008/clojure-control" target="_blank" rel="external">clojure-control</a>。</p>
-<p>四、其他</p>
-<p>1.掌握一门脚本语言，<a href="http://python.org/" target="_blank" rel="external">Python</a>或者<a href="http://www.ruby-lang.org/" target="_blank" rel="external">Ruby</a>，高效解决一些需要quick and dirty的任务：比如读写文件、导入导出数据库、网页爬虫等。注意不是python.com，咔咔。</p>
-<p><code>Python</code>推荐<a href="http://woodpecker.org.cn/" target="_blank" rel="external">啄木鸟社区</a>,<code>Ruby</code>推荐<a href="https://ruby-china.org/" target="_blank" rel="external">Ruby China</a></p>
-<p>2.使用Linux或者Mac os系统作为你的开发环境。</p>
-<p>3.升级你的“硬件工具”，双屏大屏显示器、SSD、8G内存甚至更多。</p>
-<p>4.你懂的：<a href="https://code.google.com/p/goagent/" target="_blank" rel="external">https://code.google.com/p/goagent/</a> ; <a href="https://github.com/justjavac/Google-IPs/blob/master/README.md" target="_blank" rel="external">https://github.com/justjavac/Google-IPs/blob/master/README.md</a></p>
-<p>五、如何查找工具？</p>
-<p>1.搜索引擎，google或者baidu，《<a href="http://www.williamlong.info/archives/728.html" target="_blank" rel="external">搜索技巧</a>》</p>
-<p>2.万能的stack overflow：<a href="http://stackoverflow.com/" target="_blank" rel="external">http://stackoverflow.com/</a></p>
-<p>3.虚心问牛人。</p>
-<p>六、最重要的是⋯⋯</p>
-<p>一颗永不停止学习的心。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-07-18T08:02:20.000Z"><a href="/2014/07/18/java-generics/">7月 18 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/07/18/java-generics/">java泛型的理解</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-06-15T09:06:46.000Z"><a href="/2014/06/15/java-mybatis/">6月 15 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/06/15/java-mybatis/">分享一个java对mybatis封装</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-04-11T13:03:46.000Z"><a href="/2014/04/11/create-enum-instances-dynamically/">4月 11 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/04/11/create-enum-instances-dynamically/">java在运行时动态增加枚举类型</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-01-16T09:05:42.000Z"><a href="/2014/01/16/java-object-init/">1月 16 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/01/16/java-object-init/">java对象初始化顺序问题</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2013-06-18T08:15:01.000Z"><a href="/2013/06/18/hello/">6月 18 2013</a></time>
+            
+              <h1 class="title"><a href="/2013/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2012-10-16T06:52:41.000Z"><a href="/2012/10/16/maven-help/">10月 16 2012</a></time>
+            
+              <h1 class="title"><a href="/2012/10/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2012-03-11T03:15:44.000Z"><a href="/2012/03/11/leetcode/">3月 11 2012</a></time>
+            
+              <h1 class="title"><a href="/2012/03/11/leetcode/">LeetCode题目解答,Java实现(Hard部分)</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-12-26T13:45:29.000Z"><a href="/2011/12/26/concurrenthashmap/">12月 26 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/12/26/concurrenthashmap/">由ConcurrentHashMap的一个NullPointerException异常引起的错误</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-12-11T08:53:37.000Z"><a href="/2011/12/11/transient-volatile-strictfp/">12月 11 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/12/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
+            
+          </header>
+        </div>
+      </article>
+    
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2011-11-13T02:15:01.000Z"><a href="/2011/11/13/hello-world/">11月 13 2011</a></time>
+            
+              <h1 class="title"><a href="/2011/11/13/hello-world/">Hello World</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
-<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
-<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
-<p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
-<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>如果是jvm自身执行了System.exit比如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">scala&gt; System.exit(<span class="number">0</span>)</div></pre></td></tr></table></figure>
-
-<p>那么在跟踪的信息里，是看不到signal的:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">2131</span></div><div class="line">Process <span class="number">2131</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fc14adb49d0, FUTEX_WAIT, <span class="number">2132</span>, NULLPANIC: attached pid <span class="number">2131</span> exited with <span class="number">0</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">0</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>至此我们可以判断出到底是外部还是内部引起的了，如果是内部就不必麻烦Systemtap了，可以从源码去找。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/24/java-regex/">正则表达式匹配中文</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
-<p>js代码：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
-
-<p>java代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p><br></p>
-<h3 id="常用正则表达式">常用正则表达式</h3>
-<p>说明：正则表达式通常用于两种任务：1.验证，2.搜索/替换。用于验证时，通常需要在前后分别加上^和$，以匹配整个待验证字符串；搜索/替换时是否加上此限定则根据搜索的要求而定，此外，也有可能要在前后加上\b而不是^和$。此表所列的常用正则表达式，除个别外均未在前后加上任何限定，请根据需要，自行处理。</p>
-<p>说明     | 正则表达式<br>网址（URL）</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[a-zA-z]+://[^\s]*</div></pre></td></tr></table></figure>
-
-<p>IP地址(IP Address)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)</div></pre></td></tr></table></figure>
-
-<p>电子邮件(Email)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*</div></pre></td></tr></table></figure>
-
-<p>QQ号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{4,}</div></pre></td></tr></table></figure>
-
-<p>HTML标记(包含内容或自闭合)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">(.*)(.*)</span>&gt;</span>.*<span class="tag">&lt;<span class="title">\</span>/\<span class="attribute">1</span>&gt;</span>|<span class="tag">&lt;<span class="title">(.*)</span> \/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(?=^.{8,}$)(?=.*\d)(?=.*\W+)(?=.*[A-Z])(?=.*[a-z])(?!.*\n).*$</div></pre></td></tr></table></figure>
-
-<p>日期(年-月-日)</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}|\d{2})-((1[0-2])|(0?[1-9]))-(([12][0-9])|(3[01])|(0?[1-9]))</div></pre></td></tr></table></figure>
-
-<p>日期(月/日/年)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1[0-2])|(0?[1-9]))/(([12][0-9])|(3[01])|(0?[1-9]))/(\d{4}|\d{2})</div></pre></td></tr></table></figure>
-
-
-<p>时间(小时:分钟, 24小时制)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1|0?)[0-9]|2[0-3]):([0-5][0-9])</div></pre></td></tr></table></figure>
-
-<p>汉字(字符)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u4e00-\u9fa5]</div></pre></td></tr></table></figure>
-
-
-<p>中文及全角标点符号(字符)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee]</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆固定电话号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}-|\d{3}-)?(\d{8}|\d{7})</div></pre></td></tr></table></figure>
-
-<p>中国大陆手机号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">1\d{10}</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆邮政编码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{5}</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆身份证号(15位或18位)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d{15}(\d\d[0-9xX])?</div></pre></td></tr></table></figure>
-
-<p>非负整数(正整数或零)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d+</div></pre></td></tr></table></figure>
-
-<p>正整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
-
-
-<p>负整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
-
-<p>整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-?\d+</div></pre></td></tr></table></figure>
-
-<p>小数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(-?\d+)(\.\d+)?</div></pre></td></tr></table></figure>
-
-<p>不包含abc的单词    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\b((?!abc)\w)+\b</div></pre></td></tr></table></figure>
-
-
-
-<p>以上正则表达式均经过多次测试，如果你发现有错误，请通过微博联系我．</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
-<pre><code><span class="title">RESTful</span> Web Services Cookbook
-想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
-
-RESTful API Design
-Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
-</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
-<p>API Design Tips</p>
-<p>每个实体对象仅需要两个URL </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
-
-<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
-<p>使用名词代替动词</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
-
-<p>正确使用HTTP方法 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
-
-<p>对象间的关联关系 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
-
-<p>数据分页 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>查询条件</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
-
-<p>返回需要的参数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
-
-<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
-
-<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
-
-<p>身份认证 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
-
-<p>版本管理 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-07-18T08:02:20.000Z"><a href="/2014/07/18/java-generics/">7月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/07/18/java-generics/">java泛型的理解</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>这是自己java泛型的理解,心得体会!</p>
-<p>几年前当Java5还未正式发布的时候，看到过一些人写的介绍Tiger中的新特性，当时对我第一感觉冲击最大的就是泛型(generics)和注释(annotation)，因为它们直接影响了我们编码的语法习惯。在后来的使用过程中，对于泛型一直没有特别深入的使用过，没有遇到那样的需求和场景。只需要了解Java中的泛型是编译期的，运行期被“擦拭”掉了；然后还有几种通配符的表示就足够了。</p>
-<p>直到一天我在查看Java5中Enum的源代码时，发现它是这么定义的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Enum</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">Enum</span>&lt;<span class="title">E</span>&gt;&gt; </span></div><div class="line">                <span class="keyword">implements</span> <span class="title">Comparable</span>&lt;<span class="title">E</span>&gt;, <span class="title">Serializable</span> {</div></pre></td></tr></table></figure>
-
-<p>这个类似递归结构的 Enum<e extends="" enum<e="">&gt; 究竟表达什么意思？</e></p>
-<p>随后我又看到了在Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>怎么TMD还会有这么复杂的泛型表达式!?（幸好的是这种情况在我们实际开发过程中不多见，甚至不应该见到，大概只有像JDK这种为了保留对老版本的兼容才会设计出这么复杂的泛型表达式出来。）</p>
-<p>上面的问题，你可以通过：<a href="http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf" target="_blank" rel="external">http://java.sun.com/j2se/1.5/pdf/generics-tutorial.pdf</a> 来获取答案，中文版的在：<a href="http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx" target="_blank" rel="external">http://blog.csdn.net/explorers/archive/2005/08/15/454837.aspx</a><br>这篇泛型指南的文章，非常详细。</p>
-<p>或许你看了上面的文章，依然心存疑虑。我下面的内容则是对这篇文档的一些补充（会和这篇文档有点重合）<br>回到我之前抛出的问题上：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;? extends Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">}</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">bar</span>(List&lt;? <span class="keyword">super</span> Number&gt; l){</div><div class="line">    l.add(<span class="keyword">new</span> Integer(<span class="number">2</span>));  <span class="comment">// 编译通过么？ Why ?</span></div><div class="line">    l.add(<span class="keyword">new</span> Float(<span class="number">2</span>));    <span class="comment">// ok?</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这里主要说说 &lt;? extends T&gt; 和 &lt;? super T&gt; 这两种通配符对于方法参数的使用原则。<br>即 PECS 原则 (producser-extends, consumer-super) 或者也叫 Get and Put 原则</p>
-<p>当没有使用通配符的情况下，我们定义一个方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; <span class="keyword">void</span> <span class="title">test</span>(List&lt;E&gt; l){</div><div class="line">    E e = l.get(<span class="number">0</span>);</div><div class="line">    l.set(<span class="number">0</span>, e);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>我们从List中 get和set都没有问题，因为这个E 它的类型是某种明确的类型。</p>
-<p>而当使用通配符时来描述参数时，就有些不同了。</p>
-<p>我们先定义一下两种通配符： </p>
-<p>&lt;? extends E&gt; 是 Upper Bound（上限） 的通配符</p>
-<p>&lt;? super E&gt; 是 Lower Bound（下限） 的通配符</p>
-<p>1) 当使用 Upper Bound 通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;?&gt; list){</div><div class="line">    Object e = list.get(<span class="number">0</span>); <span class="comment">// get OK</span></div><div class="line">    list.set(<span class="number">0</span>, e);         <span class="comment">// set 编译报错</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面代码中通配符&lt;?&gt; 是 &lt;? extends Object&gt; 的简写。(关于&lt;?&gt;是否和&lt;? extends Object&gt;完全等价，我遇到个小插曲，在结束的时候来描述)</p>
-<p>在eclipse里错误提示为：<br><em>The method set(int, capture#2-of ?) in the type List<capture#2-of ?=""> is not applicable for the arguments (int, Object)</capture#2-of></em></p>
-<p>注： <capture#2-of ?=""> 是一个占位符，表示编译器对通配符的捕获，更多见：</capture#2-of></p>
-<p><a href="http://www.ibm.com/developerworks/cn/java/j-jtp04298.html" target="_blank" rel="external">http://www.ibm.com/developerworks/cn/java/j-jtp04298.html</a></p>
-<p>set报错的原因是因为此时方法中的类型是不可具体化的(reified)，你可以传递一个String，Number，Book，等任何继承自Object的类作为List的参数类型给test方法，而list要求集合中的类型必须是一致的，set的时候没有办法保证set进去的数据类型是否和list中原本的类型一致，比如你传给test方法的是 List<book>， 那么在方法中set进去一个Object显然类型就不一致了。这也是通配符带来灵活性的同时所要付出的代价。</book></p>
-<p>结论：使用了 &lt;? extends E&gt; 这样的通配符，test方法的参数list变成了只能get不能set（除了null） 或者不严谨的说它变成了只读参数了， 有些类似一个生产者，提供数据。</p>
-<p>2) 当使用 Lower Bound 的通配符时：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span>(List&lt;? <span class="keyword">super</span> Number&gt; list){</div><div class="line">    Number n = list.get(<span class="number">0</span>);             <span class="comment">// 编译错误</span></div><div class="line">    Object o = list.get(<span class="number">0</span>);             <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Object());          <span class="comment">// 编译错误</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Long(<span class="number">0</span>));           <span class="comment">// OK</span></div><div class="line">    list.set(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">0</span>));        <span class="comment">// OK</span></div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这时get只能get出最宽泛的父类型，即Object。</p>
-<p>这时set的时候，必须是Number或Number的子类。</p>
-<p>原因和上面的get类似。</p>
-<p>结论： 使用了&lt;? super E&gt; 这种通配符，test方法的参数list的get受到了很大的制约，只能最宽泛的方式来获取list中的数据，相当于get只提供了数据最小级别的访问权限（想想，你可能原本是放进去了一个Book，却只能当作Object来访问）。它更多适合于set的使用场景，像是一个消费者，主要用来消费数据。</p>
-<p>上面便是对通配符的使用原则的说明，简单的说 PECS原则是指导我们在泛型方法中使用通配符的直接原则。参数作为生产者使用&lt;? extends E&gt;，作为消费者时使用&lt;? super E&gt; 。</p>
-<p>那么说完了PECS原则，我们再回过头来分析那两个复杂的泛型表达式是怎么含义</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class Enum&lt;E extends Enum&lt;E&gt;&gt;</div></pre></td></tr></table></figure>
-
-<p>它确实是一个 “递归类型限制”(recursive type bound)<br>要说明白这个问题，我们要先明白2点：</p>
-<p>a) Enum可以理解为一组同一类型的有限的数据集合；</p>
-<p>b) Java对Enum中的数据类型要求必须也是枚举类型（即必须是继承Enum类的）</p>
-<p>对于 a) 我们先定义一个 Enum<t> 表明定义了T这种类型作为它内部的数据类型，这么看它就像个普通的集合。</t></p>
-<p>再来根据 b) 定义类型E，要求E必须是继承自 Enum<t>，便成了 <e extends="" enum<t="">&gt;<br>实际上 E和T是一回事，它们是同一类型， 所以它就是 <e extends="" enum<e="">&gt;</e></e></t></p>
-<p>暂停，可能我上面的表达不太合理可能会误人子弟，递归类型限制是有些抽象，它应该有严谨的数学描述，我想不清楚怎么表达，我先用另一个简单些例子来说明吧</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;T&gt;&gt; T <span class="title">max</span>(List&lt;T&gt; list)</div></pre></td></tr></table></figure>
-
-<p>这个方法用来获取list 中的最大值，它定义了一个 <t extends="" comparable<t="">&gt; 的类型表达式</t></p>
-<p>这个递归类型限制的表达式容易理解一些，</p>
-<p><t extends="" comparable<t="">&gt; 表示的是：针对可以与自身进行比较的每个类型T。<br>或者说，每个实现了Comparable<t>接口的类型T，比如 String 实现了 Comparable<string> ， Long实现了Comparable<long>等等</long></string></t></t></p>
-<p>而Enum因为使用enum关键字的原因，让我们忽略了它底层的实现其实也是</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">class EnumSample extends Enum&lt;EnumSample&gt;</div></pre></td></tr></table></figure>
-
-<p>这一事实，比如我们定义了 BoundKind 这样的一个枚举：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> BoundKind{ }</div></pre></td></tr></table></figure>
-
-<p>编译器会转换为：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">BoundKind</span> <span class="keyword">extends</span> <span class="title">java</span>.<span class="title">lang</span>.<span class="title">Enum</span>&lt;<span class="title">BoundKind</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>看到了，这和 String implements Comparable<string> 类似</string></p>
-<p>这样我们套回到<e extends="" enum<e="">&gt; 就是 <boundkind extends="" enum<boundkind="">&gt;</boundkind></e></p>
-<p>这下好理解了， <e extends="" enum<e="">&gt; 直接按字面理解：每个继承自Enum<e>的类型E，比如</e></e></p>
-<p>BoundKind 继承了 Enum<boundkind></boundkind></p>
-<p>通过与<t extends="" comparable<t="">&gt;的对比，我们可以理解 <e extends="" enum<e="">&gt;了。</e></t></p>
-<p>那现在我们再回到Collections工具类中的max 方法：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Object & Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">                T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div></pre></td></tr></table></figure>
-
-<p>我们先简化一下这个表达式，看看<t extends="" comparable<?="" super="" t="">&gt; 怎么理解？</t></p>
-<p>既然 <t extends="" comparable<t="">&gt; 我们都理解了，把Comparable<t>改为</t></t></p>
-<p>Comparable&lt;? super T&gt; 也没什么费解的</p>
-<p>在《Java1.5 Generics Tutorial》一文中的解释是：<br>T 精确的(exactly)和自己能比较是不需要的。所需要的 是 T能 够和它的父类中的一个进行比较。</p>
-<p>而《Effictive Java》第二版中对此是用 PECS原则来解释的：</p>
-<p>下面是修改过的使用通配符类型的声明：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">               T <span class="title">max</span>(List&lt;? extends T&gt; list)</div></pre></td></tr></table></figure>
-
-<p><em>为了从初始声明中得到修改后的版本，要应用PECS转换两次，最直接的是运用到参数List。它产生T实例，因此将类型从List改为List&lt;? extends T&gt;。（ok好理解）<br>。。。。。。<br>更灵活的是运用到类型参数T。最初T 被指定用来扩展Comparable，但是T的comparable消费T实例（并产生表示顺序关系的整值）。因此，参数化类型Comparable被有限制通配符类型Comparable&lt;? super T&gt;取代。comparable始终是消费者，因此使用时始终应该是Comparable&lt;? super T&gt; 优先于 Comparable。</em></p>
-<p>蓝色粗体的那句翻译的不好。还是看一下代码来理解吧：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T extends Comparable&lt;? <span class="keyword">super</span> T&gt;&gt; </div><div class="line">            T <span class="title">max</span>(Collection&lt;? extends T&gt; coll) {</div><div class="line">    Iterator&lt;? extends T&gt; i = coll.iterator();</div><div class="line">    T candidate = i.next();</div><div class="line">    <span class="keyword">while</span> (i.hasNext()) {</div><div class="line">        T next = i.next();</div><div class="line">        <span class="keyword">if</span> (next.compareTo(candidate) &gt; <span class="number">0</span>) <span class="comment">// here comparaTo</span></div><div class="line">            candidate = next;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> candidate;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>第5行，Bloch认为 next.compareTo(cand) 是一句消费操作，在消费一个candidate对象时，根据PECS原则，candidate的类型应该使用 &lt;? super T&gt; 来提高它的灵活性。</p>
-<p>我觉得Bloch将第5行当作消费操作挺别扭的，我个人偏向《Java1.5 Generics Tutorial》中的解释。<br>但归根到底，都是降低限制，提高比较时的灵活性。</p>
-<p>最后，我们再来完整的理解：<t extends="" object="" &="" comparable<?="" super="" t="">&gt;<br>就只是比 &gt; 多了一个限制(bounds)。</t></p>
-<p>Object &amp; Comparable&lt;? super T&gt; 是一个多限定(multiple bounds)的用法，</p>
-<p>语法为： T1 &amp; T2 … &amp; Tn</p>
-<p>一个有多个界限的类型的参数是所有界限中列出来的类型的子类。当多个界限被使用的时候，界限中的第一个类型被用作这个类型参数的erasure。</p>
-<p>最终这个方法的返回值，按照第一个限定，擦拭为Object类型了。这是因为在以前版本中此方法就是返回的Object类型，需要兼容。</p>
-<p>因为多限定（multiple bounds）的存在，泛型方法中又对应的增加了一个很不优雅的调用方式。下面用一段代码来说明:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GenericsTest</span> </span>{    </div><div class="line">    <span class="keyword">static</span> class Book {};</div><div class="line">    <span class="keyword">static</span> class StoryBook extends Book implements Comparable&lt;StoryBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(StoryBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line">    <span class="keyword">static</span> class TechBook extends Book implements Comparable&lt;TechBook&gt; {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span>(TechBook o) {</div><div class="line">            <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//FIXME</span></div><div class="line">        }};</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;E&gt; Set&lt;E&gt; <span class="title">merge</span>(Set&lt;? extends E&gt; s1, Set&lt;? extends E&gt; s2) {</div><div class="line">        HashSet&lt;E&gt; newSet = <span class="keyword">new</span> HashSet&lt;E&gt;(s1);</div><div class="line">        newSet.addAll(s2);</div><div class="line">        <span class="keyword">return</span> newSet;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">        HashSet&lt;StoryBook&gt; s1 = <span class="keyword">new</span> HashSet&lt;StoryBook&gt;();</div><div class="line">        HashSet&lt;TechBook&gt; s2 = <span class="keyword">new</span> HashSet&lt;TechBook&gt;();</div><div class="line">        Set&lt;Book&gt; sb = merge(s1, s2); <span class="comment">// 错误</span></div><div class="line">        <span class="comment">// 需通过显式的类型参数(explicit type parameter)来告诉它要使用哪种类型</span></div><div class="line">        Set&lt;Book&gt; bs = GenericsTest.&lt;Book&gt;merge(s1,s2); <span class="comment">//OK</span></div><div class="line">        <span class="comment">// 或者</span></div><div class="line">        Set&lt;Comparable&lt;?&gt;&gt; s = GenericsTest.&lt;Comparable&lt;?&gt;&gt;merge(s1,s2);</div><div class="line">     }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面直接调用merge(s1,s2) 那行代码错误的提示信息：<br>Type mismatch: cannot convert from Set<genericstest.book&comparable<?>&gt; to Set<genericstest.book><br>这归于泛型的类型推导(type inference)，当无法推导出明确的类型时，就需要显式的描述，如上面代码中红色粗体字。</genericstest.book></genericstest.book&comparable<?></p>
-<p>后注：<br>有关于 &lt;?&gt; 与 &lt;? extends Object&gt;是否是一回事<br>今天中午发现同事桌上有本《Java编程思想》第四版，随手翻了一下，发现泛型一章的介绍中，有句描述：“UnboundedWildcards.java 展示了编译器处理List&lt;?&gt;和List&lt;? Extends Object&gt;时是不同的。”<br>这让我奇怪，查看了一下它的代码，主要因为是对于Raw类型的造型为泛型时的警告信息不同。<br>将一个Raw的ArrayList造型给 List&lt;?&gt; 没有问题，而给List&lt;? Extends Object&gt;却会有警告。</p>
-<p>在网上查了一下，发现对于&lt;?&gt;与&lt;? extends Object&gt;是否等同，是有些不同意见的。</p>
-<p><a href="http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html" target="_blank" rel="external">http://mail.openjdk.java.net/pipermail/compiler-dev/2008-April/000316.html</a></p>
-<p><a href="http://bugs.sun.com/view_bug.do?bug_id=6559175" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6559175</a></p>
-<p>这个报告里，有两段代码反映了两者的不同：<br>（1）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args)  {</div><div class="line">    Object  customer  = <span class="keyword">null</span>;</div><div class="line">    foo((List&lt;? extends String&gt;) customer ); <span class="comment">//[1]</span></div><div class="line">    foo((List&lt;? extends Object&gt;) customer ); <span class="comment">//[2] 编译有警告</span></div><div class="line">    foo((List&lt;?&gt;) customer ); <span class="comment">//[3]  编译没有警告</span></div><div class="line">}</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">foo</span>(List&lt;?&gt; list) {</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>（2）</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Object o2 = <span class="keyword">new</span> List&lt;?&gt;[<span class="number">3</span>];   <span class="comment">// 编译居然OK，估计直接当作Raw处理了</span></div><div class="line">Object o3 = <span class="keyword">new</span> List&lt;? extends Object&gt;[<span class="number">3</span>]; <span class="comment">// 报错</span></div></pre></td></tr></table></figure>
-
-<p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
-<p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
-<p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
-<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
-<p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
-<p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
-<p>我们暂从语义上认为两者相等。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-    <nav id="page-list" class="page-list"><span class="page-number current">1</span><a class="page-number" href="/tags/Java/page/2/">2</a><a class="extend next" rel="next" href="/tags/Java/page/2/">Next</a></nav>
-
-<nav id="pagination">
-  
-  
-    <a href="/tags/Java/page/2/" class="alignright next">下一页</a>
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -970,7 +315,7 @@ Stateless 无状态
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -979,6 +324,8 @@ Stateless 无状态
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

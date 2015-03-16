@@ -75,83 +75,20 @@
 <h2 class="archive-title">2014/1</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-01-16T09:05:42.000Z"><a href="/2014/01/16/java-object-init/">1月 16 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/01/16/java-object-init/">java对象初始化顺序问题</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-01-16T09:05:42.000Z"><a href="/2014/01/16/java-object-init/">1月 16 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/01/16/java-object-init/">java对象初始化顺序问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>今天我在Dzone阅读了一篇关于<a href="http://java.dzone.com/articles/java-object-initialization?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+javalobby%2Ffrontpage+%28Javalobby+%2F+Java+Zone%29&amp;utm_content=" target="_blank" rel="external">java对象实例初始化顺序</a>的有趣文章。说它有趣，是因为作者使用了一种并不太推荐的编码风格，只有用这种编码风格才能触发这个极为少见的 Java object initialization order 问题。</p>
-<p>其实java对象初始化顺序算是一个比较基础的java知识点。但是网上的文章多半描述不清，使用上一不小心就容易出问题。<br>所以在本文中，我想结合JLS和自己的理解，举例剖析问题的所在。</p>
-<p>OK，我们先来看个模仿Dzone作者原意的简单例子:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zxc.tmp;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">extends</span> <span class="title">B</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> a = <span class="number">100</span>;</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="title">A</span>() {</div><div class="line">		<span class="keyword">super</span>();</div><div class="line">		System.out.println(a);</div><div class="line">		a = <span class="number">200</span>;</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">		System.out.println(<span class="keyword">new</span> A().a);</div><div class="line">	}</div><div class="line">}</div><div class="line"></div><div class="line">class B {</div><div class="line">	<span class="keyword">public</span> <span class="title">B</span>() {</div><div class="line">		System.out.println(((A) <span class="keyword">this</span>).a);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>例子代码很简单，不多做解释了，直接看输出:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="number">0</span></div><div class="line"><span class="number">100</span></div><div class="line"><span class="number">200</span></div></pre></td></tr></table></figure>
-
-<p>对照这个输出，我们来详细分析一下对象的初始化顺序：<br>1，为A类分配内存空间，初始化所有成员变量为默认值，包括primitive类型(int=0,boolean=false,…)和Reference类型。<br>2，调用A类构造函数。<br>3，调用B类构造函数。<br>4，调用Object空构造函数。（java编译器会默认加此构造函数，且object构造函数是个空函数，所以立即返回）<br>5，<strong>初始化B类成员变量，因为B类没有成员变量，跳过。</strong><br>6，执行sysout输出子类A的成员变量小a。// 此时为0<br>7，<strong>初始化A类成员变量，将A类成员变量小a赋值100。</strong><br>8，执行sysout输出当前A类的成员变量小a。// 此时为100<br>9，赋值当前A类的成员变量小a为200。<br>10，main函数中执行sysout，输出A类实例的成员变量小a。// 此时为200</p>
-<p>加粗的那两行描述是重点，结论是<strong>成员变量初始化是在父类构造函数调用完后，在此之前，成员变量的值均是默认值。</strong><br>Dzone作者就是栽在这里，没有仔细分析成员变量初始化在对象初始化中的顺序，造成了程序未按原意执行。<br>其实这类问题，熟悉原理是一方面，本质上只要不在构造函数中插入过多的业务逻辑，出问题的概率也会低很多。</p>
-<p>最后，我们再来看看JLS中给出的Java类对象初始化顺序定义，这是一个带条件分支的流程描述：</p>
-<ul>
-<li>Assign the arguments for the constructor to newly created parameter variables for this constructor invocation.</li>
-<li>If this constructor begins with an explicit constructor invocation of another constructor in the same class (using this), then evaluate the arguments and process that constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason; otherwise, continue with step 5.</li>
-<li>This constructor does not begin with an explicit constructor invocation of another constructor in the same class (using this). If this constructor is for a class other than Object, then this constructor will begin with an explicit or implicit invocation of a superclass constructor (using super). Evaluate the arguments and process that superclass constructor invocation recursively using these same five steps. If that constructor invocation completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, continue with step 4.</li>
-<li>Execute the instance initializers and instance variable initializers for this class, assigning the values of instance variable initializers to the corresponding instance variables, in the left-to-right order in which they appear textually in the source code for the class. If execution of any of these initializers results in an exception, then no further initializers are processed and this procedure completes abruptly with that same exception. Otherwise, continue with step 5. (In some early implementations, the compiler incorrectly omitted the code to initialize a field if the field initializer expression was a constant expression whose value was equal to the default initialization value for its type.)</li>
-<li>Execute the rest of the body of this constructor. If that execution completes abruptly, then this procedure completes abruptly for the same reason. Otherwise, this procedure completes normally.</li>
-</ul>
-<p>引用自 <a href="http://java.sun.com/docs/books/jls/second_edition/html/execution.doc.html#44670" target="_blank" rel="external">section 12.5 of the Java Language Spec</a></p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -169,7 +106,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -178,6 +115,8 @@
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

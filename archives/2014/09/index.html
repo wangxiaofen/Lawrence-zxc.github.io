@@ -75,231 +75,42 @@
 <h2 class="archive-title">2014/9</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
-<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
-<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
-<p>-集成了Lua模块的Nginx项目OpenResty</p>
-<p>-GraphicsMagick的安装和使用</p>
-<p>-具体使用方法</p>
-<p>原始图片地址：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
-
-<p>自定义图片尺寸：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
-
-<p>配置文件中可以写成这样</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -317,7 +128,7 @@ Stateless 无状态
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -326,6 +137,8 @@ Stateless 无状态
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   

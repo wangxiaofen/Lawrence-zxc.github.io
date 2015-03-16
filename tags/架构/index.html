@@ -75,186 +75,31 @@
 <h2 class="archive-title tag">架构</h2>
 
 
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+  <div class="archive">
     
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
-<pre><code><span class="title">RESTful</span> Web Services Cookbook
-想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
-
-RESTful API Design
-Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
-</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
-<p>API Design Tips</p>
-<p>每个实体对象仅需要两个URL </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
-
-<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
-<p>使用名词代替动词</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
-
-<p>正确使用HTTP方法 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
-
-<p>对象间的关联关系 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
-
-<p>数据分页 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>查询条件</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
-
-<p>返回需要的参数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
-
-<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
-
-<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
-
-<p>身份认证 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
-
-<p>版本管理 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-    <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
+            
+              <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
+            
+          </header>
+        </div>
+      </article>
     
   </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-09-05T06:10:03.000Z"><a href="/2014/09/05/blog1/">9月 5 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/09/05/blog1/">REST风格的软件架构</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>REST风格的软件架构</p>
-<p>作者：侯西阳 时间：June 2, 2013 分类：RESTful<br>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-  
-
-  <ul class="page-direction" id="page-direction">
-    <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
-    <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
-</ul>
-
-<nav id="pagination">
-  
-  
-  <div class="clearfix"></div>
-</nav>
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
@@ -272,7 +117,7 @@ Stateless 无状态
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>18</small></li>
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -281,6 +126,8 @@ Stateless 无状态
     <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   
     <li><a href="/tags/Mongodb/">Mongodb</a><small>1</small></li>
   
