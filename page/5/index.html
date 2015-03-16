@@ -316,6 +316,96 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2012-06-27T02:30:16.000Z"><a href="/2012/06/27/ssh-sshd/">6月 27 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/06/27/ssh-sshd/">ssh,sshd命令配置和用法</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><code>ssh</code>是一个常用的命令，<code>GNU/Linux</code> 和 <code>OS X</code>默认安装。<code>sshd</code>亦是服务器居家必备。</p>
+<h3 id="sshd配置：/etc/ssh/sshd_config_禁止密码登陆，禁止root登陆">sshd配置：/etc/ssh/sshd_config 禁止密码登陆，禁止root登陆</h3>
+<p>这是一个血的教训，最近身边的一台服务器被攻击，原因是允许了root用密码登陆，结果被别人暴力破解。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#edit file: /etc/ssh/sshd_config</span></div><div class="line"><span class="title">ChallengeResponseAuthentication</span> <span class="built_in">no</span></div><div class="line">PasswordAuthentication <span class="built_in">no</span></div><div class="line">UsePAM <span class="built_in">no</span></div><div class="line">PermitRootLogin <span class="built_in">no</span></div></pre></td></tr></table></figure>
+
+<h3 id="ssh_配置：_~/-ssh/config">ssh 配置： ~/.ssh/config</h3>
+<p>可以把一些常访问的ssh服务器的信息放在 ~/.ssh/config</p>
+<p>例如经常敲这样的命令：以someone用户登陆example.com，它的端口是2323，并且启用压缩</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> -p <span class="number">2323</span> -C someone<span class="variable">@example</span>.com</div></pre></td></tr></table></figure>
+
+<p>加入这样的配置后</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="title">Host</span> example</div><div class="line">    HostName example.com</div><div class="line">    User someone</div><div class="line">    Port <span class="number">2323</span></div><div class="line">    Compression <span class="built_in">yes</span></div></pre></td></tr></table></figure>
+
+<p>就可以直接 <code>ssh example</code>登陆了，意思和敲完整命令的一样</p>
+<p>另外，如果加入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ControlMaster auto</div><div class="line">ControlPath /tmp/ssh_mux<span class="number">_</span><span class="variable">%h_</span><span class="variable">%p_</span><span class="variable">%r</span></div><div class="line">ControlPersist <span class="number">10</span>h</div></pre></td></tr></table></figure>
+
+<p>就相当于keep-alive，Ctrl-D退出后，并没有真正退出，下次再登陆时，会快不少。这个对需要远程执行命令时，比较有用。</p>
+<h3 id="X11转发">X11转发</h3>
+<p>我在公司，是通过Macbook Air ssh 登陆到一台强大的服务器上进行开发，起远程的Emacs，并且把Emacs的界面放在Air上，使Air成为<code>X Server</code>，这样Emacs做为一个X11程序，而不是做为终端程序，避免键冲突。 SSH 的<code>-X -Y</code>参数就能帮助实现这个</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> -p <span class="number">223</span> -C -X -Y admin<span class="variable">@yueji</span>.com</div></pre></td></tr></table></figure>
+
+<p>这是可以起example.com的X程序，界面在本地，如jconsole, jvisualvm，emacs等，倒是方便。</p>
+<h3 id="端口映射">端口映射</h3>
+<p>例如本地并没有装MySQL服务，有个程序需要访问本地的MySQL服务。可以通过ssh端口转发，把到本地的3306的请求转发给example.com的127.0.0.1:3306。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-L</span> <span class="tag">localhost</span><span class="pseudo">:3306</span><span class="pseudo">:localhost</span><span class="pseudo">:3306</span> <span class="tag">-Nf</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
+
+<p>这样可以绕过防火墙，它不需要example.com对外开放3306端口。</p>
+<h3 id="反向端口映射">反向端口映射</h3>
+<p>你的机器在内网，外面访问不了。你回家后还想访问本机的3389端口，继续干活。你有一台外网的机器，上面有sshd，可以通过：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-R</span> <span class="pseudo">:3389</span><span class="pseudo">:localhost</span><span class="pseudo">:3389</span> <span class="tag">-Nf</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
+
+<p>这样你就可以在另外地方通过访问example.com:3389，而达到访问本机3389的目的。</p>
+<h3 id="自建简易翻墙">自建简易翻墙</h3>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-D</span> <span class="pseudo">:3128</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
+
+<p>这样就在本地建立了一个SOCKS代理，SOCKS工作在TCP层。浏览器等可以设置代理为SOCKS 127.0.0.1:3128。这样浏览器和example.com之间建立一条加密的安全通道，如果example.com在X外，你就绕过了。</p>
+<p><a href="http://rssminer.net" target="_blank" rel="external">Rssminer</a>有很多抓取任务，有不少在X外，本地开发时，就是通过一个支持SOCKS的<a href="https://github.com/shenfeng/http-kit" target="_blank" rel="external">HTTP client</a>和<code>ssh -D</code>完成抓取任务的。</p>
+<h3 id="脚本远程命令">脚本远程命令</h3>
+<p>ssh可被脚本用于执行远程命令，使admin任务脚本化，自动化。 例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> someone<span class="variable">@example</span>.com uname</div></pre></td></tr></table></figure>
+
+<p>相当于登陆到example.com机器上，执行<code>uname</code>命令，结果输出到控制台，退出</p>
+<p><a href="http://rssminer.net" target="_blank" rel="external">Rssminer</a> 用此来部署代码后，重启服务</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2012-03-11T03:15:44.000Z"><a href="/2012/03/11/leetcode/">3月 11 2012</a></time>
       
       
@@ -1647,9 +1737,9 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>10</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>11</small></li>
   
-    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>2</small></li>
   
     <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
   

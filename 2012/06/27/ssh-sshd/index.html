@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>正则表达式匹配中文 | Jeck_Zhang</title>
+  <title>ssh,sshd命令配置和用法 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="正则表达式匹配中文"/>
+  <meta property="og:title" content="ssh,sshd命令配置和用法"/>
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -88,98 +88,60 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-10-24T08:58:25.000Z"><a href="/2014/10/24/java-regex/">10月 24 2014</a></time>
+        <time datetime="2012-06-27T02:30:16.000Z"><a href="/2012/06/27/ssh-sshd/">6月 27 2012</a></time>
       
       
   
-    <h1 class="title">正则表达式匹配中文</h1>
+    <h1 class="title">ssh,sshd命令配置和用法</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>匹配中文字符的正则表达式： <strong>[\u4e00-\u9fa5]</strong><br>匹配双字节字符(包括汉字在内)：<strong>[^\x00-\xff]</strong></p>
-<p>js代码：</p>
-<figure class="highlight javaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> reg = <span class="regexp">/^[u4E00-u9FA5]+$/</span>;</div><div class="line">    <span class="keyword">if</span>(!reg.test(str)){</div><div class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</div><div class="line">    }</div><div class="line"><span class="keyword">return</span> <span class="literal">true</span>;</div></pre></td></tr></table></figure>
+        <p><code>ssh</code>是一个常用的命令，<code>GNU/Linux</code> 和 <code>OS X</code>默认安装。<code>sshd</code>亦是服务器居家必备。</p>
+<h3 id="sshd配置：/etc/ssh/sshd_config_禁止密码登陆，禁止root登陆">sshd配置：/etc/ssh/sshd_config 禁止密码登陆，禁止root登陆</h3>
+<p>这是一个血的教训，最近身边的一台服务器被攻击，原因是允许了root用密码登陆，结果被别人暴力破解。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#edit file: /etc/ssh/sshd_config</span></div><div class="line"><span class="title">ChallengeResponseAuthentication</span> <span class="built_in">no</span></div><div class="line">PasswordAuthentication <span class="built_in">no</span></div><div class="line">UsePAM <span class="built_in">no</span></div><div class="line">PermitRootLogin <span class="built_in">no</span></div></pre></td></tr></table></figure>
 
-<p>java代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Pattern pattern = Pattern.compile(<span class="string">"[\u4e00-\u9fa5]"</span>);</div><div class="line">Matcher m = pattern.matcher(str);</div><div class="line"><span class="keyword">if</span> (m.matches()) {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+<h3 id="ssh_配置：_~/-ssh/config">ssh 配置： ~/.ssh/config</h3>
+<p>可以把一些常访问的ssh服务器的信息放在 ~/.ssh/config</p>
+<p>例如经常敲这样的命令：以someone用户登陆example.com，它的端口是2323，并且启用压缩</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> -p <span class="number">2323</span> -C someone<span class="variable">@example</span>.com</div></pre></td></tr></table></figure>
 
-<p><br></p>
-<h3 id="常用正则表达式">常用正则表达式</h3>
-<p>说明：正则表达式通常用于两种任务：1.验证，2.搜索/替换。用于验证时，通常需要在前后分别加上^和$，以匹配整个待验证字符串；搜索/替换时是否加上此限定则根据搜索的要求而定，此外，也有可能要在前后加上\b而不是^和$。此表所列的常用正则表达式，除个别外均未在前后加上任何限定，请根据需要，自行处理。</p>
-<p>说明     | 正则表达式<br>网址（URL）</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[a-zA-z]+://[^\s]*</div></pre></td></tr></table></figure>
+<p>加入这样的配置后</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="title">Host</span> example</div><div class="line">    HostName example.com</div><div class="line">    User someone</div><div class="line">    Port <span class="number">2323</span></div><div class="line">    Compression <span class="built_in">yes</span></div></pre></td></tr></table></figure>
 
-<p>IP地址(IP Address)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)</div></pre></td></tr></table></figure>
+<p>就可以直接 <code>ssh example</code>登陆了，意思和敲完整命令的一样</p>
+<p>另外，如果加入</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ControlMaster auto</div><div class="line">ControlPath /tmp/ssh_mux<span class="number">_</span><span class="variable">%h_</span><span class="variable">%p_</span><span class="variable">%r</span></div><div class="line">ControlPersist <span class="number">10</span>h</div></pre></td></tr></table></figure>
 
-<p>电子邮件(Email)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*</div></pre></td></tr></table></figure>
+<p>就相当于keep-alive，Ctrl-D退出后，并没有真正退出，下次再登陆时，会快不少。这个对需要远程执行命令时，比较有用。</p>
+<h3 id="X11转发">X11转发</h3>
+<p>我在公司，是通过Macbook Air ssh 登陆到一台强大的服务器上进行开发，起远程的Emacs，并且把Emacs的界面放在Air上，使Air成为<code>X Server</code>，这样Emacs做为一个X11程序，而不是做为终端程序，避免键冲突。 SSH 的<code>-X -Y</code>参数就能帮助实现这个</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> -p <span class="number">223</span> -C -X -Y admin<span class="variable">@yueji</span>.com</div></pre></td></tr></table></figure>
 
-<p>QQ号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{4,}</div></pre></td></tr></table></figure>
+<p>这是可以起example.com的X程序，界面在本地，如jconsole, jvisualvm，emacs等，倒是方便。</p>
+<h3 id="端口映射">端口映射</h3>
+<p>例如本地并没有装MySQL服务，有个程序需要访问本地的MySQL服务。可以通过ssh端口转发，把到本地的3306的请求转发给example.com的127.0.0.1:3306。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-L</span> <span class="tag">localhost</span><span class="pseudo">:3306</span><span class="pseudo">:localhost</span><span class="pseudo">:3306</span> <span class="tag">-Nf</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
 
-<p>HTML标记(包含内容或自闭合)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">(.*)(.*)</span>&gt;</span>.*<span class="tag">&lt;<span class="title">\</span>/\<span class="attribute">1</span>&gt;</span>|<span class="tag">&lt;<span class="title">(.*)</span> \/&gt;</span></div></pre></td></tr></table></figure>
+<p>这样可以绕过防火墙，它不需要example.com对外开放3306端口。</p>
+<h3 id="反向端口映射">反向端口映射</h3>
+<p>你的机器在内网，外面访问不了。你回家后还想访问本机的3389端口，继续干活。你有一台外网的机器，上面有sshd，可以通过：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-R</span> <span class="pseudo">:3389</span><span class="pseudo">:localhost</span><span class="pseudo">:3389</span> <span class="tag">-Nf</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
 
-<p>密码(由数字/大写字母/小写字母/标点符号组成，四种都必有，8位以上)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(?=^.{8,}$)(?=.*\d)(?=.*\W+)(?=.*[A-Z])(?=.*[a-z])(?!.*\n).*$</div></pre></td></tr></table></figure>
+<p>这样你就可以在另外地方通过访问example.com:3389，而达到访问本机3389的目的。</p>
+<h3 id="自建简易翻墙">自建简易翻墙</h3>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">ssh</span> <span class="tag">-D</span> <span class="pseudo">:3128</span> <span class="tag">someone</span><span class="at_rule">@<span class="keyword">example.com</span></span></div></pre></td></tr></table></figure>
 
-<p>日期(年-月-日)</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}|\d{2})-((1[0-2])|(0?[1-9]))-(([12][0-9])|(3[01])|(0?[1-9]))</div></pre></td></tr></table></figure>
+<p>这样就在本地建立了一个SOCKS代理，SOCKS工作在TCP层。浏览器等可以设置代理为SOCKS 127.0.0.1:3128。这样浏览器和example.com之间建立一条加密的安全通道，如果example.com在X外，你就绕过了。</p>
+<p><a href="http://rssminer.net" target="_blank" rel="external">Rssminer</a>有很多抓取任务，有不少在X外，本地开发时，就是通过一个支持SOCKS的<a href="https://github.com/shenfeng/http-kit" target="_blank" rel="external">HTTP client</a>和<code>ssh -D</code>完成抓取任务的。</p>
+<h3 id="脚本远程命令">脚本远程命令</h3>
+<p>ssh可被脚本用于执行远程命令，使admin任务脚本化，自动化。 例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">ssh</span> someone<span class="variable">@example</span>.com uname</div></pre></td></tr></table></figure>
 
-<p>日期(月/日/年)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1[0-2])|(0?[1-9]))/(([12][0-9])|(3[01])|(0?[1-9]))/(\d{4}|\d{2})</div></pre></td></tr></table></figure>
-
-
-<p>时间(小时:分钟, 24小时制)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">((1|0?)[0-9]|2[0-3]):([0-5][0-9])</div></pre></td></tr></table></figure>
-
-<p>汉字(字符)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u4e00-\u9fa5]</div></pre></td></tr></table></figure>
-
-
-<p>中文及全角标点符号(字符)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[\u3000-\u301e\ufe10-\ufe19\ufe30-\ufe44\ufe50-\ufe6b\uff01-\uffee]</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆固定电话号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(\d{4}-|\d{3}-)?(\d{8}|\d{7})</div></pre></td></tr></table></figure>
-
-<p>中国大陆手机号码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">1\d{10}</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆邮政编码    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[1-9]\d{5}</div></pre></td></tr></table></figure>
-
-
-<p>中国大陆身份证号(15位或18位)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d{15}(\d\d[0-9xX])?</div></pre></td></tr></table></figure>
-
-<p>非负整数(正整数或零)    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\d+</div></pre></td></tr></table></figure>
-
-<p>正整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
-
-
-<p>负整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-[0-9]*[1-9][0-9]*</div></pre></td></tr></table></figure>
-
-<p>整数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">-?\d+</div></pre></td></tr></table></figure>
-
-<p>小数    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(-?\d+)(\.\d+)?</div></pre></td></tr></table></figure>
-
-<p>不包含abc的单词    </p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">\b((?!abc)\w)+\b</div></pre></td></tr></table></figure>
-
-
-
-<p>以上正则表达式均经过多次测试，如果你发现有错误，请通过微博联系我．</p>
+<p>相当于登陆到example.com机器上，执行<code>uname</code>命令，结果输出到控制台，退出</p>
+<p><a href="http://rssminer.net" target="_blank" rel="external">Rssminer</a> 用此来部署代码后，重启服务</p>
 
       
     </div>
@@ -188,12 +150,12 @@
 
         
           <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+            <em>上一篇: </em><a href="/2012/10/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a>
           </div>
         
         
           <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2014/10/23/qiu/">秋</a>
+            <em>下一篇: </em><a href="/2012/03/11/leetcode/">LeetCode题目解答,Java实现(Hard部分)</a>
           </div>
           <div class="clearfix"></div>
         
@@ -206,8 +168,8 @@
             
               <span class="from-link">
                 <em>本文链接地址:</em>
-                <a href="/2014/10/24/java-regex/">
-                  http://lawrence-zxc.github.io/2014/10/24/java-regex/
+                <a href="/2012/06/27/ssh-sshd/">
+                  http://lawrence-zxc.github.io/2012/06/27/ssh-sshd/
                 </a>
               </span>
             
@@ -222,7 +184,7 @@
         
   
   <div class="tags">
-    <a href="/tags/Java/">Java</a>
+    <a href="/tags/Linux/">Linux</a>, <a href="/tags/Mac-Unix/">Mac/Unix</a>
   </div>
 
         
@@ -256,10 +218,10 @@
 
 <nav id="pagination" >
     
-    <a href="/2014/10/28/load-balancing/" class="alignleft prev" >上一页</a>
+    <a href="/2012/10/16/maven-help/" class="alignleft prev" >上一页</a>
     
     
-    <a href="/2014/10/23/qiu/" class="alignright next" >下一页</a>
+    <a href="/2012/03/11/leetcode/" class="alignright next" >下一页</a>
     
     <div class="clearfix"></div>
 </nav>
@@ -270,7 +232,7 @@
     	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     </div>
 <!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2014/10/24/java-regex/" data-title="正则表达式匹配中文" data-url="http://lawrence-zxc.github.io/2014/10/24/java-regex/"></div>
+	<div class="ds-thread" data-thread-key="2012/06/27/ssh-sshd/" data-title="ssh,sshd命令配置和用法" data-url="http://lawrence-zxc.github.io/2012/06/27/ssh-sshd/"></div>
 <!-- 多说评论框 end -->
 <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 <script type="text/javascript">
