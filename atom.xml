@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2015-03-16T09:40:01.876Z</updated>
+  <updated>2015-03-18T03:32:12.016Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -355,6 +355,113 @@
     <![CDATA[<p>最近发现Openfire服务端隔段时间就会报这样的错：<br><img src="/img/openfire1.png"><br>有时候是这样：<br><img src="/img/openfire2.png"></p>
 <p>决定处理一下这个“黑盒”，从异常信息看，这个异]]>
     </summary>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[SpringMVC中约定优于配置]]></title>
+    <link href="http://lawrence-zxc.github.io/2014/11/18/spring-mvc-1/"/>
+    <id>http://lawrence-zxc.github.io/2014/11/18/spring-mvc-1/</id>
+    <published>2014-11-18T03:13:23.000Z</published>
+    <updated>2015-03-18T03:31:53.000Z</updated>
+    <content type="html"><![CDATA[<p>所谓的约定优于配置就是指在程序开发过程中我们约定好一些规则可以使我们更少的进行配置和代码编写。就这么简单的一句话可能你还不是很懂什么是约定优于配置，没关系，看完后面对SpringMVC的约定优于配置的介绍之后你就会明白了。</p>
+<p>SpringMVC对约定优于配置的支持主要表现在三个方面，<em>Model</em>、<em>View</em>和<em>Controller</em>。</p>
+<h3 id="Model：">Model：</h3>
+<p>SpringMVC对Model的约定优于配置的支持是基于ModelMap的，由于ModelAndView中的Model就是一个ModelMap，所以ModelAndView也是支持的。约定优于配置在Model上的表现是通过ModelMap的addObject方法实现的，当我们需要往ModelMap中添加一个对象的时候，我们可以只添加一个对象，而不指定其对应的属性名称，即调用addObject(Object obj)方法，而不是调用addObject(String attrName, Object obj)方法。这个时候Spring就会根据它自身约定的一套机制给我们一个默认的属性名称。</p>
+<p>Spring的约定是这样的：</p>
+<ul>
+<li>采用这种方式添加的对象不能为null，所以如果添加的对象有可能为null时就不应该使用这种方式，还是使用addObject(String attrName,Object obj)方法指定一个属性名称比较好。</li>
+<li>采用这种方式添加的集合Collection不能为empty，同样如果该Collection有可能为empty的时候就不应该使用这种方式。</li>
+<li>简单对象，当是一个简单对象的时候取该对象的类名称，不包括包名，然后采用JavaBean的属性命名规则来确定属性名称，如添加com.host.app.model.User对象时取的属性名称就是user，添加com.host.app.model.HelloWorld对象时取的属性名称就是helloWorld，添加com.host.app.model.ABCdef对象时取的属性名称就是ABCdef。</li>
+<li>数组，当添加的是一个数组的时候，Spring会取该数组的类型按照规则3取到一个名称作为基名称，之后再加上List后缀作为约定的属性名称。如添加一个Object数组时，Spring约定的属性名称就是objectList，添加一个com.host.app.model.ABCdef数组时，Spring取的属性名称就是ABCdefList。</li>
+<li>集合Collection，当添加的是一个集合的时候，Spring会采用Iterator的方式取该集合的第一个元素类型按照规则3取到一个名称作为基名称，之后再加上List后缀作为约定的名称。如添加一个List时，如果取出的该List的第一个元素是java.lang.Object对象，那么Spring取的属性名称就是objectList；添加一个包含的都是com.host.app.model.User的Set时，Spring取的属性名称就是userList；如果添加的HashSet中同时包含多种类型的对象时就应该使用addObject(String attrName, Object obj)方法指定自己的属性名称，因为HashSet内部的元素是无序的，每次取的第一个元素可能不一样，这也就会导致Spring取的属性名称会不一样。</li>
+</ul>
+<p>看下面一个示例，当我们访问控制器处理方法testModel时，往返回的模型中添加了一个包含User的List对象，这样在ModelAndView内部内置的ModelMap中就会采用约定好的方式取userList为该对象在模型中的属性名称。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> ModelAndView <span class="title">testModel</span>() {  </div><div class="line">   ModelAndView mav = <span class="keyword">new</span> ModelAndView(<span class="string">"modelTest"</span>);  </div><div class="line">   User user = <span class="keyword">new</span> User(<span class="number">1</span>, <span class="string">"zhangsan"</span>);  </div><div class="line">   List&lt;User&gt; list = <span class="keyword">new</span> ArrayList&lt;User&gt;();  </div><div class="line">   list.add(user);  </div><div class="line">   mav.addObject(list);  </div><div class="line">   <span class="keyword">return</span> mav;  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="View：">View：</h3>
+<p>当Controller处理器方法没有返回一个View对象或逻辑视图名称，并且在该方法中没有直接往response的输出流里面写数据的时候，Spring就会采用约定好的方式提供一个逻辑视图名称。这个逻辑视图名称是通过Spring定义的org.springframework.web.servlet.RequestToViewNameTranslator接口的getViewName方法来实现的，我们可以实现自己的RequestToViewNameTranslator接口来约定好没有返回视图名称的时候如何确定视图名称。Spring已经给我们提供了一个它自己的实现，那就是org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator。<br>在介绍DefaultRequestToViewNameTranslator是如何约定视图名称之前我们先来看一下它支持用户定义的属性：</p>
+<ul>
+<li>prefix：前缀，表示约定好的视图名称需要加上的前缀，默认是空串。</li>
+<li>suffix：后缀，表示约定好的视图名称需要加上的后缀，默认是空串。</li>
+<li>separator：分隔符，默认是斜杠“/”。</li>
+<li>stripLeadingSlash：如果首字符是分隔符，是否要去除，默认是true。</li>
+<li>stripTrailingSlash：如果最后一个字符是分隔符，是否要去除，默认是true。</li>
+<li>stripExtension：如果请求路径包含扩展名是否要去除，默认是true。</li>
+<li>urlDecode：是否需要对URL解码，默认是true。它会采用request指定的编码或者ISO-8859-1编码对URL进行解码。</li>
+</ul>
+<p>当我们没有在SpringMVC的配置文件中手动的定义一个名为viewNameTranlator的bean的时候，Spring就会为我们提供一个默认的viewNameTranslator，即DefaultRequestToViewNameTranslator。</p>
+<p>接下来看一下，当Controller处理器方法没有返回逻辑视图名称的时候，DefaultRequestToViewNameTranslator是如何约定视图名称的。DefaultRequestToViewNameTranslator会获取到请求的URI，然后根据提供的属性做一些改造，把改造之后的结果作为视图名称返回。我们以请求路径<em><a href="http://localhost/app/product/index.html" target="_blank" rel="external">http://localhost/app/product/index.html</a></em>为例来说明DefaultRequestToViewNameTranslator是如何工作的。该请求路径对应的请求URI为/product/index.html,我们来看以下几种情况，它分别对应的逻辑视图名称是什么。</p>
+<ul>
+<li>prefix和suffix都存在，其他为默认值是对应返回的逻辑视图名称应该是prefixproduct/indexsuffix。</li>
+<li>stripLeadingSlash和stripExtension都为false，其他默认，这时候对应的逻辑视图名称是/product/index.html。</li>
+<li>都采用默认配置时，返回的逻辑视图名称应该是product/index。</li>
+</ul>
+<p>如果我们的逻辑视图名称都跟请求路径相同或者相关关系是一样的,我们就可以采用Spring为我们事先约定好的逻辑视图名称返回,这可以大大简化我们的开发工作。</p>
+<p>下面是一个在SpringMVC配置文件中配置一个<code>RequestToViewNameTranslator bean</code>的示例,记住,该bean的名称只能为viewNameTranslator,如果不为viewNameTranslator时,Spring还是会使用默认配置的DefaultRequestToViewNameTranslator来约定逻辑视图名称</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">id</span>=<span class="value">"viewNameTranslator"</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"prefix"</span> <span class="attribute">value</span>=<span class="value">"prefix"</span>/&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"suffix"</span> <span class="attribute">value</span>=<span class="value">"suffix"</span>/&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"stripLeadingSlash"</span> <span class="attribute">value</span>=<span class="value">"false"</span>/&gt;</span>  </div><div class="line">    <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"stripExtension"</span> <span class="attribute">value</span>=<span class="value">"false"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<h3 id="Controller：">Controller：</h3>
+<p>此处讲SpringMVC对约定优于配置的支持是基于注解配置Controller的情况。考虑这样一种情况：定义了一个Controller，名为MyController，然后在MyController类上使用了@Controller注解进行标记，没有类级别的@RequestMapping。MyController中定义了一个处理器方法add，该方法使用了@RequestMapping注解标记。大概就是下面这个样子。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"add"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">add</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"add"</span>;  </div><div class="line">    }     </div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<p>这个时候如果我们需要访问到处理器方法add的话，我们需要请求/add.do，然后有另外一个AnotherController，里面也有一个add方法对应/add.do请求，这个时候如果你再请求/add.do的时候Spring就不知道到底该访问那个方法，然后就会抛出异常，这个时候我们最简单的解决办法就是在MyController上加上类级别的@RequestMapping用以区别，表示请求的路径到底是哪个Controller下面的，类似的情况还有我们会把相关的处理器方法放在一个Controller中，比如UserController下面会有user的add方法，user的del方法等。Spring为我们提供了一种机制可以自动根据我们的Controller类名称来进行请求映射，这是通过在SpringMVC的配置文件中定义一个org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping bean来实现的。通过它的名称我们可以知道ControllerClassNameHandlerMapping就是通过Controller的类名称来进行类级别的请求映射的。使用ControllerClassNameHandlerMapping的默认属性配置的时候Spring是这样来进行请求映射的：</p>
+<ul>
+<li>首先取得去掉包名称的Controller类名称。</li>
+<li>如果该类名称是以Controller结尾，则只取Controller前面的部分，如MyController取My。</li>
+<li>将取到的名称取全部小写，如MyHome取myhome。</li>
+<li>然后将上面取到的名称映射为/name/<em>，如上面取到的名称是myhome，则映射为/myhome/</em>。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"add"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">add</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"add"</span>;  </div><div class="line">    }    </div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<p>还是这一段代码，当我们使用ControllerClassNameHandlerMapping来进行映射的时候，我们需要访问MyController的处理器方法add的时候就需要请求/my/add.do。<br>ControllerClassNameHandlerMapping支持用户定义如下属性：</p>
+<ul>
+<li>caseSensitive：大小写是否敏感，默认是false，该属性主要是用来生成映射路径的时候匹配大小写是否敏感，如果为true，则只把Controller类名称的首字母小写，其他的保持原样进行请求路径映射，如果为false，则全部小写。basePackage也使用同样的规则，只是basePackage在caseSensitive为true的时候不需要首字母小写。</li>
+<li>basePackage：表示要用于生成路径映射的基包，默认是null，这个时候就采用Controller不包含包名称的类名称来映射，映射规则跟之前介绍的映射规则相同。如果定义了basePackage，假设为com.host.app，这个时候如果Controller类的全名称是com.host.app.abc.edf.MyController，那么映射的路径就是/abc/edf/my/*。</li>
+<li>pathPrefix：表示映射路径的前缀，默认是空串。假设pathPrefix为prefix，basePackage为com.host.app，那么com.host.app.abc.MyController的映射路径就是/prefix/abc/my/*。</li>
+<li>excludedPackages：是数组形式，表示需要把哪些包排除在ControllerClassNameHandlerMapping的映射范围之内。</li>
+<li>excludedClasses：是数组形式，表示需要把哪些类排除在ControllerClassNameHandlerMapping的映射范围之内。</li>
+</ul>
+<p>在下面一个例子就排除了com.host.app.web.mymodule包、com.host.app.web.modulea.MyController和com.host.app.web.moduleb.UserController。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">&lt;bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"&gt;  </div><div class="line">   &lt;property name="order" value="1"/&gt;  </div><div class="line">   &lt;property name="excludedPackages"&gt;  </div><div class="line">       &lt;array&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.mymodule &lt;/value&gt;  </div><div class="line">       &lt;/array&gt;  </div><div class="line">   &lt;/property&gt;  </div><div class="line">   &lt;property name="excludedClasses"&gt;  </div><div class="line">       &lt;array&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.modulea.MyController&lt;/value&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.moduleb.UserController&lt;/value&gt;  </div><div class="line">       &lt;/array&gt;  </div><div class="line">   &lt;/property&gt;  </div><div class="line">&lt;/bean&gt;</div></pre></td></tr></table></figure>
+
+
+
+<p>使用ControllerClassNameHandlerMapping需要注意的地方：</p>
+<ul>
+<li>需要使用ControllerClassNameHandlerMapping来映射的Controller类上如果加了@RequestMapping注解ControllerClassNameHandlerMapping也是可以进行URL路径映射的。</li>
+<li>使用ControllerClassNameHandlerMapping映射的是类似于<code>/controllerName/*</code>这样的形式，这也就是说只有在处理器方法映射不存在斜杠的时候才可以使用这种形式访问到。看下面一个例子，在下面代码中MyController类能够映射的请求路径是<code>/my/*</code>，这也意味着只有满足/my/*的请求路径才能映射到MyController，才能访问到它里面的处理器方法，所以当请求/my/test1.do的时候毫无疑问可以访问到处理器方法test1，但是当想访问MyController的test2方法，请求/my/test/test2.do的时候由于它不能映射到MyController，所以不能如愿的访问到MyController的test2方法。这也是ControllerClassNameHandlerMapping 一个缺陷。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">   </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test1"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">test1</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"test"</span>;  </div><div class="line">    }  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test/test2"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">test2</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"test"</span>;  </div><div class="line">    }      </div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<ul>
+<li>由于在SpringMVC应用中可以同时定义多个HandlerMapping，这就涉及到一个映射的优先级问题。HandlerMapping都实现了Ordered接口，所以我们可以通过HandlerMapping的order属性来指定匹配映射的先后顺序。我们知道在ViewResolver链中，如果一个逻辑视图被一个ViewResolver解析了之后，该次视图解析就结束了，其他的视图解析器就不能再解析这个视图了，它的order属性是用来定义ViewResolver进行视图解析的先后顺序的。但是HandlerMapping不一样，它是在SpringMVC的配置文件中定义的所有的HandlerMapping都可以进行URL映射，它的order属性是用于指定映射匹配的先后顺序的。看一个例子：</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"order"</span> <span class="attribute">value</span>=<span class="value">"1"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span>  </div><div class="line">  </div><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"order"</span> <span class="attribute">value</span>=<span class="value">"10"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<p>我们在SpringMVC的配置文件里面定义了两个HandlerMapping，代码如上所示，由它们的order属性我们知道ControllerClassNameHandlerMapping会先于DefaultAnnotationHandlerMapping进行映射匹配。定义了一个MyTestController，代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTestController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"mytest/test"</span>)  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>() {  </div><div class="line">       System.out.println(<span class="string">"--------hello test---------"</span>);  </div><div class="line">    }  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test"</span>)  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test2</span>() {  </div><div class="line">       System.out.println(<span class="string">"--------hello test2---------"</span>);  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>我们知道<code>ControllerClassNameHandlerMapping</code>会把<code>MyTestController</code>映射为<code>“/mytest/*”</code>,按照这种方式我们只能利用<code>/mytest/test.do</code>请求到MyTestController的test2方法,而没法利用<code>/mytest/mytest/test.do</code>请求到test方法。</p>
+<p>而<code>DefaultAnnotationHandlerMapping</code>会把<code>MyTestController</code>的test2方法映射为<code>“/test.do”</code>,把test方法映射为“/mytest/test.do”。而根据Spring定义了多个HandlerMapping就会有多个映射机制存在的这么一个机制我们知道上述几种映射关系都是会存在的。那么这个时候如果我请求/mytest/test.do会请求哪个方法呢?</p>
+<p>我们知道,如果是按照<code>ControllerClassNameHandlerMapping</code>的映射机制会访问MyTestController的test2方法,而按照<code>DefaultAnnotationHandlerMapping</code>的映射机制就会访问MyTestController的test方法;这个时候HandlerMapping的order属性就起作用了,order属性越小的就会先匹配,由上面的配置我们知道<code>ControllerClassNameHandlerMapping</code>的order属性相对较小,所以将使用它的映射URL来匹配这次请求,所以处理的是MyTestController的test2方法。</p>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>所谓的约定优于配置就是指在程序开发过程中我们约定好一些规则可以使我们更少的进行配置和代码编写。就这么简单的一句话可能你还不是很懂什么是约定优于配置，没关系，看完后面对SpringMVC的约定优于配置的介绍之后你就会明白了。</p>
+<p>SpringMVC对约定优于配置的支]]>
+    </summary>
+    
+      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
   </entry>
   
@@ -890,69 +997,6 @@
     </summary>
     
       <category term="随感" scheme="http://lawrence-zxc.github.io/tags/%E9%9A%8F%E6%84%9F/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[RESTful Web Services中API的设计原则]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/10/14/blog2/"/>
-    <id>http://lawrence-zxc.github.io/2014/10/14/blog2/</id>
-    <published>2014-10-14T09:40:04.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
-    <content type="html"><![CDATA[<p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
-<pre><code><span class="title">RESTful</span> Web Services Cookbook
-想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
-
-RESTful API Design
-Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
-</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
-<p>API Design Tips</p>
-<p>每个实体对象仅需要两个URL </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
-
-<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
-<p>使用名词代替动词</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
-
-<p>正确使用HTTP方法 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
-
-<p>对象间的关联关系 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
-
-<p>数据分页 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>查询条件</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
-
-<p>返回需要的参数</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
-
-<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
-
-<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
-
-<p>身份认证 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
-
-<p>版本管理 </p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
-
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
-<p>]]>
-    </summary>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
-    
-      <category term="架构" scheme="http://lawrence-zxc.github.io/tags/%E6%9E%B6%E6%9E%84/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
