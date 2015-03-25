@@ -727,6 +727,455 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2012-04-23T04:57:36.000Z"><a href="/2012/04/23/front-end-standards/">4月 23 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/04/23/front-end-standards/">前端规范</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="1-_规范说明">1. 规范说明</h2>
+<p>此为前端开发团队遵循和约定的代码书写规范，意在提高代码的规范性和可维护性。<br>此规范为参考规范，不全是硬性要求，部分硬性约定见下一条<a href="#2">书写规范</a>，统一团队编码规范和风格。让所有代码都是有规可循的，并且能够得到沉淀，减少重复劳动。  </p>
+<h3 id="1-1_结构说明">1.1 结构说明</h3>
+<pre><code>    -<span class="ruby">- [项目结构](<span class="comment">#项目结构)  </span>
+</span>    -<span class="ruby">---|---- [<span class="constant">CSS</span>文件结构](<span class="comment">#css-文件结构)  </span>
+</span>    -<span class="ruby">---|---- [<span class="constant">JS</span>文件结构](<span class="comment">#js-文件结构)  </span></span>
+</code></pre><h2 id="2-_书写规范">2. 书写规范</h2>
+<h3 id="2-1_样式与内容分离">2.1 样式与内容分离</h3>
+<h4 id="2-1-1_项目结构">2.1.1 项目结构</h4>
+<pre><code>    <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">index</span><span class="string">.</span><span class="comment">html</span>             <span class="comment">入口页</span>    
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">js/</span>                    <span class="comment">JS</span> <span class="comment">//具体见JS细化结构</span>                 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/</span>                   <span class="comment">CSS</span> <span class="comment">//具体见CSS细化结构</span>
+</code></pre><h4 id="2-1-2_重构步骤约定">2.1.2 重构步骤约定</h4>
+<ol>
+<li><code>index.html</code> 全部样式附着于 <code>class=&quot;xxx&quot;</code> <strong>注：</strong> <em>此时文件中不包含任何一个 id=”xxx”</em></li>
+<li>为上一步书写 CSS style<br><strong>[至此重构完成]</strong></li>
+<li>开始书写<code>js</code>交互文件，使用 <code>ID</code> 和 <code>Class</code> 定位被操作句柄</li>
+<li>向 <code>index.html</code> 中需要的地方添加 <code>id=&quot;xxx&quot;</code> 及 <code>data-xxx=&quot;xxx&quot;</code><br><strong>[至此交互效果完成]</strong></li>
+</ol>
+<h4 id="2-1-3_命名规范">2.1.3 命名规范</h4>
+<ul>
+<li>文件及文件夹: 全部英文小写字母+数字或连接符”<code>-</code> , <code>_</code> “，不可出现其他字符<br>如：<code>../css/style.css, jquery.1.x.x.js</code> </li>
+<li>文件：调用 <code>/libs</code> 文件需包含版本号，压缩文件需包含<code>min</code>关键词，其他插件则可不包含<br>如：<code>/libs/jquery.1.9.1.js</code> <code>/libs/modernizr-1.7.min.js</code> <code>fileuploader.js</code> <code>plugins.js</code></li>
+<li>ID: <a href="http://zh.wikipedia.org/wiki/%E5%8C%88%E7%89%99%E5%88%A9%E5%91%BD%E5%90%8D%E6%B3%95" title="Wiki:匈牙利命名法" target="_blank" rel="external">匈牙利命名法</a> &amp; <a href="http://zh.wikipedia.org/wiki/%E9%A7%9D%E5%B3%B0%E5%BC%8F%E5%A4%A7%E5%B0%8F%E5%AF%AB" title="小駝峰式命名法" target="_blank" rel="external">小駝峰式命名法</a><br>如：<code>firstName</code> <code>topBoxList</code> <code>footerCopyright</code></li>
+<li>Class: [减号连接符]<br>如：<code>top-item</code> <code>main-box</code> <code>box-list-item-1</code></li>
+<li>尽量使用语义明确的单词命名，避免 <code>left</code> <code>bottom</code> 等方位性的词语</li>
+</ul>
+<h4 id="2-1-4_格式&amp;编码">2.1.4 格式&amp;编码</h4>
+<ul>
+<li>文本文件： <code>.xxx</code> UTF-8<em>(无BOM)</em> 编码</li>
+<li>图片文件： <code>.png</code> <em>(PNG-24)</em> <code>.jpg</code> <em>(压缩率8-12)</em></li>
+<li>动态图片： <code>.gif</code></li>
+<li>压缩文件： <code>.tar.gz</code> <code>.zip</code></li>
+</ul>
+<h3 id="2-2_CSS_细化规范">2.2 CSS 细化规范</h3>
+<h4 id="2-2-1_CSS_文件结构">2.2.1 CSS 文件结构</h4>
+<pre><code>    <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="string">.</span><span class="string">.</span><span class="comment">/css/</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/libs/reset</span><span class="string">.</span><span class="comment">css</span>                  <span class="comment">CSS</span> <span class="comment">reset文件</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">…</span> <span class="comment">…</span> 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/images/</span>                         <span class="comment">主</span> <span class="comment">CSS</span><span class="literal">-</span><span class="comment">sprite</span> <span class="comment">图片</span>     
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/style</span><span class="string">.</span><span class="comment">css</span>                       <span class="comment">主</span> <span class="comment">CSS</span> <span class="comment">样式表</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">…</span> <span class="comment">…</span> 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/images/xxx/sprite</span><span class="string">.</span><span class="comment">png</span>           <span class="comment">xxx</span> <span class="comment">的</span> <span class="comment">CSS</span><span class="literal">-</span><span class="comment">sprite</span> <span class="comment">图片</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/xxx</span><span class="literal">-</span><span class="comment">style</span><span class="string">.</span><span class="comment">css</span>                   <span class="comment">xxx</span> <span class="comment">的</span> <span class="comment">样式表</span>
+</code></pre><h4 id="2-2-2_CSS(含Less)_文件结构">2.2.2 CSS(含Less) 文件结构</h4>
+<pre><code>    <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="string">.</span><span class="string">.</span><span class="comment">/css/</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/libs/reset</span><span class="string">.</span><span class="comment">less</span>            <span class="comment">CSS</span> <span class="comment">reset文件</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/libs/elements</span><span class="string">.</span><span class="comment">less</span>         <span class="comment">Less</span> <span class="comment">函数复用文件</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">…</span> <span class="comment">…</span> 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/images/</span>                         <span class="comment">主</span> <span class="comment">CSS</span><span class="literal">-</span><span class="comment">sprite</span> <span class="comment">图片</span>     
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/style</span><span class="string">.</span><span class="comment">less</span>                      <span class="comment">主样式Less</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/style</span><span class="string">.</span><span class="comment">css</span>                       <span class="comment">less</span> <span class="literal">-</span>&gt; <span class="comment">css</span> <span class="comment">自动生成</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">…</span> <span class="comment">…</span> 
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/images/xxx/sprite</span><span class="string">.</span><span class="comment">png</span>           <span class="comment">xxx</span> <span class="comment">的</span> <span class="comment">CSS</span><span class="literal">-</span><span class="comment">sprite</span> <span class="comment">图片</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/xxx</span><span class="literal">-</span><span class="comment">style</span><span class="string">.</span><span class="comment">less</span>                  <span class="comment">xxx</span> <span class="comment">的</span> <span class="comment">Less</span>
+     <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">css/xxx</span><span class="literal">-</span><span class="comment">style</span><span class="string">.</span><span class="comment">css</span>                   <span class="comment">less</span> <span class="literal">-</span>&gt; <span class="comment">css</span> <span class="comment">自动生成</span>
+</code></pre><h4 id="2-2-3_使用Less">2.2.3 使用Less</h4>
+<p>在 <code>.less</code>文件头部引入 <a href="https://github.com/hzlzh/cool-head/blob/master/Template/css/libs/reset.less" title="reset.less from HTML5 Boilerplate" target="_blank" rel="external">reset.less</a> &amp; <a href="https://github.com/hzlzh/cool-head/blob/master/Template/css/libs/elements.less" title="elements.less from lesselements" target="_blank" rel="external">elements.less</a>，之后调用如下属性传参即可，具体使用说明见 -&gt; <a href="http://lesselements.com/" target="_blank" rel="external">Lesselements</a> 官方文档   </p>
+<pre><code>    <span class="at_rule">@<span class="keyword">import</span> <span class="string">"libs/reset.less"</span></span>;  
+    <span class="at_rule">@<span class="keyword">import</span> <span class="string">"libs/elements.less"</span></span>;
+
+    <span class="class">.gradient</span>
+    <span class="class">.bw-gradient</span>
+    <span class="class">.bordered</span>
+    <span class="class">.drop-shadow</span>
+    <span class="class">.rounded</span>
+    <span class="class">.border-radius</span>
+    <span class="class">.opacity</span>
+    <span class="class">.transition-duration</span>
+    <span class="class">.rotation</span>
+    <span class="class">.scale</span>
+    <span class="class">.transition</span>
+    <span class="class">.inner-shadow</span>
+    <span class="class">.box-shadow</span>
+    <span class="class">.columns</span>
+    <span class="class">.translate</span>
+</code></pre><h4 id="2-2-4_CSS_reset">2.2.4 CSS reset</h4>
+<p>CSS reset 文件使用：<a href="https://github.com/hzlzh/cool-head/blob/master/Template/css/libs/reset.css" title="CSS reset 文件" target="_blank" rel="external">reset.css</a> 或 <a href="https://github.com/hzlzh/cool-head/blob/master/Template/css/libs/reset.less" title="reset.less from HTML5 Boilerplate" target="_blank" rel="external">reset.less</a>   </p>
+<ul>
+<li>reset文件用于重设各个浏览器的默认样式方案，解决其引起的耦合问题。  </li>
+<li>也可使用 <code>.clearfix</code> 清除浮动</li>
+</ul>
+<h4 id="2-2-5_CSS_注释格式约定">2.2.5 CSS 注释格式约定</h4>
+<pre><code>    /<span class="keyword">*</span>
+    <span class="comment">@name: Drop Down Menu</span>
+    <span class="comment">@description: Style of top bar drop down menu.</span>
+    <span class="comment">@require: reset.css</span>
+    <span class="comment">@author: Andy Huang(andyahung@geekpark.net)</span>
+    <span class="keyword">*</span>/
+</code></pre><p><em>其中，@require为可选项</em> </p>
+<ul>
+<li>CSS换行制表：使用 2 <del>或4</del> 个空格，而非[Tab]</li>
+<li>书写格式：<ul>
+<li>CSS名称+冒号+属性<br>如：<code>.box1 {float:left;}</code></li>
+<li>建议保留<code>{</code>左侧空格，字体名用<code>\</code>包含<br>如：<code>.box1,.box2,.box3 {font-family:Courier,&#39;Courier New&#39;;}</code></li>
+<li>避免中文，或使用转义，推荐前者<br>如：<code>font-family: &quot;Microsoft YaHei&quot;;</code> <code>font-family:\5fae\8f6f\96c5\9ed1;</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="2-2-6_CSS各属性的排列顺序：不做硬性要求">2.2.6 CSS各属性的排列顺序：不做硬性要求</h4>
+<p><em>如：以下2种顺序均可</em></p>
+<pre><code>    <span class="class">.box</span> <span class="rules">{
+      <span class="comment">/* 顺序1 */</span>
+      <span class="rule"><span class="attribute">background</span>:<span class="value"> none repeat scroll <span class="number">0</span> <span class="number">0</span> transparent</span></span>;
+      <span class="rule"><span class="attribute">bottom</span>:<span class="value"> <span class="number">11px</span></span></span>;
+      <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;
+      <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">22px</span></span></span>;
+      <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">33</span></span></span>;
+    <span class="rule">}</span></span>
+    <span class="class">.box</span> <span class="rules">{
+      <span class="comment">/* 顺序2 */</span>
+      <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">33</span></span></span>;
+      <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">22px</span></span></span>;
+      <span class="rule"><span class="attribute">bottom</span>:<span class="value"> <span class="number">11px</span></span></span>;
+      <span class="rule"><span class="attribute">background</span>:<span class="value"> transparent none repeat scroll <span class="number">0</span> <span class="number">0</span> </span></span>;
+      <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;
+    <span class="rule">}</span></span>
+</code></pre><h4 id="2-2-7_CSS嵌套规则">2.2.7 CSS嵌套规则</h4>
+<pre><code>    <span class="comment">/* 推荐嵌套层级 */</span>
+    <span class="class">.ui-icon-rarr</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-icon-larr</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-title</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-nav</span> <span class="class">.ui-list</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-table</span> <span class="class">.ui-list</span><span class="rules">{<span class="rule">}</span></span>
+
+    <span class="comment">/* 不推荐 */</span>
+    <span class="class">.ui-icon-rarr</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-icon-larr</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-title</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-list</span><span class="rules">{<span class="rule">}</span></span>
+    <span class="class">.ui-nav</span><span class="rules">{<span class="rule">}</span></span>
+</code></pre><h4 id="2-2-8_CSS格式化">2.2.8 CSS格式化</h4>
+<p>勿格式化，保留下面这种格式，增加可读性和可维护性，后期后台程序(如：PHP/Python)会将CSS压缩成 <strong>一行</strong> 输出：</p>
+<pre><code>    <span class="class">.box</span><span class="rules">{
+      <span class="comment">/* 勿格式化，增加可读性 */</span>
+      <span class="rule"><span class="attribute">background</span>:<span class="value"> none repeat scroll <span class="number">0</span> <span class="number">0</span> transparent</span></span>;
+      <span class="rule"><span class="attribute">bottom</span>:<span class="value"> <span class="number">11px</span></span></span>;
+      <span class="rule"><span class="attribute">position</span>:<span class="value"> relative</span></span>;
+      <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">22px</span></span></span>;
+      <span class="rule"><span class="attribute">z-index</span>:<span class="value"> <span class="number">33</span></span></span>;
+    <span class="rule">}</span></span>
+</code></pre><h3 id="2-3_XHTML_细化规范">2.3 XHTML 细化规范</h3>
+<h4 id="2-3-1_HTML_注释格式约定">2.3.1 HTML 注释格式约定</h4>
+<pre><code>    <span class="comment">&lt;!--
+    @name: Drop Down Menu
+    @description: Style of top bar drop down menu.
+    @author: Andy Huang(andyahung@geekpark.net)
+    --&gt;</span>
+
+    <span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"header"</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">div</span> <span class="attribute">class</span>=<span class="value">"xxx"</span>&gt;</span>
+            <span class="tag">&lt;<span class="title">span</span>&gt;</span>HTML行内注释格式<span class="tag">&lt;/<span class="title">span</span>&gt;</span>
+        <span class="tag">&lt;/<span class="title">div</span>&gt;</span>
+    <span class="tag">&lt;/<span class="title">div</span>&gt;</span><span class="comment">&lt;!-- #header end--&gt;</span>
+</code></pre><ul>
+<li>HTML换行缩进：<strong>采用 2 空格</strong></li>
+</ul>
+<h4 id="2-3-2_HTML嵌套规则">2.3.2 HTML嵌套规则</h4>
+<pre><code>    /* 推荐嵌套层级 */
+      &lt;ul class=<span class="string">"ui-nav"</span>&gt;
+        &lt;li class=<span class="string">"ui-nav-item"</span>&gt; some text
+          &lt;ul class=<span class="string">"ui-nav-item-child"</span>&gt;
+            &lt;li&gt; some text
+              &lt;ul class=<span class="string">"ui-list"</span>&gt;
+                &lt;li class=<span class="string">"ui-list-item"</span>&gt; some text&lt;/li&gt;
+              &lt;/ul
+            <span class="keyword">...</span>
+           &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li
+        <span class="keyword">...</span>
+      &lt;/ul&gt;
+</code></pre><h4 id="2-3-4_*_第一行统一使用HTML5标准：&lt;!DOCTYPE_html&gt;">2.3.4 * 第一行统一使用HTML5标准：&lt;!DOCTYPE html&gt;</h4>
+<pre><code>    <span class="doctype">&lt;!DOCTYPE html&gt;</span>
+    <span class="tag">&lt;<span class="title">html</span> <span class="attribute">dir</span>=<span class="value">"ltr"</span> <span class="attribute">lang</span>=<span class="value">"zh-CN"</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">head</span>&gt;</span>
+      <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">charset</span>=<span class="value">"utf-8"</span> /&gt;</span>
+      <span class="tag">&lt;<span class="title">title</span>&gt;</span>极客公园 | 创新者社区<span class="tag">&lt;/<span class="title">title</span>&gt;</span>
+      <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">name</span>=<span class="value">"keywords"</span> <span class="attribute">content</span>=<span class="value">"xxxx, xxx, xxxxx"</span> /&gt;</span>
+      <span class="tag">&lt;<span class="title">meta</span> <span class="attribute">name</span>=<span class="value">"description"</span> <span class="attribute">content</span>=<span class="value">"xxxxxxxxxxxxxxxxxxxx"</span> /&gt;</span>
+</code></pre><h4 id="2-3-5_Meta_的使用：（需要根据具体需求按需选择）可参看：cool-head">2.3.5 Meta 的使用：（需要根据具体需求按需选择）可参看：<a href="https://github.com/hzlzh/cool-head" target="_blank" rel="external">cool-head</a></h4>
+<pre><code>    &lt;meta <span class="variable">http-equiv=</span><span class="string">"X-UA-Compatible"</span> <span class="variable">content=</span><span class="string">"IE=edge,chrome=1"</span>&gt;
+    &lt;meta <span class="variable">http-equiv=</span><span class="string">"Cache-Control"</span> <span class="variable">content=</span><span class="string">"max-age=7200"</span> /&gt;
+    &lt;meta <span class="variable">name=</span><span class="string">"viewport"</span> <span class="variable">content=</span><span class="string">"width=device-width, initial-scale=1.0"</span>&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"alternate"</span> <span class="variable">type=</span><span class="string">"application/rss+xml"</span> <span class="variable">title=</span><span class="string">"RSS 2.0"</span> <span class="variable">href=</span><span class="string">"http://feeds.geekpark.net/"</span> /&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"shortcut icon"</span> <span class="variable">href=</span><span class="string">"favicon.ico"</span>&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"apple-touch-icon"</span> <span class="variable">href=</span><span class="string">"/apple-touch-icon.png"</span>&gt;
+
+    &lt;script <span class="variable">type=</span><span class="string">"text/javascript"</span> <span class="variable">src=</span><span class="string">"/js/xxx.js"</span>&gt;&lt;/script&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"stylesheet"</span> <span class="variable">href=</span><span class="string">"/css/xxx.css"</span>&gt;
+
+    &lt;script <span class="variable">type=</span><span class="string">"text/javascript"</span>&gt;
+        //Google 统计代码 的位置在离&lt;/head&gt;最近的位置
+    &lt;/script&gt;
+  &lt;/head&gt;
+</code></pre><ul>
+<li><code>&lt;img&gt;</code>标签默认缺省格式：<code>&lt;img src=&quot;xxx.png&quot; alt=&quot;缺省时文字&quot; /&gt;</code> 避免出现<a href="http://js8.in/555.html" title="src=&quot;&quot; 问题" target="_blank" rel="external">src=”” 问题</a></li>
+<li><code>&lt;a&gt;</code>标签缺省格式：<code>&lt;a href=&quot;###&quot; title=&quot;链接名称&quot;&gt;xxx&lt;/&gt;</code> 注：<code>target=&quot;_blank&quot;</code> 根据需求决定  </li>
+<li><code>&lt;a&gt;</code>标签预留链接占位符使用<code>###</code>，参见：<a href="http://www.v2ex.com/t/48511/" title="a标签占位符问题" target="_blank" rel="external">a标签占位符问题</a></li>
+<li>所有标签需要符合XHTML标准闭合</li>
+<li>一律统一标签结尾斜杠的书写形式：<code>&lt;br /&gt;</code> <code>&lt;hr /&gt;</code> 注意之间空格</li>
+<li>避免使用已过时标签，如：<code>&lt;b&gt;</code> <code>&lt;u&gt;</code> <code>&lt;i&gt;</code> 而用 <code>&lt;strong&gt;</code> <code>&lt;em&gt;</code>等代替</li>
+<li>使用<code>data-xxx</code>来添加自定义数据，如：<code>&lt;input data-xxx=&quot;yyy&quot;/&gt;</code></li>
+<li>避免使用<code>style=&quot;xxx:xxx;&quot;</code>的内联样式表</li>
+<li>特殊符号使用参考<a href="http://www.w3school.com.cn/html/html_entities.asp" target="_blank" rel="external">HTML 符号实体</a></li>
+</ul>
+<h3 id="2-4_JS_细化规范">2.4 JS 细化规范</h3>
+<h4 id="2-4-1_JS_文件结构">2.4.1 JS 文件结构</h4>
+<pre><code>    <span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">/js/</span>
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">/libs/plugin</span><span class="literal">-</span><span class="comment">1/</span>       <span class="comment">使用到的js插件1</span>  
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">/libs/plugin</span><span class="literal">-</span><span class="comment">2/</span>       <span class="comment">使用到的js插件2</span>  
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">/libs/plugin</span><span class="literal">-</span><span class="comment">3/</span>       <span class="comment">使用到的js插件3</span>  
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">script</span><span class="string">.</span><span class="comment">js</span>             <span class="comment">单独书写的js</span>  
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">plugins</span><span class="string">.</span><span class="comment">js</span>            <span class="comment">调用的plugins汇总</span>  
+    <span class="comment">|</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="literal">-</span> <span class="comment">juqery</span><span class="literal">-</span><span class="comment">1</span><span class="string">.</span><span class="comment">9</span><span class="string">.</span><span class="comment">x</span><span class="string">.</span><span class="comment">min</span><span class="string">.</span><span class="comment">js</span>   <span class="comment">调用jq库文件</span>  
+</code></pre><ul>
+<li>JS 换行缩进：采用 4 空格</li>
+<li>结束行需添加分号<code>;</code></li>
+<li>jQuery变量要求首字符为 <code>$</code>, 私有变量:首字符为<code>_</code>; 尽量避免全局变量.</li>
+<li>避免使用 eval()，setTimeOut使用调用函数，考虑重绘，回流 操作对页面影响  参看：<a href="http://www.zhangxinxu.com/wordpress/2010/01/%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%EF%BC%9Acss%E6%80%A7%E8%83%BD%E8%AE%A9javascript%E5%8F%98%E6%85%A2%EF%BC%9F/" title="重绘,回流参考" target="_blank" rel="external">reflows，repaints</a></li>
+<li>JS调试使用<code>console.log()</code>及<code>console.dir()</code>进行，避免使用弹出框，线上版需要注释所有调试代码</li>
+<li>JS压缩混淆工具: <a href="http://javascriptcompressor.com/" title="JS 压缩和混淆" target="_blank" rel="external">JS Compressor</a>  如果使用了压缩，需要留 <code>name-src.js</code>在同路径供今后修改使用</li>
+</ul>
+<h5 id="2-4-2_jQuery_Call">2.4.2 jQuery Call</h5>
+<pre><code>    <span class="comment">&lt;!-- Grab Google CDN jQuery. fall back to local if necessary --&gt;</span>  
+    <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>  
+    <span class="tag">&lt;<span class="title">script</span>&gt;</span><span class="javascript">!<span class="built_in">window</span>.jQuery &amp;&amp; <span class="built_in">document</span>.write(<span class="string">'&lt;script src="js/jquery-1.7.2.min.js"&gt;&lt;\/script&gt;'</span>)</span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>  
+</code></pre><h5 id="2-4-3_jQuery_Plugin">2.4.3 jQuery Plugin</h5>
+<ul>
+<li>IE对HTML5标签支持，以及浏览器特性检测：<a href="http://modernizr.com/download/" target="_blank" rel="external">Modernizr</a> &amp; <a href="https://github.com/aFarkas/html5shiv" target="_blank" rel="external">html5shiv</a></li>
+<li><del>IE6 PNG 图片支持：<a href="http://www.dillerdesign.com/experiment/DD_belatedPNG/" target="_blank" rel="external">DD_belatedPNG</a></del></li>
+<li>定制&amp;统一 浏览器的滚动条样式：<a href="https://github.com/thomd/jquery-scroll/" target="_blank" rel="external">jquery-scroll</a> &amp; <a href="https://github.com/Charuru/lionbars" target="_blank" rel="external">Lionbars</a></li>
+<li>hover提示效果文字：<a href="http://twitter.github.com/bootstrap/javascript.html#tooltips" target="_blank" rel="external">bootstrap-tooltips</a> &amp; <a href="https://github.com/jaz303/tipsy" target="_blank" rel="external">tipsy</a></li>
+<li>滚动条跟随nav效果：<a href="http://twitter.github.com/bootstrap/javascript.html#scrollspy" target="_blank" rel="external">bootstrap-scrollspy</a></li>
+<li>提示冒泡文字：<a href="https://github.com/jamescryer/grumble.js" target="_blank" rel="external">grumble.js</a></li>
+<li>导航栏过渡效果：<a href="http://www.gmarwaha.com/blog/2007/08/23/lavalamp-for-jquery-lovers/" target="_blank" rel="external">lavalamp</a></li>
+<li>移动设备的滚动效果：<a href="https://github.com/cubiq/iscroll" target="_blank" rel="external">iscroll 4</a></li>
+<li>Mac OS Lion 风格的滚动条：<a href="https://github.com/Charuru/lionbars" target="_blank" rel="external">Lionbars</a></li>
+<li>弹性SlideShow：<a href="https://github.com/Mottie/Kwicks" target="_blank" rel="external">kwicks for jQuery</a></li>
+<li>瀑布流：<a href="https://github.com/desandro/isotope" target="_blank" rel="external">isotope</a></li>
+<li>抖动效果：<a href="https://gist.github.com/3270711" target="_blank" rel="external">jQ shake</a></li>
+<li>LightBox：<a href="https://github.com/fancyapps/fancyBox" target="_blank" rel="external">fancyBox</a></li>
+<li>KenDo UI：<a href="http://www.kendoui.com/purchase.aspx" target="_blank" rel="external">KenDo UI</a></li>
+<li>textarea自适应高度：<a href="http://unwrongest.com/projects/elastic/" target="_blank" rel="external">elastic</a></li>
+<li>提示区域 &amp; 提示层：<a href="https://github.com/needim/noty" target="_blank" rel="external">noty</a></li>
+<li>浮动话题泡：<a href="https://github.com/jamescryer/grumble.js" target="_blank" rel="external">jQuery grumble</a></li>
+<li>旋转进度：<a href="https://github.com/aterrien/jQuery-Knob" target="_blank" rel="external">jQuery Knob</a></li>
+</ul>
+<h5 id="2-4-4_JSON格式规范">2.4.4 JSON格式规范</h5>
+<p>参考<a href="https://github.com/darcyliu/google-styleguide/blob/master/JSONStyleGuide.md" target="_blank" rel="external">JSON Style Guide翻译</a>，原版：<a href="http://google-styleguide.googlecode.com/svn/trunk/jsoncstyleguide.xml" target="_blank" rel="external">Google JSON Style Guide</a></p>
+<h3 id="HTML_细化规范">HTML 细化规范</h3>
+<ul>
+<li>HTML <code>head</code>部分的结构参看：<a href="https://github.com/hzlzh/cool-head" target="_blank" rel="external">cool-head</a> (摘取必要内容即可)</li>
+<li><code>css</code> 文件置于都 <strong>头部</strong></li>
+<li><code>jQuery</code> 及 <code>Google Analytics</code>引用置于 <strong>头部</strong></li>
+<li>其他效果<code>js</code>及<code>统计代码</code> 文件置于 <strong>尾部</strong></li>
+<li>HTML 代码尽量过一遍<a href="http://html5.validator.nu/" target="_blank" rel="external">HTML5 验证</a></li>
+<li>HTML 占位图片使用 <a href="http://temp.im/" title="Placehold image" target="_blank" rel="external">temp.im</a> &amp; <a href="http://placehold.us/" target="_blank" rel="external">placehold.us</a> 图片服务</li>
+</ul>
+<h3 id="2-5_Responsive_Web_规范">2.5 Responsive Web 规范</h3>
+<p>从设计之处就坚持”<a href="http://www.lukew.com/ff/entry.asp?933" title="Mobile First" target="_blank" rel="external">Mobile First</a>“的理念，在重构页面的时候要灵活采取响应式的解决方案。</p>
+<h4 id="2-5-1_响应式实现途径">2.5.1 响应式实现途径</h4>
+<p>* 设置 <a href="https://developer.mozilla.org/en-US/docs/Mobile/Viewport_meta_tag" title="&lt;meta&gt; ViewPort" target="_blank" rel="external">meta viewport</a> 属性</p>
+<pre><code>    &lt;meta <span class="variable">name=</span><span class="string">"viewport"</span> <span class="variable">content=</span><span class="string">"width=device-width, initial-scale=1"</span> /&gt;
+</code></pre><p>* 引入不同尺寸设备的样式表</p>
+<pre><code>    &lt;link <span class="variable">rel=</span><span class="string">"stylesheet"</span> <span class="variable">type=</span><span class="string">"text/css"</span> <span class="variable">href=</span><span class="string">"style.css"</span> <span class="variable">media=</span><span class="string">"screen, handheld"</span> /&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"stylesheet"</span> <span class="variable">type=</span><span class="string">"text/css"</span> <span class="variable">href=</span><span class="string">"enhanced.css"</span> <span class="variable">media=</span><span class="string">"screen  and (min-width: 40.5em)"</span> /&gt;
+    &lt;!--[<span class="keyword">if</span> (lt IE <span class="number">9</span>)&amp;(!IEMobile)]&gt;
+    &lt;link <span class="variable">rel=</span><span class="string">"stylesheet"</span> <span class="variable">type=</span><span class="string">"text/css"</span> <span class="variable">href=</span><span class="string">"enhanced.css"</span> /&gt;
+    &lt;![endif]--&gt;
+</code></pre><p>* 使用 <a href="http://css-tricks.com/css-media-queries/" target="_blank" rel="external">CSS Media Queries</a> 方法</p>
+<pre><code>    <span class="at_rule">@<span class="keyword">media</span> screen and (max-width: <span class="number">40.5em</span>) </span>{
+      <span class="class">.product-img</span> <span class="rules">{
+        <span class="rule"><span class="attribute">width</span>:<span class="value"> auto</span></span>;
+        <span class="rule"><span class="attribute">float</span>:<span class="value"> none</span></span>;
+      <span class="rule">}</span></span>
+    }
+    <span class="at_rule">@<span class="keyword">media</span> screen and (max-width: <span class="number">480px</span>) </span>{
+    }
+</code></pre><p>* JS控制导航栏在 <a href="http://api.jquery.com/resize/" target="_blank" rel="external">resize 事件</a> 触发后的可见性，如：</p>
+<pre><code>    $(w).resize(<span class="function"><span class="keyword">function</span><span class="params">()</span></span>{ <span class="comment">//Update dimensions on resize</span>
+      sw = <span class="built_in">document</span>.documentElement.clientWidth;
+      sh = <span class="built_in">document</span>.documentElement.clientHeight;
+      checkMobile();
+    });
+    <span class="comment">//Check if Mobile</span>
+    <span class="function"><span class="keyword">function</span> <span class="title">checkMobile</span><span class="params">()</span> </span>{
+      mobile = (sw &gt; breakpoint) ? <span class="literal">false</span> : <span class="literal">true</span>;
+      <span class="keyword">if</span> (!mobile) { <span class="comment">//If Not Mobile</span>
+        $(<span class="string">'[role="tabpanel"],#nav,#search'</span>).show(); <span class="comment">//Show full navigation and search</span>
+      } <span class="keyword">else</span> { <span class="comment">//Hide </span>
+        <span class="keyword">if</span>(!$(<span class="string">'#nav-anchors a'</span>).hasClass(<span class="string">'active'</span>)) {
+          $(<span class="string">'#nav,#search'</span>).hide(); <span class="comment">//Hide full navigation and search</span>
+        }
+      }
+    }
+</code></pre><h4 id="2-5-2_响应式解决方案">2.5.2 响应式解决方案</h4>
+<p>* 弹性图片</p>
+<pre><code>    <span class="tag">img</span> <span class="rules">{
+      <span class="rule"><span class="attribute">max-width</span>:<span class="value"> <span class="number">100%</span></span></span>;
+      <span class="rule"><span class="attribute">height</span>:<span class="value"> auto</span></span>;
+      <span class="rule"><span class="attribute">width</span>:<span class="value"> auto\<span class="number">9</span></span></span>; <span class="comment">/* ie8 */</span>
+    <span class="rule">}</span></span>
+</code></pre><p>* 自适应嵌入媒体</p>
+<pre><code>    <span class="class">.video</span> <span class="tag">embed</span>, <span class="class">.video</span> <span class="tag">object</span>, <span class="class">.video</span> <span class="tag">iframe</span> <span class="rules">{
+      <span class="rule"><span class="attribute">width</span>:<span class="value"> <span class="number">100%</span></span></span>;
+      <span class="rule"><span class="attribute">height</span>:<span class="value"> auto</span></span>;
+    <span class="rule">}</span></span>
+</code></pre><p>* 禁用iPhone字体自适应功能：</p>
+<pre><code>    <span class="tag">html</span> <span class="rules">{
+      <span class="rule"><span class="attribute">-webkit-text-size-adjust</span>:<span class="value"> none</span></span>;
+    <span class="rule">}</span></span>
+</code></pre><p>* 让 IE 9 以下的IE版本支持响应式：</p>
+<pre><code>    <span class="comment">&lt;!--[if lt IE 9]&gt;
+      &lt;script src="http://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"&gt;&lt;/script&gt;
+    &lt;![endif]--&gt;</span>
+</code></pre><h3 id="2-6_Newletter_制作规范">2.6 Newletter 制作规范</h3>
+<ul>
+<li><code>CSS</code>只可使用 <strong>内联样式表</strong> ，如：<code>style=&quot;margin:0;&quot;</code></li>
+<li>设计之初遵循： <strong>图上无文本，文本后无底纹</strong> 的规则</li>
+<li>使用 <code>MailChimp HTML Email CSS Fix</code> 参看下文链接</li>
+<li>引入 <code>CSS Reset for HTML Email</code> 参看下文链接</li>
+<li>使用<code>Table</code>布局而非<code>DIV</code></li>
+<li>所有图片使用<code>IMG</code>标签，如：<code>&lt;img style=&quot;style=&quot;display:block&quot; &quot;src=&quot;&quot; /&gt;</code></li>
+<li>可以适当使用占位符<code>spacer.gif</code></li>
+<li>多用<code>&lt;br /&gt;</code>换行而非<code>&lt;p&gt;</code></li>
+<li>整体最佳宽度为：<code>550-600px</code></li>
+<li>不使用<code>Javascript</code></li>
+<li>正式发送给用户之前，多次测试</li>
+</ul>
+<p>更多细节参考下面链接：<br><a href="http://www.web-ed.com.au/2011/05/coding-html-newsletters-edms-quick-guide/" target="_blank" rel="external">12 Killer Tips and Tricks for Building HTML Email</a></p>
+<h3 id="2-7_生产力工具推荐">2.7 生产力工具推荐</h3>
+<h4 id="2-7-1_for_Mac_OS">2.7.1 for Mac OS</h4>
+<p><em>for more app detial check -&gt; <a href="http://osx.iusethis.com/user/hzlzh" title="App pack" target="_blank" rel="external">IUSETHIS</a></em>  </p>
+<h5 id="2-7-1-1_前端相关工具(Mac)">2.7.1.1 前端相关工具(Mac)</h5>
+<ul>
+<li>编辑器：<a href="http://www.sublimetext.com/2" target="_blank" rel="external">Sublime Text 2</a> / <a href="https://github.com/textmate/textmate" target="_blank" rel="external">TextMate 2</a> / <a href="http://macvim.org/" target="_blank" rel="external">Vim</a> / <a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">Intellij IDEA</a></li>
+<li>命令行：<a href="http://www.iterm2.com/" target="_blank" rel="external">iTerm2</a></li>
+<li>浏览器调试环境：<a href="http://www.google.com/chrome" target="_blank" rel="external">Chrome</a> / <a href="http://www.mozilla.org/" target="_blank" rel="external">Firefox</a> + <a href="http://getfirebug.com/" target="_blank" rel="external">Firebug</a></li>
+<li>移动设备调试环境：<a href="http://www.mozilla.org/projects/fennec" target="_blank" rel="external">Mozilla Fennec</a></li>
+<li>兼容性测试：<a href="https://www.virtualbox.org/" target="_blank" rel="external">VirtualBox</a> + Win XP（IE 8）</li>
+<li>版本控制工具：<a href="http://mac.github.com/" target="_blank" rel="external">GitHub for Mac</a> / <a href="http://versionsapp.com/" target="_blank" rel="external">Versions</a> / <a href="http://www.sourcetreeapp.com/" target="_blank" rel="external">SourceTree</a></li>
+<li>FTP工具：<a href="http://filezilla-project.org/" target="_blank" rel="external">Filezilla</a> / <a href="http://itunes.apple.com/us/app/forklift/id412448059?mt=12" target="_blank" rel="external">ForkLift</a></li>
+<li>HTTP抓包及Post/Get模拟：<a href="http://www.charlesproxy.com/" target="_blank" rel="external">Charles</a></li>
+<li>PHP集成环境：<a href="http://www.apachefriends.org/en/xampp-macosx.html" target="_blank" rel="external">XAMPP for Mac</a> / <a href="http://http://mamp.info/" target="_blank" rel="external">MAMP</a></li>
+<li>SQL数据库管理：<a href="http://www.sequelpro.com/" target="_blank" rel="external">Sequel Pro</a></li>
+<li>标注工具：<a href="http://www.getmarkman.com/" target="_blank" rel="external">Mark Man</a> / <a href="http://itunes.apple.com/us/app/xscope/id447661441?mt=12" target="_blank" rel="external">xScope</a></li>
+<li>取色拾色器： <a href="http://www.jumpzero.com/frank/" target="_blank" rel="external">Frank DeLoupe</a> / <a href="http://itunes.apple.com/app/sip/id507257563?mt=12" target="_blank" rel="external">Sip</a> / <a href="http://itunes.apple.com/us/app/snip/id512505421?mt=12" target="_blank" rel="external">Snip</a> / <a href="http://itunes.apple.com/us/app/xscope/id447661441?mt=12" target="_blank" rel="external">xScope</a></li>
+<li>MarkDown编辑器：<a href="http://mouapp.com/" target="_blank" rel="external">Mou</a></li>
+<li>浏览器免刷新开发环境：<a href="http://http://livereload.com/" target="_blank" rel="external">LiveReLoad</a> / <a href="http://incident57.com/codekit/" target="_blank" rel="external">CodeKit</a></li>
+<li>CSS Sprite切图工具：<a href="http://itunes.apple.com/us/app/spriteright/id488584662?mt=12" target="_blank" rel="external">SpriteRight</a></li>
+<li>Less -&gt; CSS 编译：<a href="http://incident57.com/codekit/" target="_blank" rel="external">CodeKit</a> / <a href="http://http://livereload.com/" target="_blank" rel="external">LiveReLoad</a> / <a href="http://incident57.com/less/" target="_blank" rel="external">Less</a></li>
+<li>配色方案工具：<a href="http://itunes.apple.com/us/app/colorschemer-studio/id417896628?mt=12" target="_blank" rel="external">ColorSchemer Studio</a></li>
+<li>多浏览器Cookie管理：<a href="http://itunes.apple.com/us/app/cookie/id415585910?mt=12" target="_blank" rel="external">Cookie</a></li>
+<li>图片素材收集：<a href="http://seesparkbox.com/" target="_blank" rel="external">Sparkbox</a> / <a href="http://www.pixa-app.com/" target="_blank" rel="external">Pixa</a></li>
+</ul>
+<h5 id="2-7-1-2_其他效率工具">2.7.1.2 其他效率工具</h5>
+<ul>
+<li>快速启动及切换app：<a href="http://www.alfredapp.com/" target="_blank" rel="external">Alfred</a></li>
+<li>剪切板历史记录：<a href="http://www.alfredapp.com/" target="_blank" rel="external">Alfred</a><em>(Fretures -&gt; Clipboard)</em></li>
+<li>笔记：<a href="http://www.evernote.com/" target="_blank" rel="external">Evernote</a></li>
+<li>轻量级GTD：<a href="http://itunes.apple.com/cn/app/breaktime/id427475982?mt=12" target="_blank" rel="external">Clear</a></li>
+<li>压缩解压：<a href="https://itunes.apple.com/hk/app/the-unarchiver/id425424353?mt=12" target="_blank" rel="external">The Unarchiver</a> / <a href="https://itunes.apple.com/us/app/keka/id470158793?mt=12" target="_blank" rel="external">Keka</a> / <a href="https://itunes.apple.com/us/app/ipack/id433386677?mt=12" target="_blank" rel="external">iPack</a></li>
+<li>语言文档和快捷词扩展：<a href="http://kapeli.com/" target="_blank" rel="external">Dash</a></li>
+<li>时间中断提醒：<a href="http://itunes.apple.com/cn/app/breaktime/id427475982?mt=12" target="_blank" rel="external">BreakTime</a></li>
+</ul>
+<h5 id="2-7-2-1_前端相关工具(Windows)">2.7.2.1 前端相关工具(Windows)</h5>
+<ul>
+<li>编辑器：<a href="http://www.sublimetext.com/2" target="_blank" rel="external">Sublime Text 2</a> / <a href="http://macvim.org/" target="_blank" rel="external">Vim</a> / <a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">Intellij IDEA</a></li>
+<li>命令行：<a href="http://www.putty.org/" target="_blank" rel="external">Putty</a></li>
+<li>浏览器调试环境：<a href="http://www.google.com/chrome" target="_blank" rel="external">Chrome</a> / <a href="http://www.mozilla.org/" target="_blank" rel="external">Firefox</a></li>
+<li>移动设备调试环境：<a href="https://developers.google.com/chrome/mobile/docs/debugging" target="_blank" rel="external">Chrome Remote USB Debugging</a></li>
+<li>版本控制：<a href="http://subversion.apache.org/" target="_blank" rel="external">Subversion</a> / <a href="http://windows.github.com/" target="_blank" rel="external">Github for Windows</a></li>
+<li>FTP工具：<a href="http://filezilla-project.org/" target="_blank" rel="external">Filezilla</a></li>
+<li>抓包工具：<a href="http://www.fiddler2.com/fiddler2/" target="_blank" rel="external">Fiddler2</a></li>
+<li>MarkDown：<a href="http://markdownpad.com/r" target="_blank" rel="external">MarkdownPad</a></li>
+<li>浏览器免刷新开发环境：<a href="http://http://livereload.com/" target="_blank" rel="external">LiveReLoad</a> / <a href="http://www.getf5.com/" target="_blank" rel="external">F5</a></li>
+<li>Less -&gt; CSS编译：<a href="http://lesscss.org/" target="_blank" rel="external">less.org</a><em>(nodejs环境下编译)</em></li>
+<li>Haml -&gt; Html编译：<a href="http://haml.info/" target="_blank" rel="external">haml.info</a><em>(Gem下编译)</em></li>
+<li>响应式设计查看工具：<a href="https://developer.mozilla.org/en-US/docs/Tools/Responsive_Design_View/" target="_blank" rel="external">Firefox Responsive Design View</a></li>
+</ul>
+<h5 id="2-7-2-2_其他效率工具(Windows)">2.7.2.2 其他效率工具(Windows)</h5>
+<ul>
+<li>笔记：<a href="http://www.evernote.com/" target="_blank" rel="external">Evernote</a></li>
+<li>压缩解压：<a href="http://www.7-zip.org/" target="_blank" rel="external">7z</a></li>
+</ul>
+<h4 id="2-7-3_其他收集">2.7.3 其他收集</h4>
+<ul>
+<li>Firefox 扩展收藏集 -&gt; <a href="https://addons.mozilla.org/en-US/firefox/collections/hzlzh/hzlzh/" target="_blank" rel="external">Firefox Add-ons collections</a></li>
+<li>Chrome 扩展 -&gt; 待添加</li>
+<li>Sublime Text 2 技巧  -&gt; <a href="http://www.douban.com/group/topic/28027863/" target="_blank" rel="external">ST2 资源技巧汇总</a></li>
+</ul>
+<h3 id="2-8_相关技巧">2.8 相关技巧</h3>
+<p><a href="https://github.com/GeekPark/Doc/wiki/_pages" target="_blank" rel="external">Wiki page index</a></p>
+<ul>
+<li><a href="https://github.com/GeekPark/Doc/wiki/%5B%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E7%BC%93%E5%AD%98%5D%E5%90%84%E6%B5%8F%E8%A7%88%E5%99%A8%E6%B5%8B%E8%AF%95%E7%BD%91%E9%A1%B5%E6%97%B6%E6%B8%85%E9%99%A4%E7%BC%93%E5%AD%98%E7%9A%84%E6%96%B9%E6%B3%95" target="_blank" rel="external">各浏览器的缓存清除方法</a>  </li>
+<li><a href="https://github.com/GeekPark/Doc/wiki/%5B%E6%B5%8B%E8%AF%95%E6%8A%80%E5%B7%A7%5DGmail-%E6%B7%BB%E5%8A%A0%E8%AF%8D%E7%BC%80(.--)%E8%8E%B7%E5%BE%97%E5%A4%9A%E4%B8%AA%E9%82%AE%E4%BB%B6%E7%9A%84%E6%96%B9%E6%B3%95" target="_blank" rel="external">测试技巧Gmail 添加词缀 .+ 获得多个邮件的方法</a>  </li>
+<li><a href="https://github.com/GeekPark/Doc/wiki/%E5%85%B3%E4%BA%8E%5BMac%5D-%5BWin%5D-%5BLinux%5D%E8%B7%A8%E7%B3%BB%E7%BB%9F%E4%BC%A0%E6%96%87%E4%BB%B6%EF%BC%8C%E6%96%87%E4%BB%B6%E5%90%8D%E4%B9%B1%E7%A0%81%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88" target="_blank" rel="external">关于Mac Win Linux跨系统传文件，文件名乱码的解决方案</a>  </li>
+<li><a href="https://github.com/GeekPark/Doc/wiki/%E6%8A%80%E6%9C%AF%E5%9B%A2%E9%98%9F%5B%E8%B7%AF%E7%94%B1%E4%BB%A3%E7%90%86%5D%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%92%8C%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5" target="_blank" rel="external">技术团队”路由代理”解决方案和使用须知</a></li>
+</ul>
+<h3 id="使用团队">使用团队</h3>
+<p>此规范基于 <a href="http://en.wikipedia.org/wiki/MIT_License" target="_blank" rel="external">MIT License</a> 开源，持续更新维护中 </p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2012-03-11T03:15:44.000Z"><a href="/2012/03/11/leetcode/">3月 11 2012</a></time>
       
       
@@ -1839,105 +2288,6 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2011-12-11T08:53:37.000Z"><a href="/2011/12/11/transient-volatile-strictfp/">12月 11 2011</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2011/12/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="Volatile_-_修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。">Volatile - 修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。</h3>
-<p>该变量声明为volatile（不稳定的），这就指示JVM，这个变量是不稳定的，每次使用它都到主存中进行读取。一般说来，多任务环境下各任务间共享的标志都应该加volatile修饰。</p>
-<p>volatile修饰变量。在每次被线程访问时，都强迫从共享内存中重读该成员变量的值。而且，当成员变量发生变化时，强迫线程将变化值回写到共享内存。这样在任何时刻，两个不同的线程总是看到某个成员变量的同一个值。</p>
-<p>Reference: </p>
-<p><a href="http://developer.51cto.com/art/201105/264855.htm" target="_blank" rel="external">http://developer.51cto.com/art/201105/264855.htm</a></p>
-<p><a href="http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html" target="_blank" rel="external">http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html</a></p>
-<h3 id="Strictfp_-_确保浮点运算，其意思是FP-strict，即_strict_float_point_(精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。">Strictfp - 确保浮点运算，其意思是FP-strict，即 strict float point (精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。</h3>
-<p>你可以将一个类、接口以及方法声明为strictfp，但是不允许对接口中的方法以及构造函数声明strictfp关键字。</p>
-<h3 id="native_关键字">native 关键字</h3>
-<p>native是方法修饰符。Native方法是由另外一种语言（如c/c++，FORTRAN，汇编）实现的本地方法。因为在外部实现了方法，所以在java代码中，就不需要声明了，有点类似于借口方法。Native可以和其他一些修饰符连用，但是abstract方法和Interface方法不能用native来修饰。</p>
-<p>为什么需要使用native method？请参考：<br><a href="http://www.javaeye.com/topic/72543" target="_blank" rel="external">http://www.javaeye.com/topic/72543</a> java Native Method初涉  </p>
-<h3 id="Transient_-_声明一个实例变量，当对象存储或序列化时，它的值不需要维持">Transient - 声明一个实例变量，当对象存储或序列化时，它的值不需要维持</h3>
-<p>Java的serialization提供了一种持久化对象实例的机制。当持久化对象时，可能有一个特殊的对象数据成员，我们不想<br>用serialization机制来保存它。为了在一个特定对象的一个域上关闭serialization，可以在这个域前加上关键字transient。<br>transient是Java语言的关键字，用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候，transient型变量的值不包括在串行化的表示中，然而非transient型的变量是被包括进去的。</p>
-<p>Reference:</p>
-<p><a href="http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html" target="_blank" rel="external">http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html</a></p>
-<h4 id="1-transient的作用及使用方法">1.transient的作用及使用方法</h4>
-<p>我们都知道一个对象只要实现了Serilizable接口，这个对象就可以被序列化，java的这种序列化模式为开发者提供了很多便利，我们可以不必关系具体序列化的过程，只要这个类实现了Serilizable接口，这个类的所有属性和方法都会自动序列化。<br>然而在实际开发过程中，我们常常会遇到这样的问题，这个类的有些属性需要序列化，而其他属性不需要被序列化，打个比方，如果一个用户有一些敏感信息（如密码，银行卡号等），为了安全起见，不希望在网络操作（主要涉及到序列化操作，本地序列化缓存也适用）中被传输，这些信息对应的变量就可以加上transient关键字。换句话说，这个字段的生命周期仅存于调用者的内存中而不会写到磁盘里持久化。<br>总之，java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将不需要序列化的属性前添加关键字transient，序列化对象的时候，这个属性就不会序列化到指定的目的地中。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileNotFoundException;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.Serializable;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @description</span> 使用transient关键字不序列化某个变量 </div><div class="line"> *        注意读取的时候，读取数据的顺序一定要和存放数据的顺序保持一致 </div><div class="line"> *         </div><div class="line"> *<span class="javadoctag"> @author</span> zxc </div><div class="line"> *<span class="javadoctag"> @date</span>  2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransientTest</span> </span>{  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {  </div><div class="line">          </div><div class="line">        User user = <span class="keyword">new</span> User();  </div><div class="line">        user.setUsername(<span class="string">"zxc"</span>);  </div><div class="line">        user.setPasswd(<span class="string">"123456"</span>);  </div><div class="line">          </div><div class="line">        System.out.println(<span class="string">"read before Serializable: "</span>);  </div><div class="line">        System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">        System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">          </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectOutputStream os = <span class="keyword">new</span> ObjectOutputStream(  </div><div class="line">                    <span class="keyword">new</span> FileOutputStream(<span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            os.writeObject(user); <span class="comment">// 将User对象写进文件  </span></div><div class="line">            os.flush();  </div><div class="line">            os.close();  </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectInputStream is = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(  </div><div class="line">                    <span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            user = (User) is.readObject(); <span class="comment">// 从流中读取User的数据  </span></div><div class="line">            is.close();  </div><div class="line">              </div><div class="line">            System.out.println(<span class="string">"\nread after Serializable: "</span>);  </div><div class="line">            System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">            System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">              </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (ClassNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">    }  </div><div class="line">}  </div><div class="line">  </div><div class="line">class User implements Serializable {  </div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">9294180014912103005</span>L;    </div><div class="line">      </div><div class="line">    <span class="keyword">private</span> String username;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String passwd;  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getUsername</span>() {  </div><div class="line">        <span class="keyword">return</span> username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUsername</span>(String username) {  </div><div class="line">        <span class="keyword">this</span>.username = username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getPasswd</span>() {  </div><div class="line">        <span class="keyword">return</span> passwd;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPasswd</span>(String passwd) {  </div><div class="line">        <span class="keyword">this</span>.passwd = passwd;  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>输出为:</p>
-<pre><code>    <span class="built_in">read</span> <span class="keyword">before</span> Serializable:   
-    username: zxc  
-    password: <span class="number">123456</span>  
-
-    <span class="built_in">read</span> <span class="keyword">after</span> Serializable:   
-    username: zxc  
-    password: <span class="constant">null</span>
-</code></pre><p>密码字段为null，说明反序列化时根本没有从文件中获取到信息。</p>
-<h4 id="2-_transient使用小结">2. transient使用小结</h4>
-<ul>
-<li>一旦变量被transient修饰，变量将不再是对象持久化的一部分，该变量内容在序列化后无法获得访问。</li>
-<li>transient关键字只能修饰变量，而不能修饰方法和类。注意，本地变量是不能被transient关键字修饰的。变量如果是用户自定义类变量，则该类需要实现Serializable接口。</li>
-<li>被transient关键字修饰的变量不再能被序列化，一个静态变量不管是否被transient修饰，均不能被序列化。<br>第三点可能有些人很迷惑，因为发现在User类中的username字段前加上transient关键字后，程序运行结果依然不变，即static类型的username也读出来为“zxc”了，这不与第三点说的矛盾吗？实际上是这样的：第三点确实没错（一个静态变量不管是否被transient修饰，均不能被序列化），反序列化后类中static型变量username的值为当前JVM中对应static变量的值，这个值是JVM中的不是反序列化得出的，不相信？好吧，下面我来证明：</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileNotFoundException;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.Serializable;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @description</span> 使用transient关键字不序列化某个变量 </div><div class="line"> *        注意读取的时候，读取数据的顺序一定要和存放数据的顺序保持一致 </div><div class="line"> *         </div><div class="line"> *<span class="javadoctag"> @author</span> zxc </div><div class="line"> *<span class="javadoctag"> @date</span>  2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransientTest</span> </span>{  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {  </div><div class="line">          </div><div class="line">        User user = <span class="keyword">new</span> User();  </div><div class="line">        user.setUsername(<span class="string">"zxc"</span>);  </div><div class="line">        user.setPasswd(<span class="string">"123456"</span>);  </div><div class="line">          </div><div class="line">        System.out.println(<span class="string">"read before Serializable: "</span>);  </div><div class="line">        System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">        System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">          </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectOutputStream os = <span class="keyword">new</span> ObjectOutputStream(  </div><div class="line">                    <span class="keyword">new</span> FileOutputStream(<span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            os.writeObject(user); <span class="comment">// 将User对象写进文件  </span></div><div class="line">            os.flush();  </div><div class="line">            os.close();  </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            <span class="comment">// 在反序列化之前改变username的值  </span></div><div class="line">            User.username = <span class="string">"alibaba"</span>;  </div><div class="line">              </div><div class="line">            ObjectInputStream is = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(  </div><div class="line">                    <span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            user = (User) is.readObject(); <span class="comment">// 从流中读取User的数据  </span></div><div class="line">            is.close();  </div><div class="line">              </div><div class="line">            System.out.println(<span class="string">"\nread after Serializable: "</span>);  </div><div class="line">            System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">            System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">              </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (ClassNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">    }  </div><div class="line">}  </div><div class="line">  </div><div class="line">class User implements Serializable {  </div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">9294180014912103005</span>L;    </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String username;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String passwd;  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getUsername</span>() {  </div><div class="line">        <span class="keyword">return</span> username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUsername</span>(String username) {  </div><div class="line">        <span class="keyword">this</span>.username = username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getPasswd</span>() {  </div><div class="line">        <span class="keyword">return</span> passwd;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPasswd</span>(String passwd) {  </div><div class="line">        <span class="keyword">this</span>.passwd = passwd;  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>输出为:</p>
-<pre><code>    <span class="built_in">read</span> <span class="keyword">before</span> Serializable:   
-    username: zxc  
-    password: <span class="number">123456</span>  
-
-    <span class="built_in">read</span> <span class="keyword">after</span> Serializable:   
-    username: alibaba  
-    password: <span class="constant">null</span>
-</code></pre><p>这说明反序列化后类中static型变量username的值为当前JVM中对应static变量的值，为修改后alibaba，而不是序列化时的值zxc。</p>
-<h4 id="3-_transient使用细节——被transient关键字修饰的变量真的不能被序列化吗？">3. transient使用细节——被transient关键字修饰的变量真的不能被序列化吗？</h4>
-<p>思考下面的例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.Externalizable;  </div><div class="line"><span class="keyword">import</span> java.io.File;  </div><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInput;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutput;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @descripiton</span> Externalizable接口的使用 </div><div class="line"> *  </div><div class="line"> *<span class="javadoctag"> @author</span> Alexia </div><div class="line"> *<span class="javadoctag"> @date</span> 2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExternalizableTest</span> <span class="keyword">implements</span> <span class="title">Externalizable</span> </span>{  </div><div class="line">  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String content = <span class="string">"是的,我将会被序列化,不管我是否被transient关键字修饰"</span>;  </div><div class="line">  </div><div class="line">    <span class="annotation">@Override</span>  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeExternal</span>(ObjectOutput out) <span class="keyword">throws</span> IOException {  </div><div class="line">        out.writeObject(content);  </div><div class="line">    }  </div><div class="line">  </div><div class="line">    <span class="annotation">@Override</span>  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readExternal</span>(ObjectInput in) <span class="keyword">throws</span> IOException,  </div><div class="line">            ClassNotFoundException {  </div><div class="line">        content = (String) in.readObject();  </div><div class="line">    }  </div><div class="line">  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception {  </div><div class="line">          </div><div class="line">        ExternalizableTest et = <span class="keyword">new</span> ExternalizableTest();  </div><div class="line">        ObjectOutput out = <span class="keyword">new</span> ObjectOutputStream(<span class="keyword">new</span> FileOutputStream(  </div><div class="line">                <span class="keyword">new</span> File(<span class="string">"test"</span>)));  </div><div class="line">        out.writeObject(et);  </div><div class="line">  </div><div class="line">        ObjectInput in = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(  </div><div class="line">                <span class="string">"test"</span>)));  </div><div class="line">        et = (ExternalizableTest) in.readObject();  </div><div class="line">        System.out.println(et.content);  </div><div class="line">  </div><div class="line">        out.close();  </div><div class="line">        in.close();  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>content变量会被序列化吗？好吧，我把答案都输出来了，是的，运行结果就是：</p>
-<pre><code>    是的,我将会被序列化,不管我是否被<span class="keyword">transient</span>关键字修饰
-</code></pre><p>这是为什么呢，不是说类的变量被transient关键字修饰以后将不能序列化了吗？</p>
-<p>我们知道在Java中，对象的序列化可以通过实现两种接口来实现，若实现的是Serializable接口，则所有的序列化将会自动进行，若实现的是Externalizable接口，则没有任何东西可以自动序列化，需要在writeExternal方法中进行手工指定所要序列化的变量，这与是否被transient修饰无关。因此第二个例子输出的是变量content初始化的内容，而不是null。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1973,7 +2323,7 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>3</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
