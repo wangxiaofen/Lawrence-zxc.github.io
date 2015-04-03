@@ -89,6 +89,58 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="秋意渐浓">秋意渐浓</h3>
+<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
+
+<p><br></p>
+<h3 id="晚秋">晚秋</h3>
+<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
       
       
@@ -766,58 +818,6 @@ Stateless 无状态
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-07-11T02:32:48.000Z"><a href="/2014/07/11/java-http/">7月 11 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/07/11/java-http/">java中使HttpDelete可以发送body信息</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>RESTful api中用到了DELETE方法，android开发的同事遇到了问题，使用HttpDelete执行DELETE操作的时候，不能携带body信息，研究了很久之后找到了解决方法。 我们查看httpclient-4.2.3的源码可以发现，methods包下面包含HttpGet, HttpPost, HttpPut, HttpDelete等类来实现http的常用操作。 其中，HttpPost继承自HttpEntityEnclosingRequestBase，HttpEntityEnclosingRequestBase类又实现了HttpEntityEnclosingRequest接口，实现了setEntity的方法。 而HttpDelete继承自HttpRequestBase，没有实现setEntity的方法，因此无法设置HttpEntity对象。 这样解决方法就明显了，我们可以自己实现一个MyHttpDelete类，继承自HttpEntityEnclosingRequestBase，覆盖其中的getMethod方法，使其返回“DELETE”。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyHttpDelete</span> <span class="keyword">extends</span> <span class="title">HttpEntityEnclosingRequestBase</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String METHOD_NAME = <span class="string">"DELETE"</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> String <span class="title">getMethod</span>() {</div><div class="line">        <span class="keyword">return</span> METHOD_NAME;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> String uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(URI.create(uri));</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>(<span class="keyword">final</span> URI uri) {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">        setURI(uri);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="title">MyHttpDelete</span>() {</div><div class="line">        <span class="keyword">super</span>();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>使用delete方法时，直接可以按下面方式操作</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">DefaultHttpClient httpClient = <span class="keyword">new</span> DefaultHttpClient(); </div><div class="line"></div><div class="line">MyHttpDelete delete = <span class="keyword">new</span> MyHttpDelete(<span class="string">"http://url.com"</span>); </div><div class="line"></div><div class="line">List&lt;NameValuePair&gt; nameValuePairs = <span class="keyword">new</span> ArrayList&lt;NameValuePair&gt;(); </div><div class="line"></div><div class="line">delete.setEntity(<span class="keyword">new</span> UrlEncodedFormEntity(nameValuePairs)); </div><div class="line"></div><div class="line">HttpResponse response = httpClient.execute(delete);</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -893,7 +893,7 @@ Stateless 无状态
   
     <li><a href="/tags/读书/">读书</a><small>1</small></li>
   
-    <li><a href="/tags/随感/">随感</a><small>5</small></li>
+    <li><a href="/tags/随感/">随感</a><small>6</small></li>
   
   </ul>
 </div>
@@ -910,6 +910,10 @@ Stateless 无状态
 <div class="widget tag">
   <h3 class="title">最新文章</h3>
   <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
     
       <li>
         <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
@@ -953,10 +957,6 @@ Stateless 无状态
     
       <li>
         <a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
       </li>
     
   </ul>
