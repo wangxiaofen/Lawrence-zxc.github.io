@@ -1,0 +1,580 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>jQuery选择器分享总结 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="jQuery选择器分享总结"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-06-17T07:51:41.000Z"><a href="/2012/06/17/jquery1/">6月 17 2012</a></time>
+      
+      
+  
+    <h1 class="title">jQuery选择器分享总结</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>jQuery选择器使得获得页面元素变得更加容易、更加灵活，从而大大减轻了开发人员的压力。<br>如同盖楼一样，没有砖瓦，就盖不起楼房。得不到元素谈何其他各种操作呢？可见,jQuery选择器的重要性。当然想一下子掌握所有选择器也是很困难的，这个得靠实践和积累。   </p>
+<p>现在我们正式进入jQuery选择器的学习。我们将jQuery选择器进行分类学习，将jQuery选择器分为以下几种：</p>
+<h3 id="1、基本选择器">1、基本选择器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td style="text-align:center">根据元素ID选择</td>
+</tr>
+<tr>
+<td>elementname</td>
+<td style="text-align:center">根据元素名称选择</td>
+</tr>
+<tr>
+<td>classname</td>
+<td style="text-align:center">根据元素css类名选择</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">id</span>=<span class="value">"ID"</span> <span class="attribute">value</span>=<span class="value">"根据ID选择"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">a</span>&gt;</span>根据元素名称选择<span class="tag">&lt;/<span class="title">a</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">class</span>=<span class="value">"classname"</span> <span class="attribute">value</span>=<span class="value">"根据元素css类名选择"</span> /&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">jQuery(<span class="string">"#ID"</span>).val();</div><div class="line">jQuery(<span class="string">"a"</span>).text();</div><div class="line">jQuery(<span class="string">".classname"</span>).val();</div></pre></td></tr></table></figure>
+
+<p>即可分别得到元素的值。以上三种为最常见的选择器，其中ID选择器是效率最高的，在可能的情况下应该尽量使用它。</p>
+<h3 id="2、层次选择器">2、层次选择器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ancestor descendant</td>
+<td style="text-align:center">祖先和子孙选择器</td>
+</tr>
+<tr>
+<td>parent &gt; child</td>
+<td style="text-align:center">父子节点选择器</td>
+</tr>
+<tr>
+<td>prev + next</td>
+<td style="text-align:center">同级别选择器</td>
+</tr>
+<tr>
+<td>prev ~ siblings</td>
+<td style="text-align:center">过滤选择器</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"divTest"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">value</span>=<span class="value">"投资"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">id</span>=<span class="value">"next"</span> <span class="attribute">type</span>=<span class="value">"text"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span>  <span class="attribute">value</span>=<span class="value">"担当"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">title</span>=<span class="value">"学习"</span> <span class="attribute">value</span>=<span class="value">"学习"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">a</span>&gt;</span>1<span class="tag">&lt;/<span class="title">a</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">a</span>&gt;</span>2<span class="tag">&lt;/<span class="title">a</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//得到div中的a标签内容 结果为12</span></div><div class="line">jQuery(<span class="string">"#divTest a"</span>).text();</div><div class="line"><span class="comment">//输出div直接子节点 结果为投资</span></div><div class="line">jQuery(<span class="string">"#divTest&gt;input"</span>).val();</div><div class="line"><span class="comment">//输出id为next的后一个同级别元素 结果为担当</span></div><div class="line">jQuery(<span class="string">"#next+input"</span>).val();</div><div class="line"><span class="comment">//同上，并且是有title的元素 结果为学习</span></div><div class="line">jQuery(<span class="string">"#next~[title]"</span>).val();</div></pre></td></tr></table></figure>
+
+<h3 id="3、基本过滤选择器">3、基本过滤选择器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>:first</td>
+<td style="text-align:center">找到第一元素</td>
+</tr>
+<tr>
+<td>:last</td>
+<td style="text-align:center">找到最后一个元素</td>
+</tr>
+<tr>
+<td>:not(selector)</td>
+<td style="text-align:center">去除与给定选择器匹配的元素</td>
+</tr>
+<tr>
+<td>:even</td>
+<td style="text-align:center">匹配索引值为偶数的元素 从0开始计数</td>
+</tr>
+<tr>
+<td>:odd</td>
+<td style="text-align:center">匹配索引值为奇数的元素 从0开始计数</td>
+</tr>
+<tr>
+<td>:eq(index)</td>
+<td style="text-align:center">匹配一个给定索引值元素 从0开始</td>
+</tr>
+<tr>
+<td>:gt(index)</td>
+<td style="text-align:center">匹配大于给定索引值元素</td>
+</tr>
+<tr>
+<td>:lt(index)</td>
+<td style="text-align:center">匹配小于给定索引值元素</td>
+</tr>
+<tr>
+<td>:header</td>
+<td style="text-align:center">选择h1,h2,h3一类的标签 (目前没用过)</td>
+</tr>
+<tr>
+<td>:animated</td>
+<td style="text-align:center">匹配正执行动画效果的元素 (目前没用过)</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"divTest"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">ul</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>投资<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>理财<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>成熟<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>担当<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"radio"</span> <span class="attribute">value</span>=<span class="value">"学习"</span> <span class="attribute">checked</span>=<span class="value">"checked"</span> /&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"radio"</span> <span class="attribute">value</span>=<span class="value">"不学习"</span> /&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">ul</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//第一个li内容 结果为投资</span></div><div class="line">jQuery(<span class="string">"li:first"</span>).text();</div><div class="line"><span class="comment">//最后一个li内容 结果为担当</span></div><div class="line">jQuery(<span class="string">"li:last"</span>).text();</div><div class="line"><span class="comment">//input未被选中的值 结果为不学习</span></div><div class="line">jQuery(<span class="string">"li input:not(:checked)"</span>).val();</div><div class="line"><span class="comment">//索引为偶数的li 结果为投资 成熟</span></div><div class="line">jQuery(<span class="string">"li:even"</span>).text();</div><div class="line"><span class="comment">//索引为奇数的li 结果为理财 担当</span></div><div class="line">jQuery(<span class="string">"li:odd"</span>).text();</div><div class="line"><span class="comment">//索引大于2的li的内容 结果为担当</span></div><div class="line">jQuery(<span class="string">"li:gt(2)"</span>).text();</div><div class="line"><span class="comment">//索引小于1的li的内容 结果为投资</span></div><div class="line">jQuery(<span class="string">"li:lt(1)"</span>).text();</div></pre></td></tr></table></figure>
+
+<h3 id="4、内容过滤器">4、内容过滤器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>:contains(text)</td>
+<td style="text-align:center">匹配包含给定文本的元素</td>
+</tr>
+<tr>
+<td>:empty 　</td>
+<td style="text-align:center">匹配所有不包含子元素或者文本的空元素</td>
+</tr>
+<tr>
+<td>:has(selector)</td>
+<td style="text-align:center">匹配含有选择器所匹配的元素</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">div</span> <span class="attribute">id</span>=<span class="value">"Test"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">ul</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>hyip投资<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>hyip<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span>理财<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">        <span class="tag">&lt;<span class="title">li</span>&gt;</span><span class="tag">&lt;<span class="title">a</span>&gt;</span>投资<span class="tag">&lt;/<span class="title">a</span>&gt;</span><span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">    <span class="tag">&lt;/<span class="title">ul</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">div</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//包含hyip的li的内容 结果为hyip投资 hyip</span></div><div class="line">jQuery(<span class="string">"li:contains('hyip')"</span>).text();</div><div class="line"><span class="comment">//内容为空的li的后一个li内容 结果为理财</span></div><div class="line">jQuery(<span class="string">"li:empty+li"</span>).text();</div><div class="line"><span class="comment">//包含a标签的li的内容 结果为投资</span></div><div class="line">jQuery(<span class="string">"li:has(a)"</span>).text();</div></pre></td></tr></table></figure>
+
+<h3 id="5、可见性过滤器">5、可见性过滤器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>:hidden</td>
+<td style="text-align:center">匹配不可见元素</td>
+</tr>
+<tr>
+<td>:visible</td>
+<td style="text-align:center">匹配可见元素</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">ul</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">li</span>&gt;</span>可见<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">li</span> <span class="attribute">style</span>=<span class="value">"display:none;"</span>&gt;</span>不可见<span class="tag">&lt;/<span class="title">li</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">ul</span>&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//不可见的li的内容 结果为不可见</span></div><div class="line">jQuery(<span class="string">"li:hidden"</span>).text();</div><div class="line"><span class="comment">//可见的li的内容 结果为可见</span></div><div class="line">jQuery(<span class="string">"li:visible"</span>).text();</div></pre></td></tr></table></figure>
+
+<h3 id="6、属性过滤器">6、属性过滤器</h3>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>[attribute=value]</td>
+<td style="text-align:center">匹配属性是给定值的元素</td>
+</tr>
+<tr>
+<td>[attribute^=value]</td>
+<td style="text-align:center">匹配属性是以给定值开始的元素</td>
+</tr>
+<tr>
+<td>[attribute$=value]</td>
+<td style="text-align:center">匹配属性是以给定值结束的元素</td>
+</tr>
+<tr>
+<td>[attribute*=value]</td>
+<td style="text-align:center">匹配属性包含给定值的元素</td>
+</tr>
+</tbody>
+</table>
+<p>举例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"hyipinvest"</span> <span class="attribute">value</span>=<span class="value">"hyip投资"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"investhyip"</span> <span class="attribute">value</span>=<span class="value">"投资hyip"</span> /&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">input</span> <span class="attribute">type</span>=<span class="value">"text"</span> <span class="attribute">name</span>=<span class="value">"google"</span> <span class="attribute">value</span>=<span class="value">"HYIP"</span> /&gt;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//name为hyipinvest的值 结果为hyip投资</span></div><div class="line">alert(jQuery(<span class="string">"input[name='hyipinvest']"</span>).val());</div><div class="line"><span class="comment">//name以hyip开始的值 结果为hyip投资</span></div><div class="line">alert(jQuery(<span class="string">"input[name^='hyip']"</span>).val());</div><div class="line"><span class="comment">//name以hyip结束的值 结果为投资hyip</span></div><div class="line">alert(jQuery(<span class="string">"input[name$='hyip']"</span>).val());</div><div class="line"><span class="comment">//name包含oo的值 结果为HYIP</span></div><div class="line">alert(jQuery(<span class="string">"input[name*='oo']"</span>).val());</div></pre></td></tr></table></figure>
+
+<p>jQuery选择器就总结到这里，这些基本上都是在学习过程中遇到的，还有极少部分没有总结出来。经过一段时间实践，相信大家就能够熟练的使用jQuery选择器了。</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2012/06/27/ssh-sshd/">ssh,sshd命令配置和用法</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2012/05/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2012/06/17/jquery1/">
+                  http://lawrence-zxc.github.io/2012/06/17/jquery1/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/JavaScript/">JavaScript</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2012/06/27/ssh-sshd/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2012/05/16/maven-help/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2012/06/17/jquery1/" data-title="jQuery选择器分享总结" data-url="http://lawrence-zxc.github.io/2012/06/17/jquery1/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>5</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>13</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/18/spring-mvc-1/">SpringMVC中约定优于配置</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

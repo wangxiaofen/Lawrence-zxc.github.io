@@ -1,0 +1,544 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Linux Shell编程分享总结 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Linux Shell编程分享总结"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2013-02-07T08:15:33.000Z"><a href="/2013/02/07/linux-share/">2月 7 2013</a></time>
+      
+      
+  
+    <h1 class="title">Linux Shell编程分享总结</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="一-linux基础命令">一.linux基础命令</h2>
+<h3 id="1-系统相关">1.系统相关</h3>
+<p>$PATH</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `<span class="built_in">echo</span> <span class="variable">$PATH</span> | tr <span class="string">':'</span> <span class="string">'\n'</span>`; <span class="keyword">do</span> ls <span class="variable">$i</span> <span class="number">2</span>&gt;/dev/null; <span class="keyword">done</span>               <span class="comment">#显示所有的linux命令</span></div><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `<span class="built_in">echo</span> <span class="variable">$PATH</span> |tr <span class="string">':'</span> <span class="string">'\n'</span>|grep -v <span class="string">"yueji"</span>|grep -v <span class="string">"home"</span>`; <span class="keyword">do</span> ls <span class="variable">$i</span> <span class="number">2</span>&gt;/dev/null; <span class="keyword">done</span></div></pre></td></tr></table></figure>
+
+<p>crontab,at</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">crontab <span class="operator">-l</span> <span class="comment">#查看当前用户的计划任务  </span></div><div class="line">crontab -r <span class="comment">#删除</span></div><div class="line">crontab <span class="operator">-e</span> <span class="comment">#编辑</span></div></pre></td></tr></table></figure>
+
+<p>时间程式的格式:<br>　　分钟f1 小时f2 日f3 月f4 星期f5 program<br>　　当 f1 为 <em> 时表示每分钟都要执行 program,f2 为 </em> 时表示每小时都要执行程式<br>　　当 f1 为 a-b 时表示从第 a 分钟到第 b 分钟这段时间内要执行,f2 为 a-b 时表示从第 a 到第 b 小时都要执行<br>　　当 f1 为 <em>/n 时表示每 n 分钟个时间间隔执行一次,f2 为 </em>/n 表示每 n 小时个时间间隔执行一次<br>　　当 f1 为 a, b, c,… 时表示第 a, b, c,… 分钟要执行,f2 为 a, b, c,… 时表示第 a, b, c…个小时要执行<br>　　每月每天每小时的第0分钟执行一次 /bin/top:<br>　　0 <em> </em> <em> </em> /bin/top </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">at <span class="number">23</span>:<span class="number">59</span> <span class="number">12</span>/<span class="number">31</span>/<span class="number">2013</span></div></pre></td></tr></table></figure>
+
+<p>echo the end of world ! #定时任务(需要开启<code>/etc/init.d/atd start</code>)</p>
+<p>系统命令 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">bg,fb,jobs <span class="comment">#进程与作业</span></div><div class="line">&   <span class="comment">#在后台挂起程序 </span></div><div class="line">^Z <span class="comment">#挂起(暂停)前台程序 </span></div><div class="line">fg <span class="comment">#将作业移到前台 </span></div><div class="line">suspend <span class="comment">#挂起(暂停)shell </span></div><div class="line">jobs <span class="comment">#显示作业信息 </span></div><div class="line">bg <span class="comment">#将作业移至后台 </span></div><div class="line">ps <span class="comment">#显示进程信息 </span></div><div class="line">top <span class="comment">#显示使用最多CPU的进程的数据 </span></div><div class="line">prstat <span class="comment">#显示进程的动态信息 </span></div><div class="line">pstree <span class="comment">#显示进程树图表 </span></div><div class="line">ptree <span class="comment">#显示进程树图表 </span></div><div class="line">fuser <span class="comment">#识别使用指定文件的进程 </span></div><div class="line">kill <span class="comment">#终止进程；给进程发送信号 </span></div><div class="line">nice <span class="comment">#使用指定的调度优先级运行程序 </span></div><div class="line">renice <span class="comment">#改变已运行程序的调度优先级</span></div></pre></td></tr></table></figure>
+
+<p>free</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">free -m |grep <span class="string">"Mem"</span> | awk <span class="string">'{print $2}'</span></div></pre></td></tr></table></figure>
+
+<p>df,du,</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">df -h <span class="comment"># 查看各分区使用情况</span></div><div class="line">du -sh &lt;目录名&gt; <span class="comment"># 查看指定目录的大小</span></div></pre></td></tr></table></figure>
+
+<p>uptime,w,top,ps</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">uptime <span class="comment"># 查看系统运行时间、用户数、负载</span></div><div class="line">ps aux | sort -nk +<span class="number">4</span> | tail <span class="comment">#显示消耗内存最多的 10 个运行中的进程，以内存使用量排序</span></div></pre></td></tr></table></figure>
+
+<p>last,history</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">last <span class="comment"># 查看用户登录日志</span></div><div class="line">last | cut <span class="operator">-d</span> <span class="string">' '</span> <span class="operator">-f</span> <span class="number">1</span> <span class="comment">#查看最近登陆的用户名</span></div><div class="line">last |tr <span class="operator">-s</span> <span class="string">' '</span>| cut <span class="operator">-d</span> <span class="string">' '</span> <span class="operator">-f</span> <span class="number">2</span>|less </div><div class="line">history | awk <span class="string">'{a[$2]++}END{for(i in a){print a[i] " " i}}'</span> | sort -rn | head <span class="comment">#列出你最常用的10条命令</span></div><div class="line">history | awk {<span class="string">'print $2'</span>} | sort | uniq -c | sort -k1 -rn <span class="comment">#输出用户了命令历史；awk统计并输出列表；sort排序；head截出前10行</span></div></pre></td></tr></table></figure>
+
+<p>netstat,ifconfig</p>
+<p>mount,unmount,</p>
+<p>source<br>管道,重定向,tee</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ls <span class="operator">-l</span> /home | tee ~/homefile | more </div><div class="line">ls <span class="operator">-l</span> / | tee <span class="operator">-a</span> ~/homefile | more <span class="comment">#-a是append</span></div></pre></td></tr></table></figure>
+
+<p>ulimit命令</p>
+<p>source 在当前shell中执行指定shell程序。 </p>
+<h3 id="2-用户相关">2.用户相关</h3>
+<p>权限:chmod,chgrp,chown</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">chown +x file 与 chown <span class="number">774</span> file 与 chown u+x file 区别? </div><div class="line">chmod ugo+rwx directory1 <span class="comment">#设置目录的所有人(u)、群组(g)以及其他人(o)以读（r ）、写(w)和执行(x)的权限</span></div><div class="line">chmod go-rwx directory1 <span class="comment">#删除群组(g)与其他人(o)对目录的读写执行权限</span></div><div class="line">chown user1 file1 <span class="comment">#改变一个文件的所有人属性</span></div><div class="line">chown -R user1 directory1 <span class="comment">#改变一个目录的所有人属性并同时改变改目录下所有文件的属性</span></div><div class="line">chgrp group1 file1 <span class="comment">#改变文件的群组</span></div><div class="line">chown user1:group1 file1 <span class="comment">#改变一个文件的所有人和群组属性</span></div></pre></td></tr></table></figure>
+
+<p>groups,groupadd,groupdel,group mod,useradd,userdel,usermod </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">groups <span class="comment">#该命令用于显示当前用户所在的组</span></div><div class="line">groupadd group_name <span class="comment">#创建一个新用户组</span></div><div class="line">groupdel group_name <span class="comment">#删除一个用户组</span></div><div class="line">groupmod -n new_group_name old_group_name <span class="comment">#重命名一个用户组,该命令用户修改组的属性</span></div><div class="line">useradd -c <span class="string">"Name Surname"</span> -g admin <span class="operator">-d</span> /home/user1 <span class="operator">-s</span> /bin/bash user1 <span class="comment">#创建一个属于 "admin" 用户组的用户</span></div><div class="line">useradd user1 <span class="comment">#创建一个新用户</span></div><div class="line">userdel -r user1 <span class="comment">#删除一个用户('-r' 排除主目录)</span></div><div class="line">usermod -c <span class="string">"User FTP"</span> -g system <span class="operator">-d</span> /ftp/user1 <span class="operator">-s</span> /bin/nologin user1 <span class="comment">#修改用户属性</span></div><div class="line">passwd <span class="comment">#修改口令</span></div><div class="line">passwd user1 <span class="comment">#修改一个用户的口令(只容许root执行)</span></div><div class="line">chage -E <span class="number">2005</span>-<span class="number">12</span>-<span class="number">31</span> user1 <span class="comment">#设置用户口令的失效期限</span></div><div class="line">newgrp group_name <span class="comment">#登陆进一个新的群组以改变新创建文件的预设群组</span></div><div class="line">w,who <span class="comment">#查看当前计算器有哪些用户登录</span></div><div class="line">whoami  <span class="comment">#查看当前登录用户名</span></div></pre></td></tr></table></figure>
+
+<h3 id="3-文件相关">3.文件相关</h3>
+<p>mime,ctime,atime</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">find /home/dam -name <span class="string">"*.zip"</span> -mtime +<span class="number">7</span> -o -name <span class="string">"*.xml"</span> -mtime +<span class="number">7</span> | xargs rm <span class="operator">-f</span> <span class="comment">#查找七天前</span></div><div class="line">find /home/dam \( -name *.zip -o -name *.xml \) -ctime +<span class="number">7</span></div></pre></td></tr></table></figure>
+
+<p>查看ls</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ls /tmp | pr -T5 -W<span class="variable">$COLUMNS</span> <span class="comment">#将终端划分成5栏显示</span></div><div class="line">ls | sed <span class="string">"s:^:`pwd`/:"</span> <span class="comment">#列出文件的绝对路径</span></div></pre></td></tr></table></figure>
+
+<p>文件:lsattr,chattr,cat,tac,tail,head,nl, more,less, dd </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">chattr +a file1 <span class="comment">#只允许以追加方式读写文件 </span></div><div class="line">chattr +i file1 <span class="comment">#设置成不可变的文件，不能被删除、修改、重命名或者链接</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[admin@server190 ~]$ lsattr <span class="operator">-d</span> ~/work</div><div class="line">----<span class="operator">-a</span>------<span class="operator">-e</span>- /home/admin/work</div></pre></td></tr></table></figure>
+
+<p>归档,打包,解压</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">tar -cvzf ,tar -xvzf <span class="comment">#打包和压缩文件</span></div><div class="line">bunzip2 file1.bz2 <span class="comment">#解压'file1.bz2'这个文件</span></div><div class="line">bzip2 file1 <span class="comment">#压缩一个叫做'file1' 的文件</span></div><div class="line">gunzip file1.gz <span class="comment">#解压一个叫做'file1.gz'的文件</span></div><div class="line">gzip file1 <span class="comment">#压缩一个叫做'file1'的文件</span></div><div class="line">gzip -<span class="number">9</span> file1 <span class="comment">#最大程度压缩</span></div><div class="line">rar a file1.rar test_file <span class="comment">#创建一个叫做 'file1.rar' 的包</span></div><div class="line">rar a file1.rar file1 file2 dir1 <span class="comment">#同时压缩 'file1', 'file2' 以及目录 'dir1'</span></div><div class="line">rar x file1.rar <span class="comment">#解压rar包</span></div><div class="line">unrar x file1.rar <span class="comment">#解压rar包</span></div><div class="line">tar -cvf archive.tar file1 <span class="comment">#创建一个非压缩的 tarball</span></div><div class="line">tar -cvf archive.tar file1 file2 dir1 <span class="comment">#创建一个包含了 'file1', 'file2' 以及 'dir1'的档案文件</span></div><div class="line">tar -tf archive.tar <span class="comment">#显示一个包中的内容</span></div><div class="line">tar -xvf archive.tar <span class="comment">#释放一个包</span></div><div class="line">tar -xvf archive.tar -C /tmp <span class="comment">#将压缩包释放到/tmp目录下</span></div><div class="line">tar -cjvf archive.tar.bz2 dir1 <span class="comment">#创建一个bzip2格式的压缩包</span></div><div class="line">tar -xjvf archive.tar.bz2 <span class="comment">#解压一个bzip2格式的压缩包</span></div><div class="line">tar -tjvf</div><div class="line">tar -czvf archive.tar.gz dir1 <span class="comment">#创建一个gzip格式的压缩包</span></div><div class="line">tar -xzvf archive.tar.gz <span class="comment">#解压一个gzip格式的压缩包</span></div><div class="line">tar -tzvf</div><div class="line">zip file1.zip file1 <span class="comment">#创建一个zip格式的压缩包</span></div><div class="line">zip -r file1.zip file1 file2 dir1 <span class="comment">#将几个文件和目录同时压缩成一个zip格式的压缩包</span></div><div class="line">unzip file1.zip <span class="comment">#解压一个zip格式压缩包</span></div></pre></td></tr></table></figure>
+
+<p>搜索 find,locate,whereis</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">find -type d -name <span class="string">".svn"</span>|xargs rm -rf 或者 find -type d -iname <span class="string">".svn"</span> -exec rm -rf {} \;</div><div class="line">find -name <span class="string">'*.[ch]'</span> | xargs grep -E <span class="string">'expr'</span> <span class="comment">#在当前目录及其子目录下所有.c和.h文件中寻找'expr'</span></div><div class="line">find -type f -print0 | xargs -r0 grep -F <span class="string">'example'</span> <span class="comment">#在当前目录及其子目录中的常规文件中查找字符串'example'</span></div><div class="line">find -maxdepth <span class="number">1</span> -type d | <span class="keyword">while</span> <span class="built_in">read</span> dir; <span class="keyword">do</span> <span class="built_in">echo</span> <span class="variable">$dir</span>; <span class="built_in">echo</span> cmd2; <span class="keyword">done</span> <span class="comment">#对每一个找到的文件执行多个命令(使用while循环)</span></div><div class="line">find -type f ! -perm -<span class="number">444</span> <span class="comment">#寻找所有不可读的文件</span></div><div class="line">find -type d ! -perm -<span class="number">111</span> <span class="comment">#寻找不可访问的目录</span></div><div class="line">locate -r <span class="string">'file[^/]*\.txt'</span> <span class="comment">#使用locate 查找所有符合*file*.txt的文件</span></div><div class="line">比较 diff 操作 ln,mkdir</div><div class="line">mkdir -p /tmp/dir1/dir2 <span class="comment">#创建一个目录树</span></div><div class="line">ln <span class="operator">-s</span> <span class="built_in">source</span> lnk1 <span class="comment">#创建一个指向文件或目录的软链接</span></div><div class="line">ln <span class="built_in">source</span> lnk1 <span class="comment">#创建一个指向文件或目录的物理链接</span></div></pre></td></tr></table></figure>
+
+<p>seq</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">seq -ws <span class="string">'-'</span> <span class="number">1</span> <span class="number">100</span> <span class="comment">#输出1到100用-分割</span></div><div class="line">seq <span class="operator">-f</span> <span class="string">'dir%03g'</span> <span class="number">1</span> <span class="number">10</span> | xargs mkdir <span class="comment">#一次制做10 個名dir001 , dir002 .. dir010 的目录</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `seq <span class="operator">-f</span> <span class="string">'%02g'</span> <span class="number">1</span> <span class="number">20</span>`</div><div class="line"><span class="keyword">do</span></div><div class="line"><span class="keyword">if</span> ! wget -P <span class="variable">$HOME</span>/tmp -c [img]http://www.yueji.com/photo/<span class="variable">$i</span>.jpg[/img] ; <span class="keyword">then</span></div><div class="line">wget -P <span class="variable">$HOME</span>/tmp -c <span class="variable">$_</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `seq -w <span class="number">1</span> <span class="number">20</span>`; <span class="keyword">do</span> <span class="built_in">echo</span> <span class="string">'zxc'</span>_<span class="variable">$i</span>; <span class="keyword">done</span>;</div></pre></td></tr></table></figure>
+
+<h2 id="二-linux文档,字符串操作">二.linux文档,字符串操作</h2>
+<p>vi/vim, sed ,perl</p>
+<h3 id="批量替换">批量替换</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">find -name <span class="string">'pom.xml'</span> | xargs perl -pi <span class="operator">-e</span> <span class="string">'s|http://repo1.maven.org/maven2|http://localhost:8081/nexus/content /groups/public|g'</span></div><div class="line">perl -pe <span class="string">'s/\r//g'</span> /tmp/t|grep -v ^$&gt;brand.txt <span class="comment">#替换回车换行</span></div><div class="line">perl -pe <span class="string">'s/^\n$//'</span> /tmp/t &gt; /tmp/tt <span class="comment">#去掉回车符号</span></div><div class="line">find -name <span class="string">"ubuntu_init_env.sh"</span>|sed -n <span class="string">'1p'</span>|xargs cat|sed -n <span class="string">"88p"</span>  <span class="comment">#取find命令找到的第一个文件cat，并取88行输出</span></div></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sed -i <span class="string">"s/oldString/newString/g"</span> `grep oldString -rl /path`</div></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">grep oldString -rl /path | xargs sed -i <span class="string">"s/oldString/newString/g"</span></div></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">grep <span class="string">"abc"</span> * -R | awk -F: <span class="string">'{print $1}'</span> | sort | uniq | xargs sed -i <span class="string">'s/abc/abcde/g'</span> <span class="comment">#一次性将所有文件中的指定字符串进行修改</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">sed <span class="string">'s/string1/string2/g'</span> <span class="comment">#使用string2替换string1</span></div><div class="line">sed <span class="string">'s/\(.*\)1/\12/g'</span> <span class="comment">#将任何以1结尾的字符串替换为以2结尾的字符串</span></div><div class="line">sed <span class="string">'/^ *#/d; /^ *$/d'</span> <span class="comment">#删除注释和空白行</span></div><div class="line">sed <span class="string">':a; /\\$/N; s/\\\n//; ta'</span> <span class="comment">#连接结尾有\的行和其下一行</span></div><div class="line">sed <span class="string">'s/[ \t]*$//'</span> <span class="comment">#删除每行后的空白</span></div><div class="line">sed <span class="string">'s/\([\\`\\"$\\\\]\)/\\\1/g'</span> <span class="comment">#将所有转义字符之前加上\</span></div><div class="line">seq <span class="number">10</span> | sed <span class="string">"s/^/ /; s/ *\(.\{7,\}\)/\1/"</span> <span class="comment">#向右排N(任意数)列</span></div><div class="line">sed -n <span class="string">'1000p;1000q'</span> <span class="comment">#输出第一千行</span></div><div class="line">sed -n <span class="string">'10,20p;20q'</span> <span class="comment">#输出第10-20行</span></div><div class="line">sed -n <span class="string">'s/.*&lt;title&gt;\(.*\)&lt;\/title&gt;.*/\1/ip;T;q'</span> <span class="comment">#输出HTML文件的&lt;title&gt;&lt;/title&gt;字段中的内容</span></div><div class="line">sort -t. -k1,<span class="number">1</span>n -k2,<span class="number">2</span>n -k3,<span class="number">3</span>n -k4,<span class="number">4</span>n <span class="comment">#排序IPV4地址</span></div></pre></td></tr></table></figure>
+
+<h3 id="sort,uniq,wc,grep">sort,uniq,wc,grep</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">uniq <span class="operator">-f</span> <span class="number">3</span> /var/log/messages   <span class="comment">#跳过前三个字段进行去重</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">grep <span class="string">'^MANPATH'</span> /etc/man.config | head -n <span class="number">3</span> | \</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">grep -v <span class="string">'^$'</span> /etc/syslog.conf | grep -v <span class="string">'^#'</span>  <span class="comment"># 结果仅有 10 行，其中第一个 -v '^$' 代表不要空白行，第二个-v '^#'代表不要开头是 # 的那行</span></div><div class="line">grep -c <span class="string">"Exception"</span> logs/com.yue.commons.standalone.web.log  <span class="comment">#统计到grep匹配的次数</span></div><div class="line">grep -A10 <span class="string">"java.sql.SQLException:"</span> web.log|less  <span class="comment">#找到抛异常的地方并输出后续的10行</span></div><div class="line">grep -A10 --color=auto <span class="string">"java.sql.SQLException:"</span> web.log</div></pre></td></tr></table></figure>
+
+<h3 id="cut,join,tr,col,split">cut,join,tr,col,split</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">'ZHANGXIONGCAI337@YUEJI.COM'</span>|tr <span class="string">"[A-Z]"</span> <span class="string">"[a-z]"</span> <span class="comment">#tr字符串替换</span></div><div class="line"><span class="built_in">echo</span> <span class="string">'Test'</span> | tr <span class="string">'[:lower:]'</span> <span class="string">'[:upper:]'</span> <span class="comment">#转换成大写</span></div><div class="line">tr -dc <span class="string">'[:print:]'</span> &lt; /dev/urandom <span class="comment">#过滤掉不能打印的字符</span></div><div class="line">cat /etc/passwd | tr <span class="operator">-d</span> <span class="string">':'</span> <span class="comment">#将冒号删除</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">last | cut <span class="operator">-d</span> <span class="string">' '</span> <span class="operator">-f</span>1 | sort | uniq -c <span class="comment">#最近每个人登陆的总次数</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">sort file1 file2 | uniq <span class="comment">#两个未排序文件的并集</span></div><div class="line">sort file1 file2 | uniq <span class="operator">-d</span> <span class="comment">#两个未排序文件的交集</span></div><div class="line">sort file1 file1 file2 | uniq -u <span class="comment">#两个未排序文件的差集</span></div><div class="line">sort file1 file2 | uniq -u <span class="comment">#两个未排序文件的对称差集</span></div><div class="line">join -t<span class="string">'\0'</span> <span class="operator">-a</span>1 <span class="operator">-a</span>2 file1 file2 <span class="comment">#两个有序文件的并集</span></div><div class="line">join -t<span class="string">'\0'</span> file1 file2 <span class="comment">#两个有序文件的交集</span></div><div class="line">join -t<span class="string">'\0'</span> -v2 file1 file2 <span class="comment">#两个有序文件的差集</span></div><div class="line">join -t<span class="string">'\0'</span> -v1 -v2 file1 file2 <span class="comment">#两个有序文件的对称差集</span></div></pre></td></tr></table></figure>
+
+<h3 id="awk">awk</h3>
+<p>比较两个文件的不同 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">awk <span class="string">'{if (NR==FNR) {a[$0]}; if (NR!=FNR&&!($0 in a)) {print $0}}'</span> firstfile secondfile   </div><div class="line">awk <span class="string">'NR==FNR {a[$0]} NR!=FNR&&!($0 in a) {print $0}'</span> firstfile secondfile   </div><div class="line">cat firstfile secondfile | sort |uniq -u</div></pre></td></tr></table></figure>
+
+<h2 id="三-linux网络命令">三.linux网络命令</h2>
+<h3 id="wget">wget</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget -c http://www.yueji.com/bo.JPG <span class="comment">#断点续传 或者 curl -c -O http://www.yueji.com/bo.JPG</span></div></pre></td></tr></table></figure>
+
+<h3 id="ssh_端口转发">ssh 端口转发</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">ssh -N <span class="operator">-f</span> -R X:Y:Z K   <span class="comment">#远程转发 将IP为的Y机器的Z端口[映射到远程]机器K的X端口上,K机器就可以通过访问X端口,而访问Y的Z端口服务 -R ：remote (远程)</span></div><div class="line">ssh -R <span class="number">9090</span>:local-secret.com:<span class="number">8080</span> my-remote-host.com <span class="comment">#远程访问my-remote-host.com:9090就等同于用本机访问local-secret.com:8080</span></div><div class="line">ssh -N <span class="operator">-f</span> -L X:Y:Z K   <span class="comment">#本地转发 将IP为Y的机器的Z端口通过中间服务器K[映射到本地]机器的X端口, -L local (本地)</span></div><div class="line">ssh -L <span class="number">9090</span>:remote-secret.com:<span class="number">8080</span> my-remote-host.com <span class="comment">#访问本地的9090端口就相当于用远程服务器my-remote-host.com访问remote-secret.com:8080</span></div><div class="line">-N <span class="comment">#告诉SSH客户端，这个连接不需要执行任何命令。仅仅做端口转发</span></div><div class="line"><span class="operator">-f</span> <span class="comment">#告诉SSH客户端在后台运行</span></div><div class="line">-i <span class="comment">#使用指定的密钥登录</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ssh -p <span class="number">222</span> admin@<span class="number">122.193</span>.<span class="number">22.120</span></div><div class="line">ssh -R <span class="number">1234</span>:localhost:<span class="number">45555</span> <span class="number">121.196</span>.<span class="number">128.188</span> </div><div class="line"><span class="comment">#主机 A :localhost把本地的 21端口(对应ftp服务)映射为 B 121.196.128.188的1234 端口(任意未被占用)，同时 A 监听 B 的1234 端口。 </span></div><div class="line"><span class="comment">#在 B 上用 netstat -al | grep 1234 ，看到这个监听连接。 </span></div><div class="line"><span class="comment">#任何发送到 B 1234 端口的请求将被传送到 A的 21 端口</span></div><div class="line"><span class="comment">#在B上 curl localhost:45555</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ssh -N <span class="operator">-f</span> -L <span class="number">2121</span>:<span class="number">234.234</span>.<span class="number">234.234</span>:<span class="number">21</span> <span class="number">123.123</span>.<span class="number">123.123</span></div><div class="line">ftp localhost:<span class="number">2121</span> <span class="comment"># 现在访问本地192.168.1.100的2121端口，就能连接234.234.234.234的21端口了</span></div></pre></td></tr></table></figure>
+
+<h3 id="curl_数据爬取">curl 数据爬取</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">curl -A <span class="string">"Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"</span> -o page.html -D cookie0001.txt http://www.yueji.com <span class="comment">#模仿运行在Windows 2000上的 IE6.0访问</span></div></pre></td></tr></table></figure>
+
+<h3 id="dig,ping">dig,ping</h3>
+<h2 id="四,bash基础">四,bash基础</h2>
+<h3 id="$@,$#,$*,$0,$1~$n,#?,$?">$@,$#,$*,$0,$1~$n,#?,$?</h3>
+<h3 id="if,for,while,util,select,case">if,for,while,util,select,case</h3>
+<h3 id="read,">read,</h3>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$0</span>   		<span class="comment">#当前执行的shell script文件名（带完整路径） </span></div><div class="line"><span class="variable">$1</span> ~ <span class="variable">$n</span>  	<span class="comment">#依次存放shell script的命令行参数，数值大于9时必须要用{}括起来，比如${10}。命令行参数可以通过shift命令进行位移操作，位置参数根据shift命令指定的数值往前移动，如不指定移动值，则移动1次。例如: </span></div><div class="line"><span class="variable">$*</span>   		<span class="comment">#将所有命令行参数做为一个字符串存入此变量。 </span></div><div class="line"><span class="variable">$@</span>   		<span class="comment">#将所有命令行参数做为一个字符串数组，每个参数为一个成员变量，存入此变量。 </span></div><div class="line"><span class="variable">$#</span>   		<span class="comment">#命令行参数的个数。 </span></div><div class="line"><span class="variable">$?</span>   		<span class="comment">#上一条命令执行后的返回码。 </span></div><div class="line"><span class="variable">$ </span>    		<span class="comment">#当前执行的shell script进程编号。 </span></div><div class="line"><span class="variable">$!</span>   		<span class="comment">#上一个后台程序的进程编号。 </span></div><div class="line"><span class="variable">$_</span>   		<span class="comment">#script执行时，存放bash的绝对路径;bash交互时，存放上一个命令最后一个命令行参数;邮件检测时，存放邮件文件名</span></div></pre></td></tr></table></figure>
+
+<h3 id="条件判断">条件判断</h3>
+<p>数值判断，仅支持整型</p>
+<pre><code>    [ n1 <span class="operator">-eq</span> n2 ]   <span class="comment">#判断n1==n2</span>
+    [ n1 -ge n2 ]   <span class="comment">#判断n1&gt;=n2</span>
+    [ n1 <span class="operator">-gt</span> n2 ]   <span class="comment">#判断n1&gt;n2</span>
+    [ n1 -le n2 ]   <span class="comment">#判断n1&lt;=n2</span>
+    [ n1 <span class="operator">-lt</span> n2 ]   <span class="comment">#判断n1&lt;n2</span>
+    [ n1 <span class="operator">-ne</span> n2 ]   <span class="comment">#判断n1!=n2</span>
+</code></pre><p>字串判断</p>
+<pre><code>    <span class="attr_selector">[ str1 = str2 ]</span>   
+    <span class="attr_selector">[ str1 != str2 ]</span>   
+    <span class="attr_selector">[ str1 &lt; str2 ]</span>   
+    <span class="attr_selector">[ str1 &gt; str2 ]</span>   
+    <span class="attr_selector">[ -n str1 ]</span>   #判断<span class="tag">str1</span>长度是否非0   
+    <span class="attr_selector">[ -z str1 ]</span>   #判断<span class="tag">str1</span>长度是否为0 
+</code></pre><p>文件判断</p>
+<pre><code>    [ -d <span class="built_in">file</span> ]   <span class="comment">#判断目录file是否存在</span>
+    [ -e <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在</span>
+    [ -f <span class="built_in">file</span> ]   <span class="comment">#判断文件file是否存在</span>
+    [ -r <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在并可读</span>
+    [ -s <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在并非空</span>
+    [ -w <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在并可写</span>
+    [ -x <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在并可执行</span>
+    [ -O <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在并属于当前用户</span>
+    [ -G <span class="built_in">file</span> ]   <span class="comment">#判断file是否存在且默认组于当前用户所属组是否相同</span>
+    [ file1 -nt file2 ]   <span class="comment">#判断file1是否比file2新</span>
+    [ file1 -ot file2 ]   <span class="comment">#判断file1是否比file2旧</span>
+</code></pre><p>复合判断</p>
+<pre><code>    -<span class="operator">a</span>  与操作，例如：[ -e <span class="built_in">file</span> -<span class="operator">a</span> -r <span class="built_in">file</span> ]
+    -o  或操作，例如：[ -e <span class="built_in">file</span> -o -r <span class="built_in">file</span> ]   
+</code></pre><h2 id="五,bash脚本">五,bash脚本</h2>
+<ul>
+<li>1.服务器监控脚本 </li>
+<li>2.数据库备份脚本 </li>
+<li>3.日志操作脚本 </li>
+<li>4.批量生成linux所有命令帮助文档  </li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `<span class="built_in">echo</span> <span class="variable">$PATH</span> |tr <span class="string">':'</span> <span class="string">'\n'</span>|grep -v <span class="string">"yueji"</span>|grep -v <span class="string">"home"</span>`; <span class="keyword">do</span> man `ls <span class="variable">$i</span>`|col -b  &gt;&gt; cmd.man ;<span class="keyword">done</span> <span class="number">2</span>&gt;/dev/null    <span class="comment">#将所有的linux命令man文档保存下来</span></div><div class="line"><span class="comment">###</span></div><div class="line"><span class="keyword">for</span> i <span class="keyword">in</span> `<span class="built_in">echo</span> <span class="variable">$PATH</span> |tr <span class="string">':'</span> <span class="string">'\n'</span>|grep -v <span class="string">"yueji"</span>|grep -v <span class="string">"home"</span>`; <span class="keyword">do</span> man `ls <span class="variable">$i</span>`|col -b | ps2pdf - &gt;&gt; man.pdf; <span class="keyword">done</span> <span class="number">2</span>&gt;/dev/null</div><div class="line"><span class="comment">###</span></div><div class="line">man ls | col -b &gt; ls.man.txt</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2013/02/11/git-help/">git使用帮助</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2012/07/10/show-busy-java-threads/">shell命令排查Java的CPU性能问题</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2013/02/07/linux-share/">
+                  http://lawrence-zxc.github.io/2013/02/07/linux-share/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Linux/">Linux</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2013/02/11/git-help/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2012/07/10/show-busy-java-threads/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2013/02/07/linux-share/" data-title="Linux Shell编程分享总结" data-url="http://lawrence-zxc.github.io/2013/02/07/linux-share/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>5</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>13</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+      </li>
+    
+      <li>
+        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/18/spring-mvc-1/">SpringMVC中约定优于配置</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>
