@@ -1,0 +1,425 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>git使用帮助 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="git使用帮助"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-02-11T08:09:32.000Z"><a href="/2011/02/11/git-help/">2月 11 2011</a></time>
+      
+      
+  
+    <h1 class="title">git使用帮助</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="使用http协议">使用http协议</h3>
+<p>对于较新版本的git，比如1.7.9以上，我们推荐使用http协议来访问git仓库，不需配置ssh key，使用注册用户名和密码就可以访问。</p>
+<p>使用git credential-cache来记住用户名和密码：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config <span class="subst">--</span><span class="built_in">global</span> credential<span class="built_in">.</span>helper <span class="keyword">cache</span></div></pre></td></tr></table></figure>
+
+<p>git<br>如果需要设置cache的时间，设置记住用户名和密码的时间(秒为单位)：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> credential.helper <span class="string">'cache --timeout=10000000'</span></div></pre></td></tr></table></figure>
+
+<p>git默认的postbuffer是比较小的，在push一个大的commit会出现错误，设置postbuffer，相关链接看<a href="http://stackoverflow.com/questions/2702731/git-fails-when-pushing-commit-to-github" target="_blank" rel="external">这里</a>：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git config --<span class="keyword">global</span> http.postBuffer <span class="number">524288000</span></div></pre></td></tr></table></figure>
+
+<p>在使用多个账户的情况下，为了避免混淆用户，可以使用@yourname来强制指定，比如：</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">git clone http<span class="variable">s:</span>//Lawrence-zxc@github.<span class="keyword">com</span>/Lawrence-zxc/github.git</div></pre></td></tr></table></figure>
+
+<h3 id="管理ssh_key">管理ssh key</h3>
+<p>ssh 公钥密钥对是一切安全的基础，就像第一道防盗门。Github出于安全的考虑，一概通过ssh协议交换数据，保护好ssh密钥是一个程序员应该有的安全意识，希望您通过<code>1password</code>之类的工具妥善保存，此外最好能定期的更新密钥。</p>
+<p>多人共用密钥是严格不支持的！</p>
+<p>如果您第一次使用，按照以下的方式配置ssh密码：</p>
+<p>快速入门：</p>
+<p>如果您使用任何类unix系统，第一次配置 ssh 公钥密钥，请按照步骤，复制灰色背景字符，在终端执行命令，和编辑文件</p>
+<p>如果不存在<code>~/.ssh/id_rsa</code>，执行以下命令，生成 ssh 密钥</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span></div><div class="line">cat ~/.ssh/id_rsa.pub</div></pre></td></tr></table></figure>
+
+<p>点击ssh public key 管理，输入标识保存公钥</p>
+<p>[可选]如果你要生成特定 ssh 密钥只用于github（是第一步的另外可选方案）</p>
+<p>执行以下命令，生成 ssh 密钥, 保存在 <code>~/.ssh/github.com_rsa</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">ssh-keygen -t rsa  -N <span class="string">''</span> <span class="operator">-f</span> ~/.ssh/github.com_rsa;</div></pre></td></tr></table></figure>
+
+<p>编辑 ssh 客户端配置文件 <code>~/.ssh/config</code>，使用您熟悉的编辑器，在后面添加</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Host github.com</div><div class="line"> User </div><div class="line"> IdentityFile ~/.ssh/github.com_rsa</div><div class="line"> PreferredAuthentications publickey</div></pre></td></tr></table></figure>
+
+
+<p>查看 ssh 公钥，使用 cat 命令，或者用编辑器打开，请复制 ssh 公钥的文本内容</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">cat ~/.ssh/github.com_rsa.pub</div></pre></td></tr></table></figure>
+
+<p>点击ssh public key 管理，输入标识保存公钥</p>
+<p>ssh 公钥配置之后就可以长期使用了，请保护好密钥。点击创建仓库，详细仓库说明有助于推广</p>
+<p>你已经可以使用 github 来托管代码了，以下是示范的操作，详细信息请开始git的学习</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your_name/repo_name</div><div class="line"><span class="variable">$ </span>cd repo_name;</div><div class="line"><span class="variable">$ </span>vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span> .</div><div class="line"><span class="variable">$ </span>git push -u origin master</div></pre></td></tr></table></figure>
+
+
+<p>配置 user.name, user.mail ，两者对后台统计，信息push有重要的作用，选择您注册的用户名和email按照下面配置</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">$ git config --global <span class="literal">user</span>.name <span class="string">"your_name"</span></div><div class="line">$ git config --global <span class="literal">user</span>.email <span class="string">"your_email"</span></div></pre></td></tr></table></figure>
+
+
+<p>如果不想 global，在每个仓库里面执行 git config ，去掉 —global 参数</p>
+<h3 id="管理仓库">管理仓库</h3>
+<p>仓库是开发的基础容器，一切活动都源于仓库。如果您想让别人知道您的仓库，最好是<br>良好的命名，简单概要。<br>适当的注释，让人知道您的仓库做什么的，解决什么问题。<br>最重要的当然是不断的开发成为优秀的项目。<br>仓库除了代码之外，其他的数据都是被严格限制的，您务必理解这一点。</p>
+<p>clone·push·pull代码</p>
+<figure class="highlight git"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$ </span>git clone git<span class="variable">@github</span>.<span class="symbol">com:</span>your/repo</div><div class="line"><span class="variable">$ </span>cd repo; vim <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git add <span class="constant">README</span>.md</div><div class="line"><span class="variable">$ </span>git commit -m <span class="string">"init README.md"</span></div><div class="line"><span class="variable">$ </span>git push -u origin master</div><div class="line"><span class="variable">$ </span>git pull</div></pre></td></tr></table></figure>
+
+<h3 id="git外部学习资源">git外部学习资源</h3>
+<ul>
+<li>Git Official Site<a href="http://book.git-scm.com/" target="_blank" rel="external">http://book.git-scm.com/</a></li>
+<li>Git Community Book 中文版<a href="http://gitbook.liuhui998.com/index.html" target="_blank" rel="external">http://gitbook.liuhui998.com/index.html</a></li>
+<li>Pro Git 简体中文版<a href="http://git.oschina.net/progit/" target="_blank" rel="external">http://git.oschina.net/progit/</a></li>
+<li>Git权威指南 相关blog<a href="http://www.worldhello.net/" target="_blank" rel="external">http://www.worldhello.net/</a></li>
+<li>Markdown 语法<a href="http://qingbo.net/picky/502-markdown-syntax.html" target="_blank" rel="external">http://qingbo.net/picky/502-markdown-syntax.html</a></li>
+<li>假如你没什么事情可以做了，还可以看看<a href="http://blog.gitshell.com/" target="_blank" rel="external">http://blog.gitshell.com/</a></li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2011/02/12/git-pro/">Git配置和常用命令</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2011/01/12/spring-mvc-1/">SpringMVC中约定优于配置</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2011/02/11/git-help/">
+                  http://lawrence-zxc.github.io/2011/02/11/git-help/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Linux/">Linux</a>, <a href="/tags/Git/">Git</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2011/02/12/git-pro/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2011/01/12/spring-mvc-1/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2011/02/11/git-help/" data-title="git使用帮助" data-url="http://lawrence-zxc.github.io/2011/02/11/git-help/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>14</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>java中的transient, volatile, strictfp关键字用法 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="java中的transient, volatile, strictfp关键字用法"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2010-10-11T08:53:37.000Z"><a href="/2010/10/11/transient-volatile-strictfp/">10月 11 2010</a></time>
+      
+      
+  
+    <h1 class="title">java中的transient, volatile, strictfp关键字用法</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="Volatile_-_修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。">Volatile - 修饰符告诉编译器被volatile修饰的变量可以被程序的其他部分改变。在多线程程序中，有时两个或更多地线程共享一个相同的实例变量。考虑效率问题，每个线程可以自己保存该共享变量的私有拷贝。实际的变量副本在不同的时候更新，比如当进入synchronized方法时。</h3>
+<p>该变量声明为volatile（不稳定的），这就指示JVM，这个变量是不稳定的，每次使用它都到主存中进行读取。一般说来，多任务环境下各任务间共享的标志都应该加volatile修饰。</p>
+<p>volatile修饰变量。在每次被线程访问时，都强迫从共享内存中重读该成员变量的值。而且，当成员变量发生变化时，强迫线程将变化值回写到共享内存。这样在任何时刻，两个不同的线程总是看到某个成员变量的同一个值。</p>
+<p>Reference: </p>
+<p><a href="http://developer.51cto.com/art/201105/264855.htm" target="_blank" rel="external">http://developer.51cto.com/art/201105/264855.htm</a></p>
+<p><a href="http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html" target="_blank" rel="external">http://www.cnblogs.com/aigongsi/archive/2012/04/01/2429166.html</a></p>
+<h3 id="Strictfp_-_确保浮点运算，其意思是FP-strict，即_strict_float_point_(精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。">Strictfp - 确保浮点运算，其意思是FP-strict，即 strict float point (精确浮点)，也就是说精确浮点的意思。在java虚拟机进行浮点运算时，如果没有指定strictfp关键字时，Java的编译器以及运行环境在对浮点数的表达式是采取一种近似于我行我素的行为来完成这些操作，以至于得到的结果往往无法令你满意。而一旦使用了strictfp来声明一个类，借口或者方法时，那么所声明的范围内java的编译器以及运行环境会完全依照浮点规范IEEE-754来执行。</h3>
+<p>你可以将一个类、接口以及方法声明为strictfp，但是不允许对接口中的方法以及构造函数声明strictfp关键字。</p>
+<h3 id="native_关键字">native 关键字</h3>
+<p>native是方法修饰符。Native方法是由另外一种语言（如c/c++，FORTRAN，汇编）实现的本地方法。因为在外部实现了方法，所以在java代码中，就不需要声明了，有点类似于借口方法。Native可以和其他一些修饰符连用，但是abstract方法和Interface方法不能用native来修饰。</p>
+<p>为什么需要使用native method？请参考：<br><a href="http://www.javaeye.com/topic/72543" target="_blank" rel="external">http://www.javaeye.com/topic/72543</a> java Native Method初涉  </p>
+<h3 id="Transient_-_声明一个实例变量，当对象存储或序列化时，它的值不需要维持">Transient - 声明一个实例变量，当对象存储或序列化时，它的值不需要维持</h3>
+<p>Java的serialization提供了一种持久化对象实例的机制。当持久化对象时，可能有一个特殊的对象数据成员，我们不想<br>用serialization机制来保存它。为了在一个特定对象的一个域上关闭serialization，可以在这个域前加上关键字transient。<br>transient是Java语言的关键字，用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候，transient型变量的值不包括在串行化的表示中，然而非transient型的变量是被包括进去的。</p>
+<p>Reference:</p>
+<p><a href="http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html" target="_blank" rel="external">http://www.blogjava.net/fhtdy2004/archive/2009/06/20/286112.html</a></p>
+<h4 id="1-transient的作用及使用方法">1.transient的作用及使用方法</h4>
+<p>我们都知道一个对象只要实现了Serilizable接口，这个对象就可以被序列化，java的这种序列化模式为开发者提供了很多便利，我们可以不必关系具体序列化的过程，只要这个类实现了Serilizable接口，这个类的所有属性和方法都会自动序列化。<br>然而在实际开发过程中，我们常常会遇到这样的问题，这个类的有些属性需要序列化，而其他属性不需要被序列化，打个比方，如果一个用户有一些敏感信息（如密码，银行卡号等），为了安全起见，不希望在网络操作（主要涉及到序列化操作，本地序列化缓存也适用）中被传输，这些信息对应的变量就可以加上transient关键字。换句话说，这个字段的生命周期仅存于调用者的内存中而不会写到磁盘里持久化。<br>总之，java 的transient关键字为我们提供了便利，你只需要实现Serilizable接口，将不需要序列化的属性前添加关键字transient，序列化对象的时候，这个属性就不会序列化到指定的目的地中。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileNotFoundException;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.Serializable;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @description</span> 使用transient关键字不序列化某个变量 </div><div class="line"> *        注意读取的时候，读取数据的顺序一定要和存放数据的顺序保持一致 </div><div class="line"> *         </div><div class="line"> *<span class="javadoctag"> @author</span> zxc </div><div class="line"> *<span class="javadoctag"> @date</span>  2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransientTest</span> </span>{  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {  </div><div class="line">          </div><div class="line">        User user = <span class="keyword">new</span> User();  </div><div class="line">        user.setUsername(<span class="string">"zxc"</span>);  </div><div class="line">        user.setPasswd(<span class="string">"123456"</span>);  </div><div class="line">          </div><div class="line">        System.out.println(<span class="string">"read before Serializable: "</span>);  </div><div class="line">        System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">        System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">          </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectOutputStream os = <span class="keyword">new</span> ObjectOutputStream(  </div><div class="line">                    <span class="keyword">new</span> FileOutputStream(<span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            os.writeObject(user); <span class="comment">// 将User对象写进文件  </span></div><div class="line">            os.flush();  </div><div class="line">            os.close();  </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectInputStream is = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(  </div><div class="line">                    <span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            user = (User) is.readObject(); <span class="comment">// 从流中读取User的数据  </span></div><div class="line">            is.close();  </div><div class="line">              </div><div class="line">            System.out.println(<span class="string">"\nread after Serializable: "</span>);  </div><div class="line">            System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">            System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">              </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (ClassNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">    }  </div><div class="line">}  </div><div class="line">  </div><div class="line">class User implements Serializable {  </div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">9294180014912103005</span>L;    </div><div class="line">      </div><div class="line">    <span class="keyword">private</span> String username;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String passwd;  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getUsername</span>() {  </div><div class="line">        <span class="keyword">return</span> username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUsername</span>(String username) {  </div><div class="line">        <span class="keyword">this</span>.username = username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getPasswd</span>() {  </div><div class="line">        <span class="keyword">return</span> passwd;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPasswd</span>(String passwd) {  </div><div class="line">        <span class="keyword">this</span>.passwd = passwd;  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>输出为:</p>
+<pre><code>    <span class="built_in">read</span> <span class="keyword">before</span> Serializable:   
+    username: zxc  
+    password: <span class="number">123456</span>  
+
+    <span class="built_in">read</span> <span class="keyword">after</span> Serializable:   
+    username: zxc  
+    password: <span class="constant">null</span>
+</code></pre><p>密码字段为null，说明反序列化时根本没有从文件中获取到信息。</p>
+<h4 id="2-_transient使用小结">2. transient使用小结</h4>
+<ul>
+<li>一旦变量被transient修饰，变量将不再是对象持久化的一部分，该变量内容在序列化后无法获得访问。</li>
+<li>transient关键字只能修饰变量，而不能修饰方法和类。注意，本地变量是不能被transient关键字修饰的。变量如果是用户自定义类变量，则该类需要实现Serializable接口。</li>
+<li>被transient关键字修饰的变量不再能被序列化，一个静态变量不管是否被transient修饰，均不能被序列化。<br>第三点可能有些人很迷惑，因为发现在User类中的username字段前加上transient关键字后，程序运行结果依然不变，即static类型的username也读出来为“zxc”了，这不与第三点说的矛盾吗？实际上是这样的：第三点确实没错（一个静态变量不管是否被transient修饰，均不能被序列化），反序列化后类中static型变量username的值为当前JVM中对应static变量的值，这个值是JVM中的不是反序列化得出的，不相信？好吧，下面我来证明：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileNotFoundException;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.Serializable;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @description</span> 使用transient关键字不序列化某个变量 </div><div class="line"> *        注意读取的时候，读取数据的顺序一定要和存放数据的顺序保持一致 </div><div class="line"> *         </div><div class="line"> *<span class="javadoctag"> @author</span> zxc </div><div class="line"> *<span class="javadoctag"> @date</span>  2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransientTest</span> </span>{  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {  </div><div class="line">          </div><div class="line">        User user = <span class="keyword">new</span> User();  </div><div class="line">        user.setUsername(<span class="string">"zxc"</span>);  </div><div class="line">        user.setPasswd(<span class="string">"123456"</span>);  </div><div class="line">          </div><div class="line">        System.out.println(<span class="string">"read before Serializable: "</span>);  </div><div class="line">        System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">        System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">          </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            ObjectOutputStream os = <span class="keyword">new</span> ObjectOutputStream(  </div><div class="line">                    <span class="keyword">new</span> FileOutputStream(<span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            os.writeObject(user); <span class="comment">// 将User对象写进文件  </span></div><div class="line">            os.flush();  </div><div class="line">            os.close();  </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">        <span class="keyword">try</span> {  </div><div class="line">            <span class="comment">// 在反序列化之前改变username的值  </span></div><div class="line">            User.username = <span class="string">"alibaba"</span>;  </div><div class="line">              </div><div class="line">            ObjectInputStream is = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(  </div><div class="line">                    <span class="string">"/home/zxc/user.txt"</span>));  </div><div class="line">            user = (User) is.readObject(); <span class="comment">// 从流中读取User的数据  </span></div><div class="line">            is.close();  </div><div class="line">              </div><div class="line">            System.out.println(<span class="string">"\nread after Serializable: "</span>);  </div><div class="line">            System.out.println(<span class="string">"username: "</span> + user.getUsername());  </div><div class="line">            System.err.println(<span class="string">"password: "</span> + user.getPasswd());  </div><div class="line">              </div><div class="line">        } <span class="keyword">catch</span> (FileNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (IOException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        } <span class="keyword">catch</span> (ClassNotFoundException e) {  </div><div class="line">            e.printStackTrace();  </div><div class="line">        }  </div><div class="line">    }  </div><div class="line">}  </div><div class="line">  </div><div class="line">class User implements Serializable {  </div><div class="line"></div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">9294180014912103005</span>L;    </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String username;  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String passwd;  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getUsername</span>() {  </div><div class="line">        <span class="keyword">return</span> username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setUsername</span>(String username) {  </div><div class="line">        <span class="keyword">this</span>.username = username;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> String <span class="title">getPasswd</span>() {  </div><div class="line">        <span class="keyword">return</span> passwd;  </div><div class="line">    }  </div><div class="line">      </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setPasswd</span>(String passwd) {  </div><div class="line">        <span class="keyword">this</span>.passwd = passwd;  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>输出为:</p>
+<pre><code>    <span class="built_in">read</span> <span class="keyword">before</span> Serializable:   
+    username: zxc  
+    password: <span class="number">123456</span>  
+
+    <span class="built_in">read</span> <span class="keyword">after</span> Serializable:   
+    username: alibaba  
+    password: <span class="constant">null</span>
+</code></pre><p>这说明反序列化后类中static型变量username的值为当前JVM中对应static变量的值，为修改后alibaba，而不是序列化时的值zxc。</p>
+<h4 id="3-_transient使用细节——被transient关键字修饰的变量真的不能被序列化吗？">3. transient使用细节——被transient关键字修饰的变量真的不能被序列化吗？</h4>
+<p>思考下面的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.io.Externalizable;  </div><div class="line"><span class="keyword">import</span> java.io.File;  </div><div class="line"><span class="keyword">import</span> java.io.FileInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.FileOutputStream;  </div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInput;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectInputStream;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutput;  </div><div class="line"><span class="keyword">import</span> java.io.ObjectOutputStream;  </div><div class="line">  </div><div class="line"><span class="javadoc">/** </span></div><div class="line"> *<span class="javadoctag"> @descripiton</span> Externalizable接口的使用 </div><div class="line"> *  </div><div class="line"> *<span class="javadoctag"> @author</span> Alexia </div><div class="line"> *<span class="javadoctag"> @date</span> 2011-12-09 </div><div class="line"> */  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExternalizableTest</span> <span class="keyword">implements</span> <span class="title">Externalizable</span> </span>{  </div><div class="line">  </div><div class="line">    <span class="keyword">private</span> <span class="keyword">transient</span> String content = <span class="string">"是的,我将会被序列化,不管我是否被transient关键字修饰"</span>;  </div><div class="line">  </div><div class="line">    <span class="annotation">@Override</span>  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">writeExternal</span>(ObjectOutput out) <span class="keyword">throws</span> IOException {  </div><div class="line">        out.writeObject(content);  </div><div class="line">    }  </div><div class="line">  </div><div class="line">    <span class="annotation">@Override</span>  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readExternal</span>(ObjectInput in) <span class="keyword">throws</span> IOException,  </div><div class="line">            ClassNotFoundException {  </div><div class="line">        content = (String) in.readObject();  </div><div class="line">    }  </div><div class="line">  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception {  </div><div class="line">          </div><div class="line">        ExternalizableTest et = <span class="keyword">new</span> ExternalizableTest();  </div><div class="line">        ObjectOutput out = <span class="keyword">new</span> ObjectOutputStream(<span class="keyword">new</span> FileOutputStream(  </div><div class="line">                <span class="keyword">new</span> File(<span class="string">"test"</span>)));  </div><div class="line">        out.writeObject(et);  </div><div class="line">  </div><div class="line">        ObjectInput in = <span class="keyword">new</span> ObjectInputStream(<span class="keyword">new</span> FileInputStream(<span class="keyword">new</span> File(  </div><div class="line">                <span class="string">"test"</span>)));  </div><div class="line">        et = (ExternalizableTest) in.readObject();  </div><div class="line">        System.out.println(et.content);  </div><div class="line">  </div><div class="line">        out.close();  </div><div class="line">        in.close();  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>content变量会被序列化吗？好吧，我把答案都输出来了，是的，运行结果就是：</p>
+<pre><code>    是的,我将会被序列化,不管我是否被<span class="keyword">transient</span>关键字修饰
+</code></pre><p>这是为什么呢，不是说类的变量被transient关键字修饰以后将不能序列化了吗？</p>
+<p>我们知道在Java中，对象的序列化可以通过实现两种接口来实现，若实现的是Serializable接口，则所有的序列化将会自动进行，若实现的是Externalizable接口，则没有任何东西可以自动序列化，需要在writeExternal方法中进行手工指定所要序列化的变量，这与是否被transient修饰无关。因此第二个例子输出的是变量content初始化的内容，而不是null。</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2010/10/14/thread-jichu/">线程的使用经验(设置名称、响应中断、使用ThreadLocal)</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2010/04/01/hello-world/">Hello World</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2010/10/11/transient-volatile-strictfp/">
+                  http://lawrence-zxc.github.io/2010/10/11/transient-volatile-strictfp/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2010/10/14/thread-jichu/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2010/04/01/hello-world/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2010/10/11/transient-volatile-strictfp/" data-title="java中的transient, volatile, strictfp关键字用法" data-url="http://lawrence-zxc.github.io/2010/10/11/transient-volatile-strictfp/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>14</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

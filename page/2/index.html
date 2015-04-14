@@ -89,719 +89,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2014-11-20T04:24:18.000Z"><a href="/2014/11/20/openfire/">11月 20 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/20/openfire/">Openfire服务端错误解决</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>最近发现Openfire服务端隔段时间就会报这样的错：<br><img src="/img/openfire1.png"><br>有时候是这样：<br><img src="/img/openfire2.png"></p>
-<p>决定处理一下这个“黑盒”，从异常信息看，这个异常有关socket连接超时或者是连接被重置。查了一下相关问题出现原因：（引）</p>
-<p>常出现的Connection reset by peer: 原因可能是多方面的，不过更常见的原因是:</p>
-<p>服务器的并发连接数超过了其承载量，服务器会将其中一些连接Down掉；<br>客户端断掉连接，而服务器还在给客户端发送数据；<br>该异常在客户端和服务器端均有可能发生，引起该异常的原因有两个，一个是如果一端的Socket被关闭（或主动关闭或者因为异常退出而引起的关闭），另一端仍发送数据，发送的第一个数据包引发该异常(Connect reset by peer)。另一个是一端退出，但退出时并未关闭该连接，另一端如果在从连接中读数据则抛出该异常（Connection reset）。简单的说就是由连接断开后的读和写操作引起的。</p>
-<p>如果频繁出现，就表示很多客户端连接到Apache服务器的响应时间太长了，可能是网络的问题或者服务器性能问题。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Connection timed out:</div></pre></td></tr></table></figure>
-
-<p>连接超时，其实还是找不到已连接的客户端。可能出现原因：客户端网络问题导致连接没断开。</p>
-<p>由于Openfire是基于mina做的socket连接，mina本身封装了socket的各种异常，只剩下ProtocolCodecException、ProtocolEncoderException、ProtocolDecoderException、RecoverableProtocolDecoderException 四种异常，其他都作为运行时异常抛出。</p>
-<p>Openfire的连接管理类是ConnectionHandler，继承了mina的IoHandlerAdapter。通过exceptionCaught方法实现连接过程中的异常处理。</p>
-<p>源码如下(Openfire 3.7.2版本)：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Override</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">exceptionCaught</span>(IoSession session, Throwable cause) <span class="keyword">throws</span> Exception {</div><div class="line">  	<span class="keyword">if</span> (cause <span class="keyword">instanceof</span> IOException) {</div><div class="line">      	<span class="comment">// TODO Verify if there were packets pending to be sent and decide what to do with them</span></div><div class="line">      	Log.info(<span class="string">"ConnectionHandler reports IOException for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> <span class="keyword">if</span> (cause <span class="keyword">instanceof</span> ProtocolDecoderException) {</div><div class="line">      	Log.warn(<span class="string">"Closing session due to exception: "</span> + session, cause);</div><div class="line">      </div><div class="line">      	<span class="comment">// PIO-524: Determine stream:error message.</span></div><div class="line">      	<span class="keyword">final</span> StreamError error;</div><div class="line">      	<span class="keyword">if</span> (cause.getCause() != <span class="keyword">null</span> && cause.getCause() <span class="keyword">instanceof</span> XMLNotWellFormedException) {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.xml_not_well_formed);</div><div class="line">      	} <span class="keyword">else</span> {</div><div class="line">      		error = <span class="keyword">new</span> StreamError(StreamError.Condition.internal_server_error);</div><div class="line">      	}</div><div class="line">      </div><div class="line">      	<span class="keyword">final</span> Connection connection = (Connection) session.getAttribute(CONNECTION);</div><div class="line">      	connection.deliverRawText(error.toXML());</div><div class="line">      	session.close();</div><div class="line">  	}</div><div class="line">  	<span class="keyword">else</span> {</div><div class="line">      	Log.error(<span class="string">"ConnectionHandler reports unexpected exception for session: "</span> + session, cause);</div><div class="line">  	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>可以看出，openfire本身没有处理IO异常，只是打了一下log。这会导致断开的链接发生没断干净的情况。这种情况下面再讨论。</p>
-<p>编写网络程序时需要注意的问题:（引）</p>
-<p>是要正确区分长、短连接。所谓的长连接是指一经建立就永久保持。短连接的情况是，准备数据—&gt;建立连接—&gt;发送数据—&gt;关闭连接。很多的程序员写了多年的网络程序，居然不知道什么是长连接，什么是短连接。</p>
-<p>是对长连接的维护。所谓维护包括两个方面，首先是检测对方的主动断连（即调用 Socket的close方法），其次是检测对方的宕机、异常退出及网络不通。这是一个健壮的通信程序必须具备的。检测对方的主动断连很简单，主要一方主动断连，另一方如果在进行读操作，则此时的返回值只-1，一旦检测到对方断连，则应该主动关闭本端的连接（调用Socket的close方法）。而检测对方的宕机、异常退出及网络不通，常用方法是用“心跳”，也就是双方周期性的发送数据给对方，同时也从对方接收“心跳”，如果连续几个周期都没有收到对方心跳，则可以判断对方宕机、异常退出或者网络不通，此时也需要主动关闭本端连接，如果是客户端可在延迟一定时间后重新发起连接。虽然Socket有一个keep alive选项来维护连接，如果用该选项，一般需要两个小时才能发现对方的宕机、异常退出及网络不通。</p>
-<p>是处理效率问题。不管是客户端还是服务器，如果是长连接一个程序至少需要两个线程，一个用于接收数据，一个用于发送心跳，写数据不需要专门的线程，当然另外还需要一类线程（俗称Worker线程）用于进行消息的处理，也就是说接收线程仅仅负责接收数据，然后再分发给Worker进行数据的处理。如果是短连接，则不需要发送心跳的线程，如果是服务器还需要一个专门的线程负责进行连接请求的监听。这些是一个通信程序的整体要求，具体到你的程序中，就看你如何对程序进行优化了。</p>
-<p>openfire自带了心跳机制，是通过在服务端设置Client Connections –&gt; Idle Connections Policy中的：</p>
-<p>Disconnect  client after they have been idle for [<em>*</em>] seconds<br>mina框架提供了空闲检测功能，这项功能可检测客户端口建立了TCP/IP连接、却不发送任何消息的情况。</p>
-<p>当我们设置了选项时长，openfire会调用mina的session.setIdleTime()方法，在客户端口连接经过指定时长未发送任何消息的情况下触发sessionIdle事件，由sessionIdle()方法处理。</p>
-<p>Openfire can send an XMPP Ping request to clients that are idle, before they are disconnected. Clients must respond to such a request, which allows Openfire to determine if the client connection has indeed been lost. The XMPP specification requires all clients to respond to request. If a client does not support the XMPP Ping request, it must return an error (which in itself is a response too).<br>选项中 Send an XMPP Ping request to idle clients对ConnectionHandler进行了再一次封装，在第一次触发sessionIdle时发送一次ping 消息，迫使客户端进行响应。</p>
-<p>在ConnectionHandler 的sessionIdle()方法中判断当前的idle次数大于1次时将关闭客户端连接。我们设置了idle Time 之后这个idle的检测发生在达到一半时间和达到指定时间，每次检测都会将idle 的次数加1 。 例如我们设置了120s，则mina会在这个时长的一半时间内，60s，发送一个ping包，等待客户端响应，然后在到达指定时长后，客户端仍未发送消息时再发一次。如果两次都没有收到回复，则认为连接断掉了，触发sessionIdle()事件，关闭连接。</p>
-<p>但是两次心跳中间的消息包就会丢失，并且不会抛出异常，因此选择通过消息回执的方式，保证消息的稳定性XEP-0184。</p>
-<p>考虑解决方案：</p>
-<p>在发生Exception后主动关闭连接。<br>心跳机制的设置与优化<br>由于服务端没有断开异常连接，会产生大量的CLOSE_WAIT和FIN_WAIT2状态。可以通过</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -na|grep <span class="number">9090</span>|grep FIN_WAIT2|wc <span class="operator">-l</span></div></pre></td></tr></table></figure>
-
-<p>或者：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">netstat -n | awk <span class="string">'/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'</span></div></pre></td></tr></table></figure>
-
-<p>命令查看。</p>
-<p>返回结果：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">TIME_WAIT <span class="number">1</span></div><div class="line">CLOSE_WAIT <span class="number">87</span></div><div class="line">FIN_WAIT1 <span class="number">4</span></div><div class="line">ESTABLISHED <span class="number">377</span></div><div class="line">FIN_WAIT2 <span class="number">3305</span></div></pre></td></tr></table></figure>
-
-<p>解决方案：<br>为 FIN_WAIT2 增加超时机制<br>CLOSE_WAIT缩短keepAlive时间<br>修改linux系统内核参数：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/sysctl.conf</div></pre></td></tr></table></figure>
-
-<p>加入以下数据：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">net.ipv4.tcp_keepalive_time = <span class="number">30</span></div><div class="line">net.ipv4.tcp_keepalive_probes = <span class="number">2</span></div><div class="line">net.ipv4.tcp_keepalive_intvl = <span class="number">2</span></div><div class="line">net.ipv4.tcp_fin_timeout = <span class="number">30</span></div></pre></td></tr></table></figure>
-
-<p>设置fin的连接超时时间为30s</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-18T03:13:23.000Z"><a href="/2014/11/18/spring-mvc-1/">11月 18 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/18/spring-mvc-1/">SpringMVC中约定优于配置</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>所谓的约定优于配置就是指在程序开发过程中我们约定好一些规则可以使我们更少的进行配置和代码编写。就这么简单的一句话可能你还不是很懂什么是约定优于配置，没关系，看完后面对SpringMVC的约定优于配置的介绍之后你就会明白了。</p>
-<p>SpringMVC对约定优于配置的支持主要表现在三个方面，<em>Model</em>、<em>View</em>和<em>Controller</em>。</p>
-<h3 id="Model：">Model：</h3>
-<p>SpringMVC对Model的约定优于配置的支持是基于ModelMap的，由于ModelAndView中的Model就是一个ModelMap，所以ModelAndView也是支持的。约定优于配置在Model上的表现是通过ModelMap的addObject方法实现的，当我们需要往ModelMap中添加一个对象的时候，我们可以只添加一个对象，而不指定其对应的属性名称，即调用addObject(Object obj)方法，而不是调用addObject(String attrName, Object obj)方法。这个时候Spring就会根据它自身约定的一套机制给我们一个默认的属性名称。</p>
-<p>Spring的约定是这样的：</p>
-<ul>
-<li>采用这种方式添加的对象不能为null，所以如果添加的对象有可能为null时就不应该使用这种方式，还是使用addObject(String attrName,Object obj)方法指定一个属性名称比较好。</li>
-<li>采用这种方式添加的集合Collection不能为empty，同样如果该Collection有可能为empty的时候就不应该使用这种方式。</li>
-<li>简单对象，当是一个简单对象的时候取该对象的类名称，不包括包名，然后采用JavaBean的属性命名规则来确定属性名称，如添加com.host.app.model.User对象时取的属性名称就是user，添加com.host.app.model.HelloWorld对象时取的属性名称就是helloWorld，添加com.host.app.model.ABCdef对象时取的属性名称就是ABCdef。</li>
-<li>数组，当添加的是一个数组的时候，Spring会取该数组的类型按照规则3取到一个名称作为基名称，之后再加上List后缀作为约定的属性名称。如添加一个Object数组时，Spring约定的属性名称就是objectList，添加一个com.host.app.model.ABCdef数组时，Spring取的属性名称就是ABCdefList。</li>
-<li>集合Collection，当添加的是一个集合的时候，Spring会采用Iterator的方式取该集合的第一个元素类型按照规则3取到一个名称作为基名称，之后再加上List后缀作为约定的名称。如添加一个List时，如果取出的该List的第一个元素是java.lang.Object对象，那么Spring取的属性名称就是objectList；添加一个包含的都是com.host.app.model.User的Set时，Spring取的属性名称就是userList；如果添加的HashSet中同时包含多种类型的对象时就应该使用addObject(String attrName, Object obj)方法指定自己的属性名称，因为HashSet内部的元素是无序的，每次取的第一个元素可能不一样，这也就会导致Spring取的属性名称会不一样。</li>
-</ul>
-<p>看下面一个示例，当我们访问控制器处理方法testModel时，往返回的模型中添加了一个包含User的List对象，这样在ModelAndView内部内置的ModelMap中就会采用约定好的方式取userList为该对象在模型中的属性名称。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> ModelAndView <span class="title">testModel</span>() {  </div><div class="line">   ModelAndView mav = <span class="keyword">new</span> ModelAndView(<span class="string">"modelTest"</span>);  </div><div class="line">   User user = <span class="keyword">new</span> User(<span class="number">1</span>, <span class="string">"zhangsan"</span>);  </div><div class="line">   List&lt;User&gt; list = <span class="keyword">new</span> ArrayList&lt;User&gt;();  </div><div class="line">   list.add(user);  </div><div class="line">   mav.addObject(list);  </div><div class="line">   <span class="keyword">return</span> mav;  </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<h3 id="View：">View：</h3>
-<p>当Controller处理器方法没有返回一个View对象或逻辑视图名称，并且在该方法中没有直接往response的输出流里面写数据的时候，Spring就会采用约定好的方式提供一个逻辑视图名称。这个逻辑视图名称是通过Spring定义的org.springframework.web.servlet.RequestToViewNameTranslator接口的getViewName方法来实现的，我们可以实现自己的RequestToViewNameTranslator接口来约定好没有返回视图名称的时候如何确定视图名称。Spring已经给我们提供了一个它自己的实现，那就是org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator。<br>在介绍DefaultRequestToViewNameTranslator是如何约定视图名称之前我们先来看一下它支持用户定义的属性：</p>
-<ul>
-<li>prefix：前缀，表示约定好的视图名称需要加上的前缀，默认是空串。</li>
-<li>suffix：后缀，表示约定好的视图名称需要加上的后缀，默认是空串。</li>
-<li>separator：分隔符，默认是斜杠“/”。</li>
-<li>stripLeadingSlash：如果首字符是分隔符，是否要去除，默认是true。</li>
-<li>stripTrailingSlash：如果最后一个字符是分隔符，是否要去除，默认是true。</li>
-<li>stripExtension：如果请求路径包含扩展名是否要去除，默认是true。</li>
-<li>urlDecode：是否需要对URL解码，默认是true。它会采用request指定的编码或者ISO-8859-1编码对URL进行解码。</li>
-</ul>
-<p>当我们没有在SpringMVC的配置文件中手动的定义一个名为viewNameTranlator的bean的时候，Spring就会为我们提供一个默认的viewNameTranslator，即DefaultRequestToViewNameTranslator。</p>
-<p>接下来看一下，当Controller处理器方法没有返回逻辑视图名称的时候，DefaultRequestToViewNameTranslator是如何约定视图名称的。DefaultRequestToViewNameTranslator会获取到请求的URI，然后根据提供的属性做一些改造，把改造之后的结果作为视图名称返回。我们以请求路径<em><a href="http://localhost/app/product/index.html" target="_blank" rel="external">http://localhost/app/product/index.html</a></em>为例来说明DefaultRequestToViewNameTranslator是如何工作的。该请求路径对应的请求URI为/product/index.html,我们来看以下几种情况，它分别对应的逻辑视图名称是什么。</p>
-<ul>
-<li>prefix和suffix都存在，其他为默认值是对应返回的逻辑视图名称应该是prefixproduct/indexsuffix。</li>
-<li>stripLeadingSlash和stripExtension都为false，其他默认，这时候对应的逻辑视图名称是/product/index.html。</li>
-<li>都采用默认配置时，返回的逻辑视图名称应该是product/index。</li>
-</ul>
-<p>如果我们的逻辑视图名称都跟请求路径相同或者相关关系是一样的,我们就可以采用Spring为我们事先约定好的逻辑视图名称返回,这可以大大简化我们的开发工作。</p>
-<p>下面是一个在SpringMVC配置文件中配置一个<code>RequestToViewNameTranslator bean</code>的示例,记住,该bean的名称只能为viewNameTranslator,如果不为viewNameTranslator时,Spring还是会使用默认配置的DefaultRequestToViewNameTranslator来约定逻辑视图名称</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">id</span>=<span class="value">"viewNameTranslator"</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"prefix"</span> <span class="attribute">value</span>=<span class="value">"prefix"</span>/&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"suffix"</span> <span class="attribute">value</span>=<span class="value">"suffix"</span>/&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"stripLeadingSlash"</span> <span class="attribute">value</span>=<span class="value">"false"</span>/&gt;</span>  </div><div class="line">    <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"stripExtension"</span> <span class="attribute">value</span>=<span class="value">"false"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="Controller：">Controller：</h3>
-<p>此处讲SpringMVC对约定优于配置的支持是基于注解配置Controller的情况。考虑这样一种情况：定义了一个Controller，名为MyController，然后在MyController类上使用了@Controller注解进行标记，没有类级别的@RequestMapping。MyController中定义了一个处理器方法add，该方法使用了@RequestMapping注解标记。大概就是下面这个样子。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"add"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">add</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"add"</span>;  </div><div class="line">    }     </div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-
-<p>这个时候如果我们需要访问到处理器方法add的话，我们需要请求/add.do，然后有另外一个AnotherController，里面也有一个add方法对应/add.do请求，这个时候如果你再请求/add.do的时候Spring就不知道到底该访问那个方法，然后就会抛出异常，这个时候我们最简单的解决办法就是在MyController上加上类级别的@RequestMapping用以区别，表示请求的路径到底是哪个Controller下面的，类似的情况还有我们会把相关的处理器方法放在一个Controller中，比如UserController下面会有user的add方法，user的del方法等。Spring为我们提供了一种机制可以自动根据我们的Controller类名称来进行请求映射，这是通过在SpringMVC的配置文件中定义一个org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping bean来实现的。通过它的名称我们可以知道ControllerClassNameHandlerMapping就是通过Controller的类名称来进行类级别的请求映射的。使用ControllerClassNameHandlerMapping的默认属性配置的时候Spring是这样来进行请求映射的：</p>
-<ul>
-<li>首先取得去掉包名称的Controller类名称。</li>
-<li>如果该类名称是以Controller结尾，则只取Controller前面的部分，如MyController取My。</li>
-<li>将取到的名称取全部小写，如MyHome取myhome。</li>
-<li>然后将上面取到的名称映射为/name/<em>，如上面取到的名称是myhome，则映射为/myhome/</em>。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"add"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">add</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"add"</span>;  </div><div class="line">    }    </div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-<p>还是这一段代码，当我们使用ControllerClassNameHandlerMapping来进行映射的时候，我们需要访问MyController的处理器方法add的时候就需要请求/my/add.do。<br>ControllerClassNameHandlerMapping支持用户定义如下属性：</p>
-<ul>
-<li>caseSensitive：大小写是否敏感，默认是false，该属性主要是用来生成映射路径的时候匹配大小写是否敏感，如果为true，则只把Controller类名称的首字母小写，其他的保持原样进行请求路径映射，如果为false，则全部小写。basePackage也使用同样的规则，只是basePackage在caseSensitive为true的时候不需要首字母小写。</li>
-<li>basePackage：表示要用于生成路径映射的基包，默认是null，这个时候就采用Controller不包含包名称的类名称来映射，映射规则跟之前介绍的映射规则相同。如果定义了basePackage，假设为com.host.app，这个时候如果Controller类的全名称是com.host.app.abc.edf.MyController，那么映射的路径就是/abc/edf/my/*。</li>
-<li>pathPrefix：表示映射路径的前缀，默认是空串。假设pathPrefix为prefix，basePackage为com.host.app，那么com.host.app.abc.MyController的映射路径就是/prefix/abc/my/*。</li>
-<li>excludedPackages：是数组形式，表示需要把哪些包排除在ControllerClassNameHandlerMapping的映射范围之内。</li>
-<li>excludedClasses：是数组形式，表示需要把哪些类排除在ControllerClassNameHandlerMapping的映射范围之内。</li>
-</ul>
-<p>在下面一个例子就排除了com.host.app.web.mymodule包、com.host.app.web.modulea.MyController和com.host.app.web.moduleb.UserController。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">&lt;bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"&gt;  </div><div class="line">   &lt;property name="order" value="1"/&gt;  </div><div class="line">   &lt;property name="excludedPackages"&gt;  </div><div class="line">       &lt;array&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.mymodule &lt;/value&gt;  </div><div class="line">       &lt;/array&gt;  </div><div class="line">   &lt;/property&gt;  </div><div class="line">   &lt;property name="excludedClasses"&gt;  </div><div class="line">       &lt;array&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.modulea.MyController&lt;/value&gt;  </div><div class="line">          &lt;value&gt;com.host.app.web.moduleb.UserController&lt;/value&gt;  </div><div class="line">       &lt;/array&gt;  </div><div class="line">   &lt;/property&gt;  </div><div class="line">&lt;/bean&gt;</div></pre></td></tr></table></figure>
-
-
-
-<p>使用ControllerClassNameHandlerMapping需要注意的地方：</p>
-<ul>
-<li>需要使用ControllerClassNameHandlerMapping来映射的Controller类上如果加了@RequestMapping注解ControllerClassNameHandlerMapping也是可以进行URL路径映射的。</li>
-<li>使用ControllerClassNameHandlerMapping映射的是类似于<code>/controllerName/*</code>这样的形式，这也就是说只有在处理器方法映射不存在斜杠的时候才可以使用这种形式访问到。看下面一个例子，在下面代码中MyController类能够映射的请求路径是<code>/my/*</code>，这也意味着只有满足/my/*的请求路径才能映射到MyController，才能访问到它里面的处理器方法，所以当请求/my/test1.do的时候毫无疑问可以访问到处理器方法test1，但是当想访问MyController的test2方法，请求/my/test/test2.do的时候由于它不能映射到MyController，所以不能如愿的访问到MyController的test2方法。这也是ControllerClassNameHandlerMapping 一个缺陷。</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyController</span> </span>{  </div><div class="line">   </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test1"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">test1</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"test"</span>;  </div><div class="line">    }  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test/test2"</span>)  </div><div class="line">    <span class="keyword">public</span> String <span class="title">test2</span>() {  </div><div class="line">       <span class="keyword">return</span> <span class="string">"test"</span>;  </div><div class="line">    }      </div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-<ul>
-<li>由于在SpringMVC应用中可以同时定义多个HandlerMapping，这就涉及到一个映射的优先级问题。HandlerMapping都实现了Ordered接口，所以我们可以通过HandlerMapping的order属性来指定匹配映射的先后顺序。我们知道在ViewResolver链中，如果一个逻辑视图被一个ViewResolver解析了之后，该次视图解析就结束了，其他的视图解析器就不能再解析这个视图了，它的order属性是用来定义ViewResolver进行视图解析的先后顺序的。但是HandlerMapping不一样，它是在SpringMVC的配置文件中定义的所有的HandlerMapping都可以进行URL映射，它的order属性是用于指定映射匹配的先后顺序的。看一个例子：</li>
-</ul>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"order"</span> <span class="attribute">value</span>=<span class="value">"1"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span>  </div><div class="line">  </div><div class="line"><span class="tag">&lt;<span class="title">bean</span> <span class="attribute">class</span>=<span class="value">"org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"</span>&gt;</span>  </div><div class="line">   <span class="tag">&lt;<span class="title">property</span> <span class="attribute">name</span>=<span class="value">"order"</span> <span class="attribute">value</span>=<span class="value">"10"</span>/&gt;</span>  </div><div class="line"><span class="tag">&lt;/<span class="title">bean</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-
-<p>我们在SpringMVC的配置文件里面定义了两个HandlerMapping，代码如上所示，由它们的order属性我们知道ControllerClassNameHandlerMapping会先于DefaultAnnotationHandlerMapping进行映射匹配。定义了一个MyTestController，代码如下所示：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@Controller</span>  </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyTestController</span> </span>{  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"mytest/test"</span>)  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span>() {  </div><div class="line">       System.out.println(<span class="string">"--------hello test---------"</span>);  </div><div class="line">    }  </div><div class="line">     </div><div class="line">    <span class="annotation">@RequestMapping</span>(<span class="string">"test"</span>)  </div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test2</span>() {  </div><div class="line">       System.out.println(<span class="string">"--------hello test2---------"</span>);  </div><div class="line">    }  </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>我们知道<code>ControllerClassNameHandlerMapping</code>会把<code>MyTestController</code>映射为<code>“/mytest/*”</code>,按照这种方式我们只能利用<code>/mytest/test.do</code>请求到MyTestController的test2方法,而没法利用<code>/mytest/mytest/test.do</code>请求到test方法。</p>
-<p>而<code>DefaultAnnotationHandlerMapping</code>会把<code>MyTestController</code>的test2方法映射为<code>“/test.do”</code>,把test方法映射为“/mytest/test.do”。而根据Spring定义了多个HandlerMapping就会有多个映射机制存在的这么一个机制我们知道上述几种映射关系都是会存在的。那么这个时候如果我请求/mytest/test.do会请求哪个方法呢?</p>
-<p>我们知道,如果是按照<code>ControllerClassNameHandlerMapping</code>的映射机制会访问MyTestController的test2方法,而按照<code>DefaultAnnotationHandlerMapping</code>的映射机制就会访问MyTestController的test方法;这个时候HandlerMapping的order属性就起作用了,order属性越小的就会先匹配,由上面的配置我们知道<code>ControllerClassNameHandlerMapping</code>的order属性相对较小,所以将使用它的映射URL来匹配这次请求,所以处理的是MyTestController的test2方法。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-12T04:19:34.000Z"><a href="/2014/11/12/ibatis1/">11月 12 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/12/ibatis1/">ibatis中传参$与#区别以及对List的排序</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>开发中ibatis会用到： $ 和 # 符号。</p>
-<p>一、区别</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$aaa$ 输出参数是以字符串方式直接输出 123</div><div class="line"></div><div class="line">#aaa# 输出参数是以Parameter方式输出 @aaa</div></pre></td></tr></table></figure>
-
-<p>二、实例</p>
-<p>SQL :</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">&lt;select id="selectMetaMandao"  parameterClass="java.util.HashMap" resultMap="WaasmetaMandaoMap" &gt;  </div><div class="line">    SELECT $subCategory$ rchannel,sum(mandao) mandao from</div><div class="line">    ( SELECT nvl(channel,'-') channel,ROUND(count(1)*0.1131) mandao  FROM WAAS_VIEW_USER_RESULT a </div><div class="line">    AND not EXISTS (</div><div class="line">    SELECT msgid</div><div class="line">      FROM DT_XMS_MT b</div><div class="line">     WHERE EXISTS</div><div class="line">           (SELECT MSGID FROM WAAS_VIEW_USER_RESULT WHERE STATUS = 'SUCCESS' AND msgid = b.msgid)</div><div class="line">    AND msgid = a.msgid)</div><div class="line">       GROUP BY channel) d LEFT JOIN waas_channel_summary c ON d.channel = c.original_channel </div><div class="line">    &lt;isNotEmpty property="channel"&gt;</div><div class="line">            WHERE c.original_channel LIKE '%'||#channel#||'%' </div><div class="line">     &lt;/isNotEmpty&gt;</div><div class="line">       GROUP BY $subCategory$</div><div class="line">&lt;/select&gt;</div></pre></td></tr></table></figure>
-
-<p>代码 :</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="annotation">@RequestMapping</span>(<span class="string">"queryMeta"</span>)</div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">selectMeta</span>(HttpServletRequest request, HttpServletResponse response) {</div><div class="line">    String channel = request.getParameter(<span class="string">"channel"</span>);</div><div class="line">    Map&lt;String, Object&gt; param = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();</div><div class="line">    <span class="comment">//以参数方式输出, 相当于一个变量 (活的)</span></div><div class="line">    param.put(<span class="string">"channel"</span>, channel); </div><div class="line">    <span class="comment">//以字符串方式输出, 直接输出(死的)</span></div><div class="line">    param.put(<span class="string">"subCategory"</span>, channel == <span class="keyword">null</span> ? <span class="string">"primary_category"</span> : <span class="string">"ORIGINAL_CHANNEL"</span>); </div><div class="line">    List&lt;WAASUserMOTypeResult&gt; data = wumtService.selectMeta(param);</div><div class="line">    <span class="comment">//因为楼上这个List查完之后重新封装的, 所以无序, 要对List里面的对象进行排序, 如下</span></div><div class="line">    Collections.sort(data, <span class="keyword">new</span> Comparator&lt;WAASUserMOTypeResult&gt;() {</div><div class="line">        <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span>(WAASUserMOTypeResult o1, WAASUserMOTypeResult o2) {</div><div class="line">            <span class="keyword">return</span> o2.getShijia() - o1.getShijia(); <span class="comment">//排序字段, 倒序</span></div><div class="line">        }</div><div class="line">    });</div><div class="line">	</div><div class="line">    ......</div><div class="line">	</div><div class="line">    renderJson(response, resultJson.toString());</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>实现效果:</p>
-<p>如果传channel参数, 则根据原始媒体(ORIGINAL_CHANNEL)分组, 不传则根据合并后的大媒体(primary_category) 分组.</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:50:10.000Z"><a href="/2014/11/10/my-java-dev-tools/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>我发现很多人没办法高效地解决问题的关键原因是不熟悉工具，不熟悉工具也还罢了，甚至还不知道怎么去找工具，这个问题就大条了。我想列下我能想到的一个Java程序员会用到的常用工具。</p>
-<p>一、编码工具</p>
-<p> 1.IDE：<a href="http://www.eclipse.org/" target="_blank" rel="external">Eclipse</a>或者<a href="http://www.jetbrains.com/idea/" target="_blank" rel="external">IDEA</a>，熟悉尽可能多的快捷键，《<a href="https://www.google.com/#hl=zh-CN&amp;site=&amp;source=hp&amp;q=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;oq=Eclipse+%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE&amp;aq=f&amp;aqi=g-l1&amp;aql=&amp;gs_l=hp.3..0i13.449l7739l0l7948l53l49l9l4l4l9l278l4511l14j15j7l36l0.&amp;bav=on.2,or.r_gc.r_pw.r_cp.,cf.osb&amp;fp=eef1a08d3fa904e4&amp;biw=1594&amp;bih=858" target="_blank" rel="external">Eclipse常见快捷键列表</a>》</p>
-<p> 2.插件：<br> (1) <a href="http://findbugs.sourceforge.net/" target="_blank" rel="external">Findbugs</a>，在release之前进行一次静态代码检查是必须的<br> (2) <a href="http://www.atlassian.com/software/clover/overview" target="_blank" rel="external">Clover</a>，关心你的单元测试覆盖率<br> (3) <a href="http://checkstyle.sourceforge.net/" target="_blank" rel="external">Checkstyle</a> 代码风格检查</p>
-<p> 3.构建和部署工具:ant或者maven，现在主流都是maven了吧，使用<a href="http://www.sonatype.org/nexus/" target="_blank" rel="external">nexus搭建maven私服</a>，再加上持续集成<a href="http://jenkins-ci.org/" target="_blank" rel="external">jenkins</a>。代码质量不用愁。</p>
-<p> 4.版本管理工具： svn或者git</p>
-<p> 5.<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">diff</a>和<a href="http://www.linuxsky.org/doc/admin/200712/213.html" target="_blank" rel="external">patch</a></p>
-<p> 6.设置你的eclipse或者IDEA，如formatter,save actions以及code template等。代码风格，直接用google的也可以啊。《<a href="http://code.google.com/p/google-styleguide/" target="_blank" rel="external">Google style guide</a>》</p>
-<p> 7.掌握一个文本编辑器，Emacs或者VIM，熟悉常用快捷键。这在你需要在线编辑代码，或者编写其他语言代码时候特别有用。《<a href="http://linuxtoy.org/archives/why-emacs-vim-good.html" target="_blank" rel="external">神器圣战</a>》</p>
-<p>二、JDK相关</p>
-<p>1.jstat : 观察GC情况，如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstat -gcutil pid <span class="number">3078</span></div></pre></td></tr></table></figure>
-
-<p>2.jmap，查看heap情况，如查看存活对象列表：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -histo:live pid |grep com.company |less</div></pre></td></tr></table></figure>
-
-<p>或者dump内存用来分析：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jmap -dump:file=test.bin pid</div></pre></td></tr></table></figure>
-
-<p>3.分析dump的堆文件，可以用jhat:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jhat test.bin</div></pre></td></tr></table></figure>
-
-<p>  分析完成后可以用浏览器查看堆的情况。这个工具的分析结果还比较原始，你还可以用Eclipse MAT插件进行图形化分析，或者IBM的<a href="https://www.ibm.com/developerworks/community/groups/service/html/communityview?communityUuid=4544bafe-c7a2-455f-9d43-eb866ea60091" target="_blank" rel="external">Heap Analyzer</a>.</p>
-<p>4.jvisualvm和jconsole： JVM自带的性能分析和监控工具，怎么用？请自己看<a href="http://docs.oracle.com/javase/6/docs/technotes/guides/visualvm/index.html" target="_blank" rel="external">文档</a>。</p>
-<p>5.jstack：分析线程堆栈，如</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">jstack pid &gt; thread_dump</div></pre></td></tr></table></figure>
-
-<p>查看CPU最高的线程在干什么的方法结合top和jstack：<a href="http://www.iteye.com/topic/1114219" target="_blank" rel="external">http://www.iteye.com/topic/1114219</a></p>
-<p>6.更多JVM工具，参见官方文档：<a href="http://docs.oracle.com/javase/6/docs/technotes/tools/" target="_blank" rel="external">http://docs.oracle.com/javase/6/docs/technotes/tools/</a></p>
-<p>7.学习使用btrace分析java运行时问题。《(Btrace使用简介)[<a href="http://rdc.taobao.com/team/jm/archives/509]》" target="_blank" rel="external">http://rdc.taobao.com/team/jm/archives/509]》</a></p>
-<p>8.GC日志分析工具：GC viewer、GC-console或者自己挑<a href="http://stackoverflow.com/questions/1839599/analyze-gc-logs-for-sun-hotspots-jvm-6" target="_blank" rel="external">这里</a>。</p>
-<p>9.性能分析工具，除了自带的jvisualvm外，还可以用商业的jprofiler。</p>
-<p>10.<a href="http://kenwublog.com/docs/java6-jvm-options-chinese-edition.htm" target="_blank" rel="external">JVM参数大全</a></p>
-<p>11.《<a href="http://hllvm.group.iteye.com/group/topic/27945" target="_blank" rel="external">JVM调优标准参数陷阱</a>》，iteye神贴。</p>
-<p>三、Linux工具</p>
-<p>1.熟悉<a href="http://www.commandlinefu.com/commands/browse/sort-by-votes" target="_blank" rel="external">常用的shell命令</a>，</p>
-<p>2.设置<a href="http://paulkeck.com/ssh/" target="_blank" rel="external">ssh免登陆</a></p>
-<p>3.使用htop替换top。</p>
-<p>4.熟悉下strace,gdb甚至systemtap来分析问题。</p>
-<p>5.熟悉vmstat,iostat,sar等性能统计工具。</p>
-<p>5.自动化部署脚本，<a href="http://docs.fabfile.org/en/1.4.1/index.html" target="_blank" rel="external">py-fabric</a>或者自荐下这个<a href="https://github.com/killme2008/clojure-control" target="_blank" rel="external">clojure-control</a>。</p>
-<p>四、其他</p>
-<p>1.掌握一门脚本语言，<a href="http://python.org/" target="_blank" rel="external">Python</a>或者<a href="http://www.ruby-lang.org/" target="_blank" rel="external">Ruby</a>，高效解决一些需要quick and dirty的任务：比如读写文件、导入导出数据库、网页爬虫等。注意不是python.com，咔咔。</p>
-<p><code>Python</code>推荐<a href="http://woodpecker.org.cn/" target="_blank" rel="external">啄木鸟社区</a>,<code>Ruby</code>推荐<a href="https://ruby-china.org/" target="_blank" rel="external">Ruby China</a></p>
-<p>2.使用Linux或者Mac os系统作为你的开发环境。</p>
-<p>3.升级你的“硬件工具”，双屏大屏显示器、SSD、8G内存甚至更多。</p>
-<p>4.你懂的：<a href="https://code.google.com/p/goagent/" target="_blank" rel="external">https://code.google.com/p/goagent/</a> ; <a href="https://github.com/justjavac/Google-IPs/blob/master/README.md" target="_blank" rel="external">https://github.com/justjavac/Google-IPs/blob/master/README.md</a></p>
-<p>五、如何查找工具？</p>
-<p>1.搜索引擎，google或者baidu，《<a href="http://www.williamlong.info/archives/728.html" target="_blank" rel="external">搜索技巧</a>》</p>
-<p>2.万能的stack overflow：<a href="http://stackoverflow.com/" target="_blank" rel="external">http://stackoverflow.com/</a></p>
-<p>3.虚心问牛人。</p>
-<p>六、最重要的是⋯⋯</p>
-<p>一颗永不停止学习的心。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>更新索引字段会触发索引重建，如果是要大批量修改大数据表的索引字段，速度会很慢，时间大多花在重建索引上了。<br>高效的办法是将索引先unusable，待批次更新修改后再重建（rebuild）索引。<br>整理語法如下,需要注意：</p>
-<pre><code><span class="bullet">1. </span>通过索引判断一个table是否大数据表（大于50M）。
-<span class="bullet">2. </span>对于分区表的索引，需用对不同分区进行重建。
-</code></pre><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">DECLARE</span></span></div><div class="line">    <span class="keyword">CURSOR</span> c1 <span class="keyword">IS</span></div><div class="line">    <span class="keyword">SELECT</span> index_name,PARTITIONED</div><div class="line">    <span class="keyword">FROM</span> user_indexes</div><div class="line">    <span class="keyword">WHERE</span> index_name <span class="keyword">IN</span> (</div><div class="line">            <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> INDEX_NAME</div><div class="line">            <span class="keyword">FROM</span> user_ind_columns</div><div class="line">            <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                <span class="keyword">AND</span> column_name = <span class="string">'COLUMN_NAME'</span> <span class="comment">--更新字段</span></div><div class="line">                <span class="keyword">AND</span> TABLE_NAME <span class="keyword">IN</span> (</div><div class="line">                    <span class="keyword">SELECT</span> segment_name</div><div class="line">                    <span class="keyword">FROM</span> (</div><div class="line">                        <span class="keyword">SELECT</span> segment_name</div><div class="line">                            ,<span class="keyword">SUM</span>(siz_M) <span class="keyword">AS</span> siz_M</div><div class="line">                        <span class="keyword">FROM</span> (</div><div class="line">                            <span class="keyword">SELECT</span> segment_name</div><div class="line">                                ,segment_type</div><div class="line">                                ,bytes / <span class="number">1024</span> / <span class="number">1024</span> <span class="keyword">AS</span> siz_M</div><div class="line">                            <span class="keyword">FROM</span> user_segments</div><div class="line">                            <span class="keyword">WHERE</span> segment_type <span class="keyword">LIKE</span> <span class="string">'TABLE%'</span></div><div class="line">                                <span class="keyword">AND</span> segment_name = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                            )</div><div class="line">                        <span class="keyword">GROUP</span> <span class="keyword">BY</span> segment_name</div><div class="line">                        )</div><div class="line">                    <span class="keyword">WHERE</span> siz_M &gt;= <span class="number">50</span>  <span class="comment">--定义达到50M的表为大数据表</span></div><div class="line">                    )</div><div class="line">            );</div><div class="line">    </div><div class="line">    TYPE IDXINFOREC </div><div class="line">    IS TABLE OF c1%ROWTYPE INDEX BY BINARY_INTEGER; </div><div class="line"></div><div class="line">    idxinfo    c1%ROWTYPE; </div><div class="line">    idxinfolist IDXINFOREC; </div><div class="line">    counter INTEGER; </div><div class="line">    </div><div class="line"><span class="operator"><span class="keyword">BEGIN</span></span></div><div class="line">    counter := <span class="number">0</span>; </div><div class="line"></div><div class="line">    OPEN c1;</div><div class="line">    </div><div class="line">    LOOP </div><div class="line">        FETCH c1 INTO idxinfo; </div><div class="line"></div><div class="line">        IF c1%FOUND THEN </div><div class="line">          counter := counter + 1; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line"></div><div class="line">        idxinfolist(counter) := idxinfo; </div><div class="line"></div><div class="line">        IF c1%NOTFOUND THEN </div><div class="line">          EXIT; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span> </div><div class="line"></div><div class="line">    CLOSE c1; </div><div class="line">    </div><div class="line">    <span class="comment">--1.unusable索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' unusable'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">        </div><div class="line">    <span class="comment">--2.中间执行更新任务</span></div><div class="line">    <span class="comment">-- update something</span></div><div class="line">    <span class="operator"><span class="keyword">COMMIT</span>;</span></div><div class="line">    </div><div class="line">    <span class="comment">--3.重建索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        IF idxinfolist(i).PARTITIONED = 'NO' THEN</div><div class="line">            <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild parallel nologging'</span>;</span></div><div class="line">            </div><div class="line">        ELSE </div><div class="line">            IF idxinfolist(i).PARTITIONED = 'YES' THEN</div><div class="line">                FOR x IN (</div><div class="line">                            <span class="operator"><span class="keyword">SELECT</span> PARTITION_NAME</span></div><div class="line">                            <span class="keyword">FROM</span> user_IND_PARTITIONS</div><div class="line">                            <span class="keyword">WHERE</span> index_name = idxinfolist(i).index_name</div><div class="line">                            <span class="keyword">ORDER</span> <span class="keyword">BY</span> PARTITION_POSITION</div><div class="line">                            ) LOOP</div><div class="line"></div><div class="line">                        <span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild PARTITION '</span> || x.PARTITION_NAME || <span class="string">' parallel nologging'</span>;</div><div class="line">                <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">            <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' noparallel'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line"><span class="operator"><span class="keyword">END</span>;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:35:30.000Z"><a href="/2014/11/10/oracle-partition/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--create tablespaces</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_1 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_1.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_2 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_2.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_3 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_3.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"></div><div class="line"><span class="comment">--create table with partition declaration</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> CUSTOMER</span></div><div class="line">(</div><div class="line">  CUSTOMER_ID <span class="built_in">NUMBER</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span>,</div><div class="line">  CUST_AREA <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  FIRST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  LAST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  PHONE VARCHAR2(<span class="number">15</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  EMAIL VARCHAR2(<span class="number">80</span>),</div><div class="line">  SEX VARCHAR2(<span class="number">10</span>),</div><div class="line">  <span class="keyword">STATUS</span> VARCHAR2(<span class="number">10</span>),</div><div class="line">  CREATE_DATE <span class="built_in">DATE</span></div><div class="line">)</div><div class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> LIST (CUST_AREA) <span class="comment">--partition declaration</span></div><div class="line">(</div><div class="line">  <span class="keyword">PARTITION</span> area_1 <span class="keyword">VALUES</span>(<span class="number">1</span>) <span class="keyword">TABLESPACE</span> cus_area_1,</div><div class="line">  <span class="keyword">PARTITION</span> area_2 <span class="keyword">VALUES</span>(<span class="number">2</span>) <span class="keyword">TABLESPACE</span> cus_area_2,</div><div class="line">  <span class="keyword">PARTITION</span> area_3 <span class="keyword">VALUES</span>(<span class="number">3</span>) <span class="keyword">TABLESPACE</span> cus_area_3</div><div class="line">);</div><div class="line"></div><div class="line"><span class="comment">-- test data</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="string">'geln'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="number">2</span>,<span class="string">'eric'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="string">'tom'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">4</span>,<span class="number">3</span>,<span class="string">'tony'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">commit</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- query by partition</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER <span class="keyword">partition</span> (area_1) ;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="comment">/*+rowid(CUSTOMER)*/</span> ROWID,LAST_NAME,FIRST_NAME,PHONE <span class="keyword">FROM</span> CUSTOMER  <span class="keyword">partition</span> (AREA_1)  <span class="keyword">WHERE</span>  ROWID&gt;=<span class="string">'AAASrfAAIAAAACAAAA'</span> <span class="keyword">AND</span>  ROWID&lt;=<span class="string">'AAASrfAAIAAAACHCcQ'</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- find all partitioin data for a table</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> e.owner,e.segment_name,e.partition_name,o.data_object_id,</span></div><div class="line">    e.RELATIVE_FNO,</div><div class="line">    e.BLOCK_ID MIN_BLOCK,</div><div class="line">    e.BLOCK_ID + e.BLOCKS - <span class="number">1</span> MAX_BLOCK</div><div class="line"><span class="keyword">FROM</span> dba_extents e, dba_objects o</div><div class="line"><span class="keyword">WHERE</span>     e.segment_name = <span class="string">'CUSTOMER'</span>  <span class="comment">-- table name</span></div><div class="line">    <span class="keyword">AND</span> o.object_name = e.segment_name</div><div class="line">    <span class="keyword">AND</span> e.owner = <span class="string">'MASK'</span> <span class="comment">-- schema name</span></div><div class="line">    <span class="keyword">AND</span> o.OWNER = e.owner</div><div class="line">    <span class="keyword">AND</span> NVL (e.partition_name, <span class="number">0</span>) = NVL (o.SUBOBJECT_NAME, <span class="number">0</span>)</div><div class="line">    <span class="keyword">AND</span> o.data_object_id <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>;</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T03:38:10.000Z"><a href="/2014/11/10/xmpp/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/xmpp/">xmpp通信过程分析</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h2 id="XMPP消息格式">XMPP消息格式</h2>
-<p>Jabber/XMPP系统使用XML流在不同实体之间相互传输数据。在两个实体的连接期间，XML流将从一个实体传送到另一个实体。在实体间，有三个顶层的XML元素:，和。每一个都包含属性和子节点。下面将分别描述这些元素。</p>
-<p>1)消息(message)元素：</p>
-<p>一个即时消息系统最基本的功能就是能够在两个用户之间实时交换消息，元素就提供了这个功能。每条消息都有一个或多个属性和子元素。属性“from”和“to”分别表示了消息发送者和接收者的地址。也可以包含一个“type”属性，这给接收者一个提示，这个消息是什么样的消息。表3-1给出了“type”属性的可能取值。中也可以包含“id”属性，用来唯一的标识一个输出消息的响应。</p>
-<p>2)状态(presence)元素:</p>
-<p>元素用来传递一个用户的存在状态的感知信息。用户可以是“available”，要么是“unavailable”，“Hide”等。当用户连接到即时消息服务器后，好友发给他的消息就立即被传递。如果用户没有连接到服务器，好友发给他的消息将被服务器存储起来直到用户连接到服务器。用户通过即时消息客户端自己控制可用性。但是，如果用户断开了同服务器的连接，服务器将发送给订阅了这个用户的存在信息的用户通知他们用户已经不可用。还包含了两个子元素：和。包含了一个对的文本描述。</p>
-<p>3)IQ(Info&lt;Query)元素</p>
-<p>IQ元素是Jabber/XMPP消息协议的第三个顶层元素。IQ代表”Info/Query”，用来发送和获取实体之间的信息。IQ消息是通过“请求/响应”机制在实体间进行交换的。IQ元素用于不同的目的，它们之间通过不同的命名空间来加以区分。在Jabber/XMPP消息协议里有许多的命名空间，但最常用的命名空间是：”jabber:iq:register”,”jabber:iq:auth”,”jabber:iq:roster”。</p>
-<p>上面描述了Jabber协议的三个顶层节点。通过这种格式Jabber消息不仅可以是简单的文本（text），而且可以携带复杂的数据和各种格式的文件，也就是说Jabber不仅可以用在人与人之间的交流，而且可以实现软件与软件或软件与人之间的交流。Jabber的这种功能大大扩展了即时通信的应用范围。</p>
-<h2 id="XMPP通信过程">XMPP通信过程</h2>
-<p>XMPP被设计为能够异步并能快速交换短文的协议，为此客户端和服务器之间存在两条XML流，用于异步通信，流传输的是XML文档。TCP是XMPP的默认承载协议，在客户端到服务器的通信模型下，需要一条TCP链路；在服务器到服务器的通信模式下，需要两条TCP链路以传输两个对端数据。</p>
-<p>XMPP流以<stream>标记开始，以</stream>结束。XMPP流可以视为一个well-form的XML文档，每次传输的是文档的片段，而片段则是well-form的XML标签。</p>
-<p>stream标记的属性如下：<br>to只能用于从客户端到服务器的XML流中。<br>from只能用于从服务器到客户端的XML流中。<br>id只能用于从接收实体到发送实体的XML流中，id必须唯一，用于标记会话。<br>xml:lang只能用于发起方，用于约定语言。如发起方没有携带xml:lang属性，接收方应使用默认语言。<br>version至少在“1.0”以上。</p>
-<p>可以看到客户端和服务器双方都以<stream>标记开始会话，即双方都在传输一个完整的XML文档。以<stream>发起会话后，双方建立TLS安全链路，然后用SASL（稍后说明）认证对方身份，最后绑定资源并开始传输消息报文。</stream></stream></p>
-<p>TLS是SSL的后继者，TLS1.0和SSL3.0非常相似。TLS建立在传输层上，通信双方先用不对称加密算法传输对称加密算法的密钥，然后用对称加密算法加密传输内容。  </p>
-<h3 id="TLS">TLS</h3>
-<p>第1步: 客户端发起连接:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第2步: 服务器向客户端返回一个<stream>标记: </stream></p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">id</span>=<span class="value">'c2s_123'</span> <span class="attribute">from</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第3步: 服务器向客户端发送STARTTLS扩展，并携带认证机制和流特性:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>&gt;</span><span class="tag">&lt;<span class="title">required</span>/&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第4步: 客户端发送STARTTLS给服务器:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第5步: 服务器提示客户端可以继续:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">proceed</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-tls'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第6步: 客户端和服务器尝试在已有的TCP链路上完成TLS握手过程。<br>第7步: 如果TLS握手成功，客户端向服务器发起一个新流:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-<p>第8步: 服务器以一个stream头响应，同时携带可能的流特性: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"3f857b69"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第9步: 客户端继续SASL握手。</p>
-<h3 id="SASL(Simple_Authentication_and_Security_Layer_protocol)">SASL(Simple Authentication and Security Layer protocol)</h3>
-<p>第1步: 客户端向服务器发起流请求: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span> <span class="attribute">to</span>=<span class="value">'maimaijun.com'</span> <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</span></div></pre></td></tr></table></figure>
-
-
-<p>第2步: 服务器向客户端响应stream标记: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span> <span class="attribute">xmlns:stream</span>=<span class="value">"http://etherx.jabber.org/streams"</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:client"</span> <span class="attribute">from</span>=<span class="value">"maimaijun.com"</span> <span class="attribute">id</span>=<span class="value">"9a7eced8"</span> <span class="attribute">xml:lang</span>=<span class="value">"en"</span> <span class="attribute">version</span>=<span class="value">"1.0"</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第3步: 服务器向客户端提示可用的认证方法: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:features</span>&gt;</span><span class="tag">&lt;<span class="title">starttls</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-tls"</span>&gt;</span><span class="tag">&lt;/<span class="title">starttls</span>&gt;</span><span class="tag">&lt;<span class="title">mechanisms</span> <span class="attribute">xmlns</span>=<span class="value">"urn:ietf:params:xml:ns:xmpp-sasl"</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>DIGEST-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>PLAIN<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>ANONYMOUS<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;<span class="title">mechanism</span>&gt;</span>CRAM-MD5<span class="tag">&lt;/<span class="title">mechanism</span>&gt;</span><span class="tag">&lt;/<span class="title">mechanisms</span>&gt;</span><span class="tag">&lt;<span class="title">compression</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/compress"</span>&gt;</span><span class="tag">&lt;<span class="title">method</span>&gt;</span>zlib<span class="tag">&lt;/<span class="title">method</span>&gt;</span><span class="tag">&lt;/<span class="title">compression</span>&gt;</span><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-auth"</span>/&gt;</span><span class="tag">&lt;<span class="title">register</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/features/iq-register"</span>/&gt;</span><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第4步: 客户端选择一种认证方法:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">auth</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span> <span class="attribute">mechanism</span>=<span class="value">'DIGEST-MD5'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第5步: 服务器发送以BASE64编码的验证码给客户端:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cmVhbG09InNvbWVyZWFsbSIsbm9uY2U9Ik9BNk1HOXRFUUdtMmhoIixxb3A9ImF1dGgiLGNoYXJzZXQ9dXRmLTgsYWxnb3JpdGhtPW1kNS1zZXNzCg==<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line">验证码解码后如下:</div><div class="line">realm="somerealm",nonce="OA6MG9tEQGm2hh",qop="auth",charset=utf-8,algorithm=md5-sess</div></pre></td></tr></table></figure>
-
-<p>第6步: 客户端发送以BASE64编码的响应码:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>dXNlcm5hbWU9InNvbWVub2RlIixyZWFsbT0ic29tZXJlYWxtIixub25jZT0iT0E2TUc5dEVRR20yaGgiLGNub25jZT0iT0E2TUhYaDZWcVRyUmsiLG5jPTAwMDAwMDAxLHFvcD1hdXRoLGRpZ2VzdC11cmk9InhtcHAvZXhhbXBsZS5jb20iLHJlc3BvbnNlPWQzODhkYWQ5MGQ0YmJkNzYwYTE1MjMyMWYyMTQzYWY3LGNoYXJzZXQ9dXRmLTgK<span class="tag">&lt;/<span class="title">response</span>&gt;</span></div><div class="line"></div><div class="line">解码后的响应码如下:</div><div class="line">username="somenode",realm="somerealm",nonce="OA6MG9tEQGm2hh",cnonce="OA6MHXh6VqTrRk",nc=00000001,qop=auth,digest-uri="xmpp/example.com",response=d388dad90d4bbd760a152321f2143af7,charset=utf-8</div></pre></td></tr></table></figure>
-
-<p>第7步: 服务器发送另一个以BASE64编码的验证码给客户端: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">challenge</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>&gt;</span>cnNwYXV0aD1lYTQwZjYwMzM1YzQyN2I1NTI3Yjg0ZGJhYmNkZmZmZAo=<span class="tag">&lt;/<span class="title">challenge</span>&gt;</span></div><div class="line"></div><div class="line"> 解码后的验证码:</div><div class="line">   rspauth=ea40f60335c427b5527b84dbabcdfffd</div></pre></td></tr></table></figure>
-
-<p>第8步: 客户端响应验证码: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">response</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第9步: 服务器提示客户端认证通过:  </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">success</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-sasl'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>第10步: 客户端向服务器发起新连接: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">to</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;</div></pre></td></tr></table></figure>
-
-<p>第11步: 服务器响应一个stream头，可能携带特性:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">stream:stream</span></span></div><div class="line">    <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span></div><div class="line">    <span class="attribute">xmlns:stream</span>=<span class="value">'http://etherx.jabber.org/streams'</span></div><div class="line">    <span class="attribute">id</span>=<span class="value">'c2s_345'</span></div><div class="line">    <span class="attribute">from</span>=<span class="value">'example.com'</span></div><div class="line">    <span class="attribute">version</span>=<span class="value">'1.0'</span>&gt;    <span class="tag">&lt;<span class="title">stream:features</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>/&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">session</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-session'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">stream:features</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<h3 id="绑定资源">绑定资源</h3>
-<p>客户端登陆<br>SENT:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"1a58416"</span> <span class="attribute">type</span>=<span class="value">"get"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>RECV:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'5573507c'</span> <span class="attribute">type</span>=<span class="value">'result'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>/&gt;</span><span class="tag">&lt;<span class="title">password</span>/&gt;</span><span class="tag">&lt;<span class="title">resource</span>/&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>注意中间的ID，这个ID是服务器端返回给客户端的验证信息，验证信息一般是以该ID号+用户密码通过SHA1(RFC3174)算法进行操作的。也就是说客户端得到该ID和密码经过SHA1算法加密后返回给服务器。</p>
-<p>SENT(客户端提交字段内容进行验证):<br>文本格式，非加密模式</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">query</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>加密模式</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>javaScript<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line">或者</div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">"ee17dc3f"</span> <span class="attribute">type</span>=<span class="value">"set"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">"jabber:iq:auth"</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;<span class="title">digest</span>&gt;</span>459154dc8ea4a74ba5f692f79393e1c7e9de9fda<span class="tag">&lt;/<span class="title">digest</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>这个digest就是上面经过SHA1算法得出的结果字段;<br>如果客户端发送的字段包括了用户名和IQ-GET的字段，服务器不应该返回错误消息（因为需要服务器判断当前用户名是否在使用），如果服务器不支持可插入的简单认证及密码模块，那么必须返回一个<service-unavailable>的错误;如果客户端企图使用SASL认证但是失败，服务器必须返回<policy-violation>错误信息<br>在认证过程中，jabber:iq:auth命名、用户名和资源是必须要求客户端提供的，而服务器返回的XML流中也必须提供<username>和<resource>这2个元素。</resource></username></policy-violation></service-unavailable></p>
-<p>RECV: </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">id</span>=<span class="value">'jcl_104'</span> <span class="attribute">type</span>=<span class="value">'result'</span>/&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">presence</span>&gt;</span><span class="tag">&lt;<span class="title">c</span> <span class="attribute">node</span>=<span class="value">"http://exodus.jabberstudio.org/caps"</span> <span class="attribute">ver</span>=<span class="value">"0.9.1.0"</span> <span class="attribute">xmlns</span>=<span class="value">"http://jabber.org/protocol/caps"</span>/&gt;</span><span class="tag">&lt;<span class="title">status</span>&gt;</span>Available<span class="tag">&lt;/<span class="title">status</span>&gt;</span><span class="tag">&lt;<span class="title">priority</span>&gt;</span>1<span class="tag">&lt;/<span class="title">priority</span>&gt;</span><span class="tag">&lt;/<span class="title">presence</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'1a58416'</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:auth'</span>&gt;</span><span class="tag">&lt;<span class="title">username</span>&gt;</span>mbed<span class="tag">&lt;/<span class="title">username</span>&gt;</span><span class="tag">&lt;<span class="title">password</span>&gt;</span>mirror<span class="tag">&lt;/<span class="title">password</span>&gt;</span><span class="tag">&lt;<span class="title">resource</span>&gt;</span>flash_as3<span class="tag">&lt;/<span class="title">resource</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:client'</span> <span class="attribute">type</span>=<span class="value">"get"</span> <span class="attribute">to</span>=<span class="value">"muc.maimaijun.com"</span>&gt;</span><span class="tag">&lt;<span class="title">query</span> <span class="attribute">xmlns</span>=<span class="value">'jabber:iq:mucAnonyRoom'</span> <span class="attribute">actionType</span>=<span class="value">'getRoomIndex'</span>&gt;</span><span class="tag">&lt;<span class="title">item</span>&gt;</span><span class="tag">&lt;<span class="title">customerIndex</span>&gt;</span>1<span class="tag">&lt;/<span class="title">customerIndex</span>&gt;</span><span class="tag">&lt;/<span class="title">item</span>&gt;</span><span class="tag">&lt;/<span class="title">query</span>&gt;</span><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>登录结果<br>成功</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>/&gt;</span></div></pre></td></tr></table></figure>
-
-<p>失败 – 认证失败，可能是用户名密码不匹配或数字验证错误</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'401'</span> <span class="attribute">type</span>=<span class="value">'auth'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-authorized</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>失败 – 资源冲突/错误</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'409'</span> <span class="attribute">type</span>=<span class="value">'cancel'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">conflict</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>失败 – 没有提供需要验证的字段</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'error'</span> <span class="attribute">id</span>=<span class="value">'auth2'</span>&gt;</span></div><div class="line"> <span class="tag">&lt;<span class="title">error</span> <span class="attribute">code</span>=<span class="value">'406'</span> <span class="attribute">type</span>=<span class="value">'modify'</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="title">not-acceptable</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-stanzas'</span>/&gt;</span></div><div class="line"> <span class="tag">&lt;/<span class="title">error</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<p>客户端连接成功后使用iq(Info Query)查询服务器资源。</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'set'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">resource</span>&gt;</span>someresource<span class="tag">&lt;/<span class="title">resource</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span>  </div><div class="line">服务器确认客户端要绑定的资源后，必须返回一个iq标签。</div><div class="line"></div><div class="line"><span class="tag">&lt;<span class="title">iq</span> <span class="attribute">type</span>=<span class="value">'result'</span> <span class="attribute">id</span>=<span class="value">'bind_2'</span>&gt;</span> <span class="tag">&lt;<span class="title">bind</span> <span class="attribute">xmlns</span>=<span class="value">'urn:ietf:params:xml:ns:xmpp-bind'</span>&gt;</span> <span class="tag">&lt;<span class="title">jid</span>&gt;</span>somenode@example.com/someresource<span class="tag">&lt;/<span class="title">jid</span>&gt;</span> <span class="tag">&lt;/<span class="title">bind</span>&gt;</span> <span class="tag">&lt;/<span class="title">iq</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<h3 id="XML短语（Stanzas）">XML短语（Stanzas）</h3>
-<p>有三种短语——<message>（消息）、<presence>（在线状态）和<iq>（信息查询），三种短语都有共同属性，如下。</iq></presence></message></p>
-<ol>
-<li>Message语义<br>message短语可视为一种推送机制——某个实体向另一个实体推送信息。所有message短语必须携带to属性，以标明接收者。服务器收到message短语后，或路由或投递给接收者。</li>
-<li>Presence语义<br>presence可被视为一个基本的广播或“发布-订阅”机制，多个实体接收他们订阅的关于某个实体的信息。</li>
-<li>IQ语义<br>Info/Query，或IQ，是一种”请求-响应“机制，与HTTP类似。IQ使一个实体能够向另一个实体发起请求，请求/响应报文以id属性标示。IQ交互通常以get/result和set/result模式执行。</li>
-<li>基于XMPP的即时信使扩展<br>XMPP标准由XMPP Core(RFC3920)、XMPP IM(RFC3921)、XMPP CPIM(RFC3922)(映射XMPP到IETF的CPIM规范)、XMPP E2E(RFC3922)(端到端信号和对象加密)、XMPP URN(RFC4854)(基于XMPP扩展的Uniform Resource Name树)、XMPP ENUM(RFC4979)(在IANA注册的枚举服务)、XMPP URI(RFC5122)(对RFC4622的勘误)。本文只覆盖了XMPP Core和XMPP IM，其中XMPP IM由XMPP Core扩展而得。</li>
-</ol>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-10-29T09:20:33.000Z"><a href="/2014/10/29/nginx-upstream/">10月 29 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/10/29/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>在需要使用负载均衡的server中增加</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
-
-<p>每个设备的状态设置为:</p>
-<ul>
-<li>1.down 表示单前的server暂时不参与负载</li>
-<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
-<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
-<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
-<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2014-10-28T08:33:28.000Z"><a href="/2014/10/28/jvm-strace/">10月 28 2014</a></time>
       
       
@@ -923,6 +210,516 @@
 
 
 
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-23T06:14:35.000Z"><a href="/2014/10/23/qiu/">10月 23 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/23/qiu/">秋</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="秋意渐浓">秋意渐浓</h3>
+<center><br>    暑尽秋意浓，<br>    翘望满目空，<br>    西子斜阳里，<br>    游客独匆匆。<br></center>
+
+<p><br></p>
+<h3 id="晚秋">晚秋</h3>
+<center><br>    秋风起，满地黄，<br>    朝为晨露暮凝霜，<br>    偏爱秋风抚落叶，<br>    不喜叶落树上光。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-14T09:40:04.000Z"><a href="/2014/10/14/blog2/">10月 14 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/14/blog2/">RESTful Web Services中API的设计原则</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
+<p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
+<pre><code><span class="title">RESTful</span> Web Services Cookbook
+想要看书的话，可以买本来看，从名字就知道，这是一本手册，里面有设计API需要注意的所有方面。
+
+RESTful API Design
+Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子。
+</code></pre><p>豆瓣的API<br>    另外就是可以参考一下现有的开放平台API的设计，我比较喜欢设计，条理清晰，也很漂亮。apigee的视频中举的例子比较多的是facebook、twitter、LinkedIn等网站，参考已经实现的设计也是一个很好的学习方法。</p>
+<p>API Design Tips</p>
+<p>每个实体对象仅需要两个URL </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books     # <span class="keyword">for</span> Collections</div><div class="line">/books/<span class="number">2</span>   # <span class="keyword">for</span> Single Object</div></pre></td></tr></table></figure>
+
+<p>每个对象仅需要两个url，第一个是获取对象的集合，第二个是获取单个对象</p>
+<p>使用名词代替动词</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>         # Good :)</div><div class="line">/getBook?id=<span class="number">2</span>    # Bad :(</div></pre></td></tr></table></figure>
+
+<p>正确使用HTTP方法 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">GET     # Read</div><div class="line">POST    # Create</div><div class="line">PUT     # Update</div><div class="line">DELETE  # Delete</div></pre></td></tr></table></figure>
+
+<p>对象间的关联关系 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>/author  # book author</div><div class="line">/author/<span class="number">1</span>/books  # author<span class="string">'s books</span></div></pre></td></tr></table></figure>
+
+<p>数据分页 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?start=<span class="number">10</span>&count=<span class="number">20</span>   # <span class="keyword">return</span> the books from <span class="number">10</span> to <span class="number">30</span></div></pre></td></tr></table></figure>
+
+<p>查询条件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books?order=hot   # <span class="keyword">return</span> the books order by hot</div></pre></td></tr></table></figure>
+
+<p>返回需要的参数</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/books/<span class="number">2</span>?fields=author,isbn,price   # only <span class="keyword">return</span> the book<span class="string">'s author, isbn and price</span></div></pre></td></tr></table></figure>
+
+<p>错误处理<br>依靠status code来给程序标识错误，常见的status code如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="number">200</span> - OK             # GET success</div><div class="line"><span class="number">201</span> - CREATED        # POST success</div><div class="line"><span class="number">202</span> - ACCEPTED       # PUT success</div><div class="line"><span class="number">400</span> - BAD REQUEST    # Wrong path or unsupported parameters</div><div class="line"><span class="number">401</span> - UNAUTHORIZED   # Need Authorize</div><div class="line"><span class="number">403</span> - FORBIDDEN      # forbidden to access</div><div class="line"><span class="number">404</span> - NOT FOUND      # Resource not exists</div><div class="line"><span class="number">500</span> - INTERNAL ERROR # Server error</div></pre></td></tr></table></figure>
+
+<p>具体的错误信息和错误代码（自定义的错误代码）也要返回： </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">{<span class="string">"code"</span>: <span class="number">1000</span>, <span class="string">"message"</span>: <span class="string">"missing_args"</span>, <span class="string">"request"</span>: <span class="string">"GET /books/2"</span>}</div></pre></td></tr></table></figure>
+
+<p>身份认证 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Oauth <span class="number">2.0</span></div></pre></td></tr></table></figure>
+
+<p>版本管理 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">GET   /books/<span class="number">2</span>      # version <span class="number">1</span></div><div class="line">GET   /v2/books/<span class="number">2</span>   # version <span class="number">2</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-11T09:08:18.000Z"><a href="/2014/10/11/switch-hosts/">10月 11 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/11/switch-hosts/">分享一个切换hosts的python脚本</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/python</span></div><div class="line"></div><div class="line"><span class="comment">#################################################</span></div><div class="line"><span class="comment">#         左边网开发环境SwitchHosts Tools</span></div><div class="line"><span class="comment">#   (初始化开发环境,安装相关开发软件,服务器）</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#    V1.0      Writen by: zxc       Date:2014-10-11</span></div><div class="line"><span class="comment">##################################################</span></div><div class="line"></div><div class="line"><span class="keyword">import</span> re</div><div class="line"><span class="keyword">import</span> sys</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span></div><div class="line">    hostsmap = {}</div><div class="line">    envlist = []</div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)</div><div class="line">    current_env = <span class="string">''</span></div><div class="line">    <span class="keyword">for</span> line <span class="keyword">in</span> hosts:</div><div class="line">        line = line.strip()</div><div class="line">        env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)</div><div class="line">        <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:</div><div class="line">            current_env = env_p.group(<span class="number">1</span>)</div><div class="line">            <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:</div><div class="line">                <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env</div><div class="line">            envlist.append(current_env)</div><div class="line">            hostsmap[current_env] = [] </div><div class="line">            <span class="keyword">continue</span></div><div class="line">        <span class="keyword">if</span> current_env == <span class="string">''</span>:</div><div class="line">            <span class="keyword">continue</span></div><div class="line">        hostsmap[current_env].append(line)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line">    iter_idx = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)</div><div class="line">        iter_idx = iter_idx+<span class="number">1</span></div><div class="line">    hostsmapCount = {}</div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:</div><div class="line">        <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:</div><div class="line">            <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):</div><div class="line">                <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">                    hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span></div><div class="line">                <span class="keyword">else</span>:</div><div class="line">                    hostsmapCount[env] = <span class="number">1</span></div><div class="line">    current_env = <span class="keyword">None</span></div><div class="line">    max_count = <span class="number">0</span></div><div class="line">    <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:</div><div class="line">        <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:</div><div class="line">            current_env = env </div><div class="line">            max_count = hostsmapCount[env]</div><div class="line">    <span class="keyword">if</span> max_count == <span class="number">0</span>:</div><div class="line">        current_env = <span class="string">'base'</span></div><div class="line">    <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env</div><div class="line">    env = envlist[int(sys.stdin.readline().strip())]</div><div class="line">    writehosts(env, envlist, hostsmap)</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span></div><div class="line">    hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)</div><div class="line">    <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:</div><div class="line">        hosts.write(<span class="string">'### %s ###'</span> % env_iter)</div><div class="line">        hosts.write(<span class="string">'\n'</span>)</div><div class="line">        desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)</div><div class="line">        <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:</div><div class="line">            <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):</div><div class="line">                item = item[<span class="number">1</span> : len(item)]</div><div class="line">            <span class="keyword">if</span> desc:</div><div class="line">                hosts.write(<span class="string">'%s'</span> % item.strip())</div><div class="line">            <span class="keyword">else</span>:</div><div class="line">                hosts.write(<span class="string">'# %s'</span> % item.strip())</div><div class="line">            hosts.write(<span class="string">'\n'</span>)</div><div class="line">    hosts.close()</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span></div><div class="line">    example = <span class="string">"""&gt; cat /etc/hosts</span></div><div class="line">### base ###</div><div class="line">127.0.0.1 localhost</div><div class="line">127.0.0.1 zxc-rMBP</div><div class="line">255.255.255.255    broadcasthost</div><div class="line">::1             localhost</div><div class="line">fe80::1%lo0    localhost</div><div class="line">91.213.30.151   www.google.com</div><div class="line">91.213.30.151   www.google.com.hk</div><div class="line">91.213.30.151   accounts.google.com</div><div class="line">91.213.30.151   accounts.google.com.hk</div><div class="line">91.213.30.151   mail.google.com</div><div class="line">91.213.30.151   mail.google.com.hk</div><div class="line">91.213.30.151   plus.google.com</div><div class="line">91.213.30.151   plus.google.com.hk</div><div class="line">### server190 ###</div><div class="line">192.168.0.190  web.zuobian.com</div><div class="line">### server150 ###</div><div class="line">192.168.0.150  web.zuobian.com</div><div class="line">### localdev ###</div><div class="line">127.0.0.1   web.zuobian.com</div><div class="line">### run ###</div><div class="line">"""</div><div class="line">    <span class="keyword">print</span> example</div><div class="line"></div><div class="line"><span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:</div><div class="line">    <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):</div><div class="line">        <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span></div><div class="line">        print_example()</div><div class="line">        sys.exit(<span class="number">1</span>)</div><div class="line">    switchhosts()</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-09T06:48:10.000Z"><a href="/2014/10/09/blog4/">10月 9 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/09/blog4/">mysql多列索引详解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>创建多列索引</p>
+<p>在t_user表id，userName，email字段上创建多列索引（该表只有此索引）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">alter table t_user add index USER_INDEX(id, userName, email);</div></pre></td></tr></table></figure>
+
+<p>能够利用该索引的查询</p>
+<p>符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span>;</div><div class="line">select * from t_user where id between <span class="number">10</span> and <span class="number">50</span>;</div><div class="line">select * from t_user where id <span class="keyword">in</span> (<span class="number">30</span>, <span class="number">31</span>, <span class="number">32</span>);</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where id = <span class="number">40</span> and userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div><div class="line">select * from t_user where id &gt; <span class="number">40</span> and userName &gt; <span class="string">'t'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能利用以上索引的查询</p>
+<p>不符合leftmost index prefixes原则的查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">select * from t_user where userName = <span class="string">'zxc'</span>;</div><div class="line">select * from t_user where userName = <span class="string">'zxc'</span> and email = <span class="string">'xiongcaizhang@yahoo.com'</span>;</div></pre></td></tr></table></figure>
+
+<p>or查询</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">select * from t_user where id = <span class="number">40</span> or userName = <span class="string">'zxc'</span>;</div></pre></td></tr></table></figure>
+
+<p>不能使用索引的解决方案</p>
+<p>在where语句后面的查询字段建立单个索引及多列索引，注意leftmost index prefixes原则，避免建立重复索引</p>
+<p>or查询使用union来连接查询结果，并在对应的字段上建立索引</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-05T09:10:34.000Z"><a href="/2014/10/05/rizhi/">10月 5 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/05/rizhi/">琐忆</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-10-01T06:55:13.000Z"><a href="/2014/10/01/aboutMe/">10月 1 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/10/01/aboutMe/">关于我</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><br></p>
+<h3 id="张兄才"><em>张兄才</em></h3>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<a href="http://lawrence-zxc.github.io/img/MyDeerCV.pdf" target="_blank" rel="external">我的简历</a><br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<h3 id="技术领域"><em>技术领域</em></h3>
+<p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
+<h3 id="足迹"><em>足迹</em></h3>
+<ul>
+<li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
+<li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/yahoo.png">邮箱：xiongcaizhang@yahoo.com</li>
+<li><img src="/img/qq.png">QQ：407815772</li>
+<li><img src="/img/twitter.png">Twitter: <a href="http://twitter.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/facebook.png">Facebook: <a href="https://www.facebook.com/zxc337" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/quora.png">Quora: <a href="http://quora.com/Jeck-Zhang" target="_blank" rel="external">@Jeck Zhang</a></li>
+<li><img src="/img/gmail.png">Gmail: zhangxiongcai337#gmail.com(把#换成@)</li>
+<li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
+<li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+</ul>
+<h3 id="情怀"><em>情怀</em></h3>
+<p><code>爱狗</code>、<code>完美主义</code>、<code>Apple控</code>、<code>Google控</code>、<code>旅行</code>、<code>电影</code>、<code>吃货</code>、<code>游戏</code>、<code>豆瓣</code></p>
+<h3 id="咖啡"><em>咖啡</em></h3>
+<p>如果您觉得『Jeck_Zhang Blog』对您的工作和生活有价值，欢迎对『Jeck_Zhang』进行无负担小额赞助(1元即可)</p>
+<ul>
+<li><strong>支付宝帐号</strong>  407815772@qq.com</li>
+</ul>
+<ul>
+<li><strong>手机扫码</strong>  <img src="/img/zxc_Alipay.png" width="150" height="150"></li>
+</ul>
+<p><br></p>
+<h2><br></h2>
+<p><img src="/img/my-work.jpg"></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-09-21T13:03:03.000Z"><a href="/2014/09/21/centos-install-oracle/">9月 21 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/21/centos-install-oracle/">centos install oracle 11g</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/mnt/database/runInstaller -silent -ignoreSysPrereqs  -debug -force FROM_LOCATION=/mnt/database/stage/products.xml oracle.install.option=INSTALL_DB_SWONLY  UNIX_GROUP_NAME=oinstall INVENTORY_LOCATION=/mnt/oraInventory ORACLE_HOME=/mnt/oracle/product/<span class="number">11.2</span>.<span class="number">0</span>/db_1 ORACLE_HOME_NAME=<span class="string">"Oracle11"</span> ORACLE_BASE=/mnt/oracle oracle.install.db.InstallEdition=EE oracle.install.db.isCustomInstall=<span class="literal">false</span>   oracle.install.db.DBA_GROUP=oinstall  oracle.install.db.OPER_GROUP=oinstall</div><div class="line">DECLINE_SECURITY_UPDATES=<span class="literal">true</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dbca -silent -createDatabase -templateName General_Purpose.dbc -gdbname zuobian -sid zuobian -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage <span class="number">30</span> -emConfiguration LOCAL</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLESPACE</span> zuobian_data datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M,  <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data02.bdf'</span> <span class="keyword">size</span> <span class="number">5120</span>M EXTENT MANAGEMENT <span class="keyword">LOCAL</span>;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">alter</span> <span class="keyword">tablespace</span> zuobian_data <span class="keyword">add</span>  datafile <span class="string">'/mnt/oracle/oradata/zuobian/zuobian_data01.bdf'</span> <span class="keyword">size</span> <span class="number">800</span>M  autoextend <span class="keyword">on</span> <span class="keyword">next</span> <span class="number">50</span>M  maxsize <span class="number">1000</span>M;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> TRAVEL_GIFTCLASS (</span></div><div class="line"> 	GC_ID             <span class="built_in">NUMBER</span>(<span class="number">10</span>)        <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GMT_CREATE        <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">    GMT_MODIFIED      <span class="keyword">TIMESTAMP</span>         <span class="keyword">NOT</span> <span class="literal">NULL</span>, </div><div class="line">    GC_NAME           VARCHAR2(<span class="number">200</span>),   </div><div class="line">    GC_PARENTID       <span class="built_in">NUMBER</span>(<span class="number">10</span>) </div><div class="line">);</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">create</span> <span class="keyword">user</span> zuobian <span class="keyword">identified</span> <span class="keyword">by</span> zuobian <span class="keyword">default</span> <span class="keyword">tablespace</span> zuobian_data;</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource,dba <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">connect</span>,resource <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">create</span> <span class="keyword">view</span> <span class="keyword">to</span> zuobian;</span></div><div class="line"><span class="operator"><span class="keyword">grant</span> <span class="keyword">read</span>,<span class="keyword">write</span> <span class="keyword">on</span> directory dump_dir <span class="keyword">to</span> zuobian;</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2014-09-18T07:12:39.000Z"><a href="/2014/09/18/blog3/">9月 18 2014</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2014/09/18/blog3/">Nginx+Lua+GraphicsMagick实现动态生成指定尺寸的图片</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>面临的问题<br>网站需求变更，需要更多不同尺寸的缩略图</p>
+<p>有些图片的缩略图很少使用到，但还是存在了硬盘上，造成空间浪费</p>
+<p>解决方法<br>Nginx搭配Lua模块，如果访问的图片不存在，则调用GraphicsMagick的命令行实时生成指定尺寸的图片。</p>
+<p>-集成了Lua模块的Nginx项目OpenResty</p>
+<p>-GraphicsMagick的安装和使用</p>
+<p>-具体使用方法</p>
+<p>原始图片地址：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd.jpg</div></pre></td></tr></table></figure>
+
+<p>自定义图片尺寸：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">/images/f47aa98b47b4b7bd=<span class="number">40</span>x40.jpg</div><div class="line"></div><div class="line">/images/f47aa98b47b4b7bd=<span class="number">300</span>x300.jpg</div></pre></td></tr></table></figure>
+
+<p>配置文件中可以写成这样</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">location ~* ^/tmp/(.+)(=|=C)(\d+)x(\d+).(jpg|jpeg|gif|png)$ {</div><div class="line">    root /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_root</span> /data/static/style/tmp;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$image_path</span> /data/static/style;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$fileName</span> <span class="variable">$1</span>.<span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$width</span> <span class="variable">$3</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$height</span> <span class="variable">$4</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$suffix</span> <span class="variable">$5</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$origin</span> <span class="variable">$image_root</span>/<span class="variable">$fileName</span>;</div><div class="line">    <span class="keyword">set</span> <span class="variable">$file</span> <span class="variable">$image_path</span><span class="variable">$uri</span>;</div><div class="line">    <span class="keyword">if</span> (!<span class="operator">-f</span> <span class="variable">$file</span>) {</div><div class="line">        rewrite_by_lua <span class="string">'</span></div><div class="line">            local command = "/usr/local/GraphicsMagick/bin/gm convert "..ngx.var.origin.." -thumbnail "..ngx.var.width.."x" ..ngx.var.height.." "..ngx.var.file;</div><div class="line">            os.execute(command);</div><div class="line">            ngx.req.set_uri(ngx.var.request_uri, true);</div><div class="line">        ';</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这样就能简单的生成图片指定尺寸的缩略图了。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -958,11 +755,11 @@
   
     <li><a href="/tags/Java/">Java</a><small>20</small></li>
   
-    <li><a href="/tags/JavaScript/">JavaScript</a><small>5</small></li>
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>13</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>14</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
@@ -970,7 +767,7 @@
   
     <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
   
-    <li><a href="/tags/Nginx/">Nginx</a><small>4</small></li>
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
   
     <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
   
@@ -1031,22 +828,6 @@
       </li>
     
       <li>
-        <a href="/2015/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
-      </li>
-    
-      <li>
-        <a href="/2014/12/12/oracle-tmp-tablespace/">oracle 临时表空间扩容</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/26/spring-mvc-xss/">Spring MVC里面xss攻击的预防</a>
-      </li>
-    
-      <li>
         <a href="/2014/11/25/xushen/">徐神的诗</a>
       </li>
     
@@ -1055,7 +836,23 @@
       </li>
     
       <li>
-        <a href="/2014/11/18/spring-mvc-1/">SpringMVC中约定优于配置</a>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
       </li>
     
   </ul>

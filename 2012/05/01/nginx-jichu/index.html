@@ -1,0 +1,574 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>nginx基础及其配制说明 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="nginx基础及其配制说明"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-05-01T07:41:48.000Z"><a href="/2012/05/01/nginx-jichu/">5月 1 2012</a></time>
+      
+      
+  
+    <h1 class="title">nginx基础及其配制说明</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="为什么使用nginx？">为什么使用nginx？</h3>
+<p>现在主流使用的web服务器主要有三种<code>nginx</code>、<code>apache</code>和<code>lighttpd</code>，它们主要的区别我在主流web服务器的区别这一章中介绍了，nginx的优点主要是：异步无阻塞架构，拥有更高的效率；结构化的配置文件，更有效的组织配置数据；社区和论坛非常活跃，学习资料很丰富；</p>
+<h3 id="使用nginx">使用nginx</h3>
+<p>安装完nginx后，在nginx目录下：sbin/nginx：nginx主程序，conf/nginx.conf主配置，这两个文件就是nginx的主要内容；</p>
+<h3 id="nginx的配置">nginx的配置</h3>
+<pre><code>    <span class="comment">#定义Nginx运行的用户和用户组</span>
+    <span class="literal">user</span> nobody<span class="comment">;</span>
+    <span class="comment">#nginx进程数，建议设置为等于CPU总核心数。</span>
+    worker_processes <span class="number">4</span><span class="comment">;</span>
+    <span class="comment">#log文件地址</span>
+    error_log logs/error.log<span class="comment">;</span>
+    <span class="comment">#全局错误日志定义类型，[ debug | info | notice | warn | error | crit ]</span>
+    error_log logs/error.log info<span class="comment">;</span>
+    <span class="comment">#进程ID文件</span>
+    pid logs/nginx.pid<span class="comment">;</span>
+    <span class="comment">#一个nginx进程打开的最多文件描述符数目，理论值应该是最多打开文件数（系统的值ulimit -n）与nginx进程数相除，</span>
+    <span class="comment">#但是nginx分配请求并不均匀，所以建议与ulimit -n的值保持一致。</span>
+    worker_rlimit_nofile <span class="number">65535</span><span class="comment">;</span>
+    <span class="comment">#工作模式与连接数上限</span>
+    events
+    {
+        <span class="comment">#参考事件模型，use [ kqueue | rtsig | epoll | /dev/poll | select | poll ]; </span>
+        <span class="comment">#epoll模型是Linux 2.6以上版本内核中的高性能网络I/O模型，如果跑在FreeBSD上面，就用kqueue模型。</span>
+             use epoll<span class="comment">;</span>
+        <span class="comment">#单个进程最大连接数（最大连接数=连接数*进程数）</span>
+            worker_connections <span class="number">65535</span><span class="comment">;</span>
+    }
+
+    <span class="comment">#设定http服务器</span>
+    http
+    {
+        include mime.types<span class="comment">; #文件扩展名与文件类型映射表</span>
+        default_type application/octet-stream<span class="comment">;     #默认文件类型</span>
+        <span class="comment">#charset utf-8; #默认编码</span>
+        server_names_hash_bucket_size <span class="number">128</span><span class="comment">;     #服务器名字的hash表大小</span>
+        client_header_buffer_size <span class="number">32</span>k<span class="comment">;     #上传文件大小限制</span>
+        large_client_header_buffers <span class="number">4</span> <span class="number">64</span>k<span class="comment">;     #指定客户端一些比较大的请求的缓冲区数量和大小</span>
+        client_max_body_size <span class="number">8</span>m<span class="comment">;     #允许客户端请求的最大单文件字节数</span>
+        sendfile <span class="literal">on</span><span class="comment">;     #开启高效文件传输模式，sendfile指令指定nginx是否调用sendfile函数来输出文件，</span>
+        <span class="comment">#对于普通应用设为 on，如果用来进行下载等应用磁盘IO重负载应用，可设置为off，</span>
+        <span class="comment">#以平衡磁盘与网络I/O处理速度，降低系统的负载。</span>
+        <span class="comment">#注意：如果图片显示不正常把这个改成off。  </span>
+        autoindex <span class="literal">on</span><span class="comment">;     #开启目录列表访问，合适下载服务器，默认关闭。</span>
+        tcp_nopush <span class="literal">on</span><span class="comment">;     #防止网络阻塞</span>
+        tcp_nodelay <span class="literal">on</span><span class="comment">;     #防止网络阻塞</span>
+        keepalive_timeout <span class="number">120</span><span class="comment">;     #长连接超时时间，单位是秒    </span>
+        <span class="comment">#FastCGI相关参数是为了改善网站的性能：减少资源占用，提高访问速度。下面参数看字面意思都能理解。</span>
+        fastcgi_connect_timeout <span class="number">300</span><span class="comment">;</span>
+        fastcgi_send_timeout <span class="number">300</span><span class="comment">;</span>
+        fastcgi_read_timeout <span class="number">300</span><span class="comment">;</span>
+        fastcgi_buffer_size <span class="number">64</span>k<span class="comment">;</span>
+        fastcgi_buffers <span class="number">4</span> <span class="number">64</span>k<span class="comment">;</span>
+        fastcgi_busy_buffers_size <span class="number">128</span>k<span class="comment">;</span>
+        fastcgi_temp_file_write_size <span class="number">128</span>k<span class="comment">;</span>
+        <span class="comment">#gzip模块设置</span>
+        gzip <span class="literal">on</span><span class="comment">; #开启gzip压缩输出</span>
+        gzip_min_length <span class="number">1</span>k<span class="comment">; #最小压缩文件大小</span>
+        gzip_buffers <span class="number">4</span> <span class="number">16</span>k<span class="comment">; #压缩缓冲区</span>
+        gzip_http_version <span class="number">1.0</span><span class="comment">; #压缩版本（默认1.1，前端如果是squid2.5请使用1.0）</span>
+        gzip_comp_level <span class="number">2</span><span class="comment">; #压缩等级</span>
+        gzip_types text/plain application/x-javascript text/css application/xml<span class="comment">;</span>
+        <span class="comment">#压缩类型，默认就已经包含textml，所以下面就不用再写了，写上去也不会有问题，但是会有一个warn。</span>
+        gzip_vary <span class="literal">on</span><span class="comment">;</span>
+
+        <span class="comment">#日志格式设置</span>
+        log_format  style_access    '<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> - <span class="variable">$request_time</span> - [<span class="variable">$time_local</span>] <span class="string">"<span class="variable">$request</span>"</span> '
+                                    '<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="string">"<span class="variable">$http_referer</span>"</span> '
+                                    '<span class="string">"<span class="variable">$http_user_agent</span>"</span> <span class="variable">$http_x_forwarded_for</span>'<span class="comment">;</span>
+        log_format  img_access      '<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> - <span class="variable">$request_time</span> - [<span class="variable">$time_local</span>] <span class="string">"<span class="variable">$request</span>"</span> '
+                                    '<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="string">"<span class="variable">$http_referer</span>"</span> '
+                                    '<span class="string">"<span class="variable">$http_user_agent</span>"</span> <span class="variable">$http_x_forwarded_for</span>'<span class="comment">;</span>
+        log_format  web_access      '<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> - <span class="variable">$request_time</span> - [<span class="variable">$time_local</span>] <span class="string">"<span class="variable">$request</span>"</span> '
+                                    '<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="string">"<span class="variable">$http_referer</span>"</span> '
+                                    '<span class="string">"<span class="variable">$http_user_agent</span>"</span> <span class="variable">$http_x_forwarded_for</span>'<span class="comment">;</span>
+
+        <span class="comment">#limit_zone crawler $binary_remote_addr 10m; #开启限制IP连接数的时候需要使用 </span>
+        <span class="comment">#例如设置 limit_req_zone $binary_remote_addr zone=allips:10m rate=20r/s;</span>
+        upstream www.mysite.com {
+        <span class="comment">#upstream的负载均衡，weight是权重，可以根据机器配置定义权重。weigth参数表示权值，权值越高被分配到的几率越大。</span>
+            server <span class="number">192.168</span>.<span class="number">1.101</span>:<span class="number">80</span> weight=<span class="number">1</span><span class="comment">;</span>
+            server <span class="number">192.168</span>.<span class="number">1.102</span>:<span class="number">80</span> weight=<span class="number">2</span><span class="comment">;</span>
+            server <span class="number">192.168</span>.<span class="number">1.103</span>:<span class="number">80</span> weight=<span class="number">3</span><span class="comment">;</span>
+        }
+        <span class="comment">#webSocket长连接通信配制upgrade</span>
+        map <span class="variable">$http_upgrade</span> <span class="variable">$connection_upgrade</span> {
+            default upgrade<span class="comment">;</span>
+            '' close<span class="comment">;</span>
+        }
+        <span class="comment">#虚拟主机的配置</span>
+        server
+        {
+            <span class="comment">#监听端口</span>
+            listen <span class="number">80</span><span class="comment">;        </span>
+            <span class="comment">#域名可以有多个，用空格隔开</span>
+            server_name www.mysite.com mysite.com<span class="comment">;</span>
+            index index.html index.htm index.php<span class="comment">;</span>
+            root html<span class="comment">;</span>
+            location ~ .*.(htm|html)?$
+            {
+                fastcgi_pass <span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">9000</span><span class="comment">;</span>
+                fastcgi_index index.htm<span class="comment">;</span>
+                include fastcgi.conf<span class="comment">;</span>
+            }
+            <span class="comment">#图片缓存时间设置</span>
+            location ~ .*.(gif|jpg|jpeg|png|bmp|swf)$
+            {
+                expires <span class="number">10</span>d<span class="comment">;</span>
+            }
+            <span class="comment">#JS和CSS缓存时间设置</span>
+            location ~ .*.(js|css)?$
+            {
+                expires <span class="number">1</span>h<span class="comment">;</span>
+            }
+            <span class="comment">#日志格式设定</span>
+            log_format access '<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> [<span class="variable">$time_local</span>] <span class="string">"<span class="variable">$request</span>"</span> '
+        '<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> <span class="string">"<span class="variable">$http_referer</span>"</span> '
+        '<span class="string">"<span class="variable">$http_user_agent</span>"</span> <span class="variable">$http_x_forwarded_for</span>'<span class="comment">;</span>
+            <span class="comment">#定义本虚拟主机的访问日志</span>
+            access_log logs/access.log access<span class="comment">;</span>
+            <span class="comment">#对 "/" 启用反向代理</span>
+            location / {
+                proxy_pass http://<span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">8080</span><span class="comment">;</span>
+                proxy_redirect <span class="literal">off</span><span class="comment">;</span>
+                proxy_set_header X-Real-IP <span class="variable">$remote_addr</span><span class="comment">;</span>
+                <span class="comment">#http版本与Upgrade设置</span>
+                proxy_http_version <span class="number">1.1</span><span class="comment">;</span>
+                proxy_set_header Upgrade <span class="variable">$http_upgrade</span><span class="comment">;</span>
+                proxy_set_header Connection <span class="string">"Upgrade"</span><span class="comment">;</span>
+            <span class="comment">#后端的Web服务器可以通过X-Forwarded-For获取用户真实IP</span>
+                proxy_set_header X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span><span class="comment">;</span>
+            <span class="comment">#以下是一些反向代理的配置，可选。</span>
+                proxy_set_header Host <span class="variable">$host</span><span class="comment">;</span>
+                client_max_body_size <span class="number">10</span>m<span class="comment">;         #允许客户端请求的最大单文件字节数</span>
+                client_body_buffer_size <span class="number">128</span>k<span class="comment">;     #缓冲区代理缓冲用户端请求的最大字节数，</span>
+                proxy_connect_timeout <span class="number">90</span><span class="comment">;         #nginx跟后端服务器连接超时时间(代理连接超时)</span>
+                proxy_send_timeout <span class="number">90</span><span class="comment">;             #后端服务器数据回传时间(代理发送超时)</span>
+                proxy_read_timeout <span class="number">90</span><span class="comment">;             #连接成功后，后端服务器响应时间(代理接收超时)</span>
+                proxy_buffer_size <span class="number">4</span>k<span class="comment">;             #设置代理服务器（nginx）保存用户头信息的缓冲区大小</span>
+                proxy_buffers <span class="number">4</span> <span class="number">32</span>k<span class="comment">;             #proxy_buffers缓冲区，网页平均在32k以下的设置</span>
+                proxy_busy_buffers_size <span class="number">64</span>k<span class="comment">;    #高负荷下缓冲大小（proxy_buffers*2）</span>
+                proxy_temp_file_write_size <span class="number">64</span>k<span class="comment">; #设定缓存文件夹大小，大于这个值，将从upstream服务器传</span>
+
+                <span class="comment">#限制IP连接数</span>
+                limit_req zone=allips burst=<span class="number">5</span> nodelay<span class="comment">;</span>
+            }
+            <span class="comment">#设定查看Nginx状态的地址</span>
+            location /NginxStatus {
+                stub_status <span class="literal">on</span><span class="comment">;</span>
+                access_log <span class="literal">on</span><span class="comment">;</span>
+                auth_basic <span class="string">"NginxStatus"</span><span class="comment">;</span>
+                auth_basic_user_file confpasswd<span class="comment">; #htpasswd文件的内容可以用apache提供的htpasswd工具来产生。</span>
+            }
+            <span class="comment">#本地动静分离反向代理配置</span>
+            <span class="comment">#所有jsp的页面均交由tomcat或resin处理</span>
+            location ~ .(jsp|jspx|do)?$ {
+                proxy_set_header Host <span class="variable">$host</span><span class="comment">;</span>
+                proxy_set_header X-Real-IP <span class="variable">$remote_addr</span><span class="comment">;</span>
+                proxy_set_header X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span><span class="comment">;</span>
+                proxy_pass http://<span class="number">127.0</span>.<span class="number">0.1</span>:<span class="number">8080</span><span class="comment">;</span>
+            }
+            <span class="comment">#所有静态文件由nginx直接读取不经过tomcat或resin</span>
+            location ~ .*.(htm|html|gif|jpg|jpeg|png|bmp|swf|ioc|rar|zip|txt|flv|mid|doc|ppt|pdf|xls|mp3|wma)$
+            { 
+                expires <span class="number">15</span>d<span class="comment">; </span>
+            }
+            location ~ .*.(js|css)?$
+            { 
+                expires <span class="number">1</span>h<span class="comment">;</span>
+                add_header Pragma public<span class="comment">;</span>
+                add_header Cache-Control <span class="string">"public,must-revalidate,proxy-revalidate"</span><span class="comment">;</span>
+                access_log <span class="literal">off</span><span class="comment">;</span>
+                log_not_found <span class="literal">off</span><span class="comment">;</span>
+                tcp_nodelay <span class="literal">off</span><span class="comment">;</span>
+                break<span class="comment">; </span>
+            }
+        }
+        <span class="comment">#为nginx设置默认虚拟主机(空主机头，默认主机头)</span>
+        <span class="comment">#比如别人通过ip或者未知域名访问你的网站的时候，你希望禁止显示任何有效内容，可以给他返回500</span>
+        server{   
+            listen <span class="number">80</span> default<span class="comment">;  </span>
+            server_name  _<span class="comment">;  </span>
+            return <span class="number">404</span><span class="comment">;  </span>
+            <span class="comment">#也可以把这些流量收集起来，导入到自己的网站，只要做以下跳转设置就可以</span>
+            <span class="comment"># rewrite ^(.*) http://www.mysite.com permanent; </span>
+        }
+    }
+</code></pre><h3 id="nginx如何处理一个请求？">nginx如何处理一个请求？</h3>
+<p>1）server匹配</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">server{</div><div class="line">    listen <span class="number">80</span>;</div><div class="line">    server_name www.mysite.com;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>2）location匹配</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">location / {  <span class="comment">#prefix</span></div><div class="line">	<span class="comment">#匹配任何请求，因为所有请求都是以/开始的</span></div><div class="line">	<span class="comment">#但是更长字符匹配或者正则表达式匹配会优先命中</span></div><div class="line">}</div><div class="line"><span class="comment">#</span></div><div class="line">location = /user {  <span class="comment"># strict match</span></div><div class="line">	<span class="comment">#只匹配 /user</span></div><div class="line">}</div><div class="line"><span class="comment">#</span></div><div class="line">location = \,css$ {  <span class="comment">#regular expression</span></div><div class="line">	<span class="comment">#匹配任何以css结尾的请求</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>3）rewrite规则</p>
+<p>rewrite可以用在server或location下，以特定的格式书写，将用户的请求进行修改，格式一般为：rewrite 正则表达式 替换目标 动作</p>
+<p>动作一般有：last、break、permanent、redirect</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#rewrite, then break</span></div><div class="line">rewrite ^/$ /html/index.htm <span class="keyword">break</span>;</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#rewrite with 301</span></div><div class="line">rewrite ^/admin/?$ http://www.mysite.com/error.html permanent;</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#rewrite, then do loaction matching</span></div><div class="line">rewrite ^/user(/[^/]*)(/.*)?$ /user/index.htm<span class="variable">$1</span><span class="variable">$2</span> last;</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#rewrite with a argument</span></div><div class="line">ewrite ^/api/module/(.*)?$ /module/indext.html?=<span class="variable">$1</span> <span class="keyword">break</span>;</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#rewrite ^/pgc /prof?url=pgc? redirect;</span></div></pre></td></tr></table></figure>
+
+<p>4）upstream</p>
+<p>nginx可以作为反向代理，位于服务器群的最前端，将用户的请求根据一定的策略发送到后端进行真正的处理；</p>
+<p>通常在server或location下加入proxy_pass来指定命中的请求进入upstream模块；</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">location / {</div><div class="line">    proxy_pass http://mysite.com</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>upstream常见有轮训,权重,根据ip进行hash,fair优先选择响应时间短的服务器,自定义hash等手段实现</p>
+<h3 id="nginx常用的内置变量">nginx常用的内置变量</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="variable">$uri</span> <span class="comment">#uri值不带参数</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$request_uri</span> <span class="comment">#原始uri</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$server_addr</span> <span class="comment">#服务器地址</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$remote_addr</span> <span class="comment">#客户端地址</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$host</span> <span class="comment">#host名称</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$http_xxx</span>(<span class="variable">$http_user_agent</span>, <span class="variable">$http_cookie</span>) <span class="comment">#http首部字段内容</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$arg_xxx</span> <span class="comment">#参数内容</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$cookie_xxx</span> <span class="comment">#cookie内容</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$request_metod</span> <span class="comment">#请求动作 GET POST</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$request_time</span> </div><div class="line"><span class="comment">#</span></div><div class="line"><span class="variable">$status</span> <span class="comment">#响应码</span></div></pre></td></tr></table></figure>
+
+<h3 id="nginx日常使用命令">nginx日常使用命令</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">nginx <span class="operator">-s</span> stop 立即停止进程，相当于kill -<span class="number">9</span></div><div class="line"><span class="comment">#</span></div><div class="line">quit 优雅的退出</div><div class="line"><span class="comment">#</span></div><div class="line">reload 重新读取配置文件</div><div class="line"><span class="comment">#</span></div><div class="line">reopen 重新打开日志句柄</div><div class="line"><span class="comment">#</span></div><div class="line">nginx不支持so，新增模块时需要重新编译；</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2012/05/16/maven-help/">Maven的使用、核心概念、用法、常用命令、扩展及配置</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2012/04/23/front-end-standards/">前端规范</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2012/05/01/nginx-jichu/">
+                  http://lawrence-zxc.github.io/2012/05/01/nginx-jichu/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Nginx/">Nginx</a>, <a href="/tags/Linux/">Linux</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2012/05/16/maven-help/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2012/04/23/front-end-standards/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2012/05/01/nginx-jichu/" data-title="nginx基础及其配制说明" data-url="http://lawrence-zxc.github.io/2012/05/01/nginx-jichu/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>14</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>
