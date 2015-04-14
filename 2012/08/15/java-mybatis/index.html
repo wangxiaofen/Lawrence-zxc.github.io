@@ -102,11 +102,11 @@
 <p>写了一个对mybatis封装code,源码</p>
 <p>BaseDao是一个基础类,对Mapper中方法的实现</p>
 <pre><code><span class="comment">/*
- * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
- * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
- * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
+ * Copyright 2012-2017 MUSN.com All right reserved. This software is the confidential and proprietary information of
+ * MUSN.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
+ * in accordance with the terms of the license agreement you entered into with MUSN.com.
  */</span>
-<span class="keyword">package</span> com.zb.app.biz.base;
+<span class="keyword">package</span> com.msun.app.biz.base;
 
 <span class="keyword">import</span> java.io.Serializable;
 <span class="keyword">import</span> java.lang.reflect.Method;
@@ -125,19 +125,19 @@
 <span class="keyword">import</span> org.mybatis.spring.support.SqlSessionDaoSupport;
 <span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;
 
-<span class="keyword">import</span> com.zb.app.common.core.lang.Argument;
-<span class="keyword">import</span> com.zb.app.common.core.lang.ArrayUtils;
-<span class="keyword">import</span> com.zb.app.common.core.lang.Assert;
-<span class="keyword">import</span> com.zb.app.common.exception.UnSupportBaseDaoException;
-<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationList;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser;
-<span class="keyword">import</span> com.zb.app.common.pagination.PaginationParser.IPageUrl;
+<span class="keyword">import</span> com.msun.app.common.core.lang.Argument;
+<span class="keyword">import</span> com.msun.app.common.core.lang.ArrayUtils;
+<span class="keyword">import</span> com.msun.app.common.core.lang.Assert;
+<span class="keyword">import</span> com.msun.app.common.exception.UnSupportBaseDaoException;
+<span class="keyword">import</span> com.msun.app.common.pagination.Pagination;
+<span class="keyword">import</span> com.msun.app.common.pagination.PaginationList;
+<span class="keyword">import</span> com.msun.app.common.pagination.PaginationParser;
+<span class="keyword">import</span> com.msun.app.common.pagination.PaginationParser.IPageUrl;
 
 <span class="javadoc">/**
  * 分页可以不注入SqlSessionTemplate对象,用Mapper方式实现,在BaseDao封装
  * 
- *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:10:41 PM
+ *<span class="javadoctag"> @author</span> zxc Jun 15, 2012 11:10:41 PM
  */</span>
 <span class="annotation">@SuppressWarnings</span>({ <span class="string">"rawtypes"</span>, <span class="string">"unchecked"</span> })
 <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">BaseDao</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>, <span class="title">M</span>, <span class="title">Q</span>&gt; <span class="keyword">extends</span> <span class="title">SqlSessionDaoSupport</span> <span class="keyword">implements</span> <span class="title">IBase</span> </span>{
@@ -545,24 +545,24 @@
 </code></pre><p><br></p>
 <p>BaseMapper类</p>
 <pre><code><span class="comment">/*
- * Copyright 2014-2017 ZuoBian.com All right reserved. This software is the confidential and proprietary information of
- * ZuoBian.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
- * in accordance with the terms of the license agreement you entered into with ZuoBian.com.
+ * Copyright 2012-2017 MSUN.com All right reserved. This software is the confidential and proprietary information of
+ * MSUN.com ("Confidential Information"). You shall not disclose such Confidential Information and shall use it only
+ * in accordance with the terms of the license agreement you entered into with MSUN.com.
  */</span>
-<span class="keyword">package</span> com.zb.app.biz.base;
+<span class="keyword">package</span> com.msun.app.biz.base;
 
 <span class="keyword">import</span> java.io.Serializable;
 <span class="keyword">import</span> java.util.List;
 <span class="keyword">import</span> java.util.Map;
 
-<span class="keyword">import</span> com.zb.app.common.pagination.Pagination;
+<span class="keyword">import</span> com.msun.app.common.pagination.Pagination;
 
 <span class="javadoc">/**
  * &lt;pre&gt;
  *      可以在BaseMapper中加入Q查询对象 BaseMapper&lt;T,Q&gt;,分页可以用BaseMapper实现然后在BaseDao中封装掉
  * &lt;/pre&gt;
  * 
- *<span class="javadoctag"> @author</span> zxc Jun 15, 2014 11:11:48 PM
+ *<span class="javadoctag"> @author</span> zxc Jun 15, 2012 11:11:48 PM
  */</span>
 <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">BaseMapper</span>&lt;<span class="title">T</span> <span class="keyword">extends</span> <span class="title">Serializable</span>&gt; </span>{
 
@@ -612,7 +612,7 @@
      */</span>
     <span class="keyword">public</span> Integer <span class="title">updateById</span>(T t);
 }
-</code></pre><p>Pagination类源码就不放了吧。</p>
+</code></pre><p>Pagination类源码就不放了吧,有兴趣可以查看我的github源码。</p>
 
       
     </div>
