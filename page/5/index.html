@@ -89,180 +89,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2012-07-10T04:28:13.000Z"><a href="/2012/07/10/show-busy-java-threads/">7月 10 2012</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/07/10/show-busy-java-threads/">shell命令排查Java的CPU性能问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在排查Java的CPU性能问题时(<code>top us</code>值过高),要找出Java进程中消耗CPU多的线程,并查看它的线程栈,从而找出导致性能问题的方法调用。</p>
-<p>详细说明：top命令开启线程显示模式、按CPU使用率排序、记下Java进程里CPU高的线程号；手动转成十六进制（可以用printf %x 1234）；jstack，grep十六进制的线程id，找到线程栈。查问题时，会要多次这样操作，太繁琐。</p>
-<p>这个脚本的功能是，打印出在运行的Java进程中，消耗CPU最多的线程栈（缺省是5个线程）。</p>
-<h3 id="用法">用法</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt;</div><div class="line"><span class="comment"># 上面会从所有的Java进程中找出最消耗CPU的线程，这样用更方便。</span></div><div class="line"></div><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt; -p &lt;指定的Java Process&gt;</div></pre></td></tr></table></figure>
-
-<h3 id="示例">示例</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">$ show-busy-java-threads.sh </div><div class="line">The stack of busy(<span class="number">57.0</span>%) thread(<span class="number">23355</span>/<span class="number">0</span>x5b3b) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-1"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005b5c5000 nid=<span class="number">0</span>x5b3b runnable [<span class="number">0</span>x000000004062c000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">127</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">662</span>)</div><div class="line"></div><div class="line">The stack of busy(<span class="number">26.1</span>%) thread(<span class="number">24018</span>/<span class="number">0</span>x5dd2) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-2"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005a968800 nid=<span class="number">0</span>x5dd2 runnable [<span class="number">0</span>x00000000420e9000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.util.Arrays.copyOf(Arrays.java:<span class="number">2882</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:<span class="number">100</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:<span class="number">572</span>)</div><div class="line">    at java.lang.StringBuffer.append(StringBuffer.java:<span class="number">320</span>)</div><div class="line">    - locked &lt;<span class="number">0</span>x00000007908d0030&gt; (a java.lang.StringBuffer)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">890</span>)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">869</span>)</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">126</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">...</div></pre></td></tr></table></figure>
-
-<p>上面的线程栈可以看出，CPU消耗最高的2个线程都在执行java.text.DateFormat.format，业务代码对应的方法是shared.monitor.schedule.AppMonitorDataAvgScheduler.run。可以基本确定：</p>
-<ul>
-<li>AppMonitorDataAvgScheduler.run调用DateFormat.format次数比较频繁。</li>
-<li>DateFormat.format比较慢。（这个可以由DateFormat.format的实现确定。）</li>
-</ul>
-<p>多个执行几次show-busy-java-threads.sh，如果上面情况高概率出现，则可以确定上面的判定。<br>因为调用越少代码执行越快，则出现在线程栈的概率就越低。</p>
-<p>分析shared.monitor.schedule.AppMonitorDataAvgScheduler.run实现逻辑和调用方式，以优化实现解决问题。</p>
-<p>show-busy-java-threads.sh脚本:</p>
-<pre><code>    <span class="comment">#!/bin/bash</span>
-    <span class="comment"># @Function</span>
-    <span class="comment"># Find out the highest cpu consumed threads of java, and print the stack of these threads.</span>
-    <span class="comment">#</span>
-    <span class="comment"># @Usage</span>
-    <span class="comment">#   $ ./show-busy-java-threads.sh</span>
-    <span class="comment">#</span>
-    <span class="comment"># @author zxc</span>
-
-    PROG=`basename <span class="variable">$0</span>`
-
-    <span class="function"><span class="title">usage</span></span>() {
-        cat &lt;&lt;EOF
-    Usage: <span class="variable">${PROG}</span> [OPTION]...
-    Find out the highest cpu consumed threads of java, and print the stack of these threads.
-    Example: <span class="variable">${PROG}</span> -c <span class="number">10</span>
-    Options:
-        -p, --pid       find out the highest cpu consumed threads from the specifed java process,
-                        default from all java process.
-        -c, --count     <span class="keyword">set</span> the thread count to show, default is <span class="number">5</span>
-        -h, --help      display this <span class="built_in">help</span> and <span class="keyword">exit</span>
-    EOF
-        <span class="keyword">exit</span> <span class="variable">$1</span>
-    }
-
-    ARGS=`getopt -n <span class="string">"<span class="variable">$PROG</span>"</span> <span class="operator">-a</span> -o c:p:h <span class="operator">-l</span> count:,pid:,<span class="built_in">help</span> -- <span class="string">"<span class="variable">$@</span>"</span>`
-    [ $? <span class="operator">-ne</span> <span class="number">0</span> ] &amp;&amp; usage <span class="number">1</span>
-    <span class="built_in">eval</span> <span class="keyword">set</span> -- <span class="string">"<span class="variable">${ARGS}</span>"</span>
-
-    <span class="keyword">while</span> <span class="literal">true</span>; <span class="keyword">do</span>
-        <span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span>
-        -c|--count)
-            count=<span class="string">"<span class="variable">$2</span>"</span>
-            shift <span class="number">2</span>
-            ;;
-        -p|--pid)
-            pid=<span class="string">"<span class="variable">$2</span>"</span>
-            shift <span class="number">2</span>
-            ;;
-        -h|--help)
-            usage
-            ;;
-        --)
-            shift
-            <span class="keyword">break</span>
-            ;;
-        <span class="keyword">esac</span>
-    <span class="keyword">done</span>
-    count=<span class="variable">${count:-5}</span>
-
-    <span class="function"><span class="title">redEcho</span></span>() {
-        [ -c /dev/stdout ] &amp;&amp; {
-            <span class="comment"># if stdout is console, turn on color output.</span>
-            <span class="built_in">echo</span> <span class="operator">-ne</span> <span class="string">"\033[1;31m"</span>
-            <span class="built_in">echo</span> -n <span class="string">"<span class="variable">$@</span>"</span>
-            <span class="built_in">echo</span> <span class="operator">-e</span> <span class="string">"\033[0m"</span>
-        } || <span class="built_in">echo</span> <span class="string">"<span class="variable">$@</span>"</span>
-    }
-
-    <span class="comment"># Check the existence of jstack command!</span>
-    <span class="keyword">if</span> ! which jstack &amp;&gt; /dev/null; <span class="keyword">then</span>
-        [ -z <span class="string">"<span class="variable">$JAVA_HOME</span>"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        ! [ <span class="operator">-f</span> <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack file does NOT exists!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        ! [ -x <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack is NOT executalbe!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        <span class="keyword">export</span> PATH=<span class="string">"<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span>"</span>
-    <span class="keyword">fi</span>
-
-    uuid=`date +%s`_<span class="variable">${RANDOM}</span>_$$
-
-    <span class="function"><span class="title">cleanupWhenExit</span></span>() {
-        rm /tmp/<span class="variable">${uuid}</span>_* &amp;&gt; /dev/null
-    }
-    trap <span class="string">"cleanupWhenExit"</span> EXIT
-
-    <span class="function"><span class="title">printStackOfThread</span></span>() {
-        <span class="keyword">while</span> <span class="built_in">read</span> threadLine ; <span class="keyword">do</span>
-            pid=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $1}'</span>`
-            threadId=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $2}'</span>`
-            threadId0x=`<span class="built_in">printf</span> %x <span class="variable">${threadId}</span>`
-            user=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $3}'</span>`
-            pcpu=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $5}'</span>`
-
-            jstackFile=/tmp/<span class="variable">${uuid}</span>_<span class="variable">${pid}</span>
-
-            [ ! <span class="operator">-f</span> <span class="string">"<span class="variable">${jstackFile}</span>"</span> ] &amp;&amp; {
-                jstack <span class="variable">${pid}</span> &gt; <span class="variable">${jstackFile}</span> || {
-                    redEcho <span class="string">"Fail to jstack java process <span class="variable">${pid}</span>!"</span>
-                    rm <span class="variable">${jstackFile}</span>
-                    <span class="keyword">continue</span>
-                }
-            }
-
-            redEcho <span class="string">"Busy(<span class="variable">${pcpu}</span>%) thread(<span class="variable">${threadId}</span>/0x<span class="variable">${threadId0x}</span>) stack of java process(<span class="variable">${pid}</span>) under user(<span class="variable">${user}</span>):"</span>
-            sed <span class="string">"/nid=0x<span class="variable">${threadId0x}</span> /,/^$/p"</span> -n <span class="variable">${jstackFile}</span>
-        <span class="keyword">done</span>
-    }
-
-    ps -Leo pid,lwp,user,comm,pcpu --no-headers | {
-        [ -z <span class="string">"<span class="variable">${pid}</span>"</span> ] &amp;&amp;
-        awk <span class="string">'$4=="java"{print $0}'</span> ||
-        awk -v <span class="string">"pid=<span class="variable">${pid}</span>"</span> <span class="string">'$1==pid,$4=="java"{print $0}'</span>
-    } | sort -k5 -r -n | head --lines <span class="string">"<span class="variable">${count}</span>"</span> | printStackOfThread
-</code></pre>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2012-07-07T09:34:56.000Z"><a href="/2012/07/07/monitor-host/">7月 7 2012</a></time>
       
       
@@ -1082,7 +908,7 @@
       
       
   
-    <h1 class="title"><a href="/2012/04/23/front-end-standards/">前端规范</a></h1>
+    <h1 class="title"><a href="/2012/04/23/front-end-standards/">前端开发约定及规范</a></h1>
   
 
     </header>
@@ -1540,7 +1366,7 @@
         <p>今天我在Dzone阅读了一篇关于<a href="http://java.dzone.com/articles/java-object-initialization?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed%3A+javalobby%2Ffrontpage+%28Javalobby+%2F+Java+Zone%29&amp;utm_content=" target="_blank" rel="external">java对象实例初始化顺序</a>的有趣文章。说它有趣，是因为作者使用了一种并不太推荐的编码风格，只有用这种编码风格才能触发这个极为少见的 Java object initialization order 问题。</p>
 <p>其实java对象初始化顺序算是一个比较基础的java知识点。但是网上的文章多半描述不清，使用上一不小心就容易出问题。<br>所以在本文中，我想结合JLS和自己的理解，举例剖析问题的所在。</p>
 <p>OK，我们先来看个模仿Dzone作者原意的简单例子:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zxc.tmp;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">extends</span> <span class="title">B</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> a = <span class="number">100</span>;</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="title">A</span>() {</div><div class="line">		<span class="keyword">super</span>();</div><div class="line">		System.out.println(a);</div><div class="line">		a = <span class="number">200</span>;</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">		System.out.println(<span class="keyword">new</span> A().a);</div><div class="line">	}</div><div class="line">}</div><div class="line"></div><div class="line">class B {</div><div class="line">	<span class="keyword">public</span> <span class="title">B</span>() {</div><div class="line">		System.out.println(((A) <span class="keyword">this</span>).a);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.zxc.tmp;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> <span class="keyword">extends</span> <span class="title">B</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> a = <span class="number">100</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="title">A</span>() {</div><div class="line">		<span class="keyword">super</span>();</div><div class="line">		System.out.println(a);</div><div class="line">		a = <span class="number">200</span>;</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">		System.out.println(<span class="keyword">new</span> A().a);</div><div class="line">	}</div><div class="line">}</div><div class="line"><span class="comment">//</span></div><div class="line">class B {</div><div class="line">	<span class="keyword">public</span> <span class="title">B</span>() {</div><div class="line">		System.out.println(((A) <span class="keyword">this</span>).a);</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>例子代码很简单，不多做解释了，直接看输出:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="number">0</span></div><div class="line"><span class="number">100</span></div><div class="line"><span class="number">200</span></div></pre></td></tr></table></figure>
@@ -2641,13 +2467,76 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
 
 
 
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-12-26T13:45:29.000Z"><a href="/2011/12/26/concurrenthashmap/">12月 26 2011</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/12/26/concurrenthashmap/">由ConcurrentHashMap的一个NullPointerException异常引起的错误</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>开发中碰到ConcurrentHashMap NullPointerException not allow null key and value,由ConcurrentHashMap的一个NullPointerException异常引起，结合ConcurrentHashMap源码分析为什么ConcurrentHashMap不允许空key和value以及如何改造进行支持。</p>
+<p>1、异常分析<br>前几天碰到一个异常,日志信息如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">FATAL EXCEPTION: main</div><div class="line">java.lang.NullPointerException</div><div class="line">    at java.util.concurrent.ConcurrentHashMap.remove(ConcurrentHashMap.java:<span class="number">921</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.deleteDownloadAndUpdateViewInfo(AppSearchService.java:<span class="number">586</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.installFinish(AppSearchService.java:<span class="number">1111</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.access$<span class="number">10</span>(AppSearchService.java:<span class="number">1102</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService$MyHandler.handleMessage(AppSearchService.java:<span class="number">1062</span>)</div><div class="line">    at android.os.Handler.dispatchMessage(Handler.java:<span class="number">99</span>)</div><div class="line">    at android.os.Looper.loop(Looper.java:<span class="number">153</span>)</div><div class="line">    at android.app.ActivityThread.main(ActivityThread.java:<span class="number">5198</span>)</div><div class="line">    at java.lang.reflect.Method.invokeNative(Native Method)</div><div class="line">    at java.lang.reflect.Method.invoke(Method.java:<span class="number">511</span>)</div><div class="line">    at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:<span class="number">826</span>)</div><div class="line">    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:<span class="number">589</span>)</div><div class="line">    at dalvik.system.NativeStart.main(Native Method)</div></pre></td></tr></table></figure>
+
+<p>本以为是并发异常，后发现不对，因为ConcurrentHashMap已经使用继承自ReentrantLock的Segment，保证了线程安全，Java如果有这么大的bug肯定早修复了。看了下源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="javadoc">/**</span></div><div class="line"> * Removes the key (and its corresponding value) from this map.</div><div class="line"> * This method does nothing if the key is not in the map.</div><div class="line"> *</div><div class="line"> *<span class="javadoctag"> @param</span>  key the key that needs to be removed</div><div class="line"> *<span class="javadoctag"> @return</span> the previous value associated with &lt;tt&gt;key&lt;/tt&gt;, or</div><div class="line"> *         &lt;tt&gt;null&lt;/tt&gt; if there was no mapping for &lt;tt&gt;key&lt;/tt&gt;</div><div class="line"> *<span class="javadoctag"> @throws</span> NullPointerException if the specified key is null</div><div class="line"> */</div><div class="line"><span class="keyword">public</span> V <span class="title">remove</span>(Object key) {</div><div class="line">    <span class="keyword">int</span> hash = hash(key);</div><div class="line">    Segment&lt;K,V&gt; s = segmentForHash(hash);</div><div class="line">    <span class="keyword">return</span> s == <span class="keyword">null</span> ? <span class="keyword">null</span> : s.remove(key, hash, <span class="keyword">null</span>);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>发现自己大意了，在获取hashCode时NPE(hashMap不会,因为它会对null key做一次处理)。ConcurrentHashMap不接受null key和null value这个常识一时疏忽了,调用的地方确实有可能传入null。这样在remove前进行null判断即可解决。</p>
+<p>在问题解决后,想到hashMap和linkedhashMap都允许null key和null value,treeMap不允许null key,但允许null value,而ConcurrentHashMap既不允许null key也不允许null value，why?</p>
+<p>2、not allow null key and value<br>stackoverflow并结合了源码分析了一下<br>(1) treeMap不允许null key是因为compare会导致NPE,可通过以下代码实现null key支持</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">SortedMap&lt;Integer, Integer&gt; map = <span class="keyword">new</span> TreeMap&lt;Integer, Integer&gt;(<span class="keyword">new</span> Comparator&lt;Integer&gt;() {</div><div class="line"></div><div class="line">									<span class="annotation">@Override</span></div><div class="line">									<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span>(Integer arg0, Integer arg1) {</div><div class="line">										<span class="keyword">if</span> (arg0 == <span class="keyword">null</span>) {</div><div class="line">											<span class="keyword">if</span> (arg1 == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">											<span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">										}</div><div class="line">										<span class="keyword">if</span> (arg1 == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="number">1</span>;</div><div class="line">										<span class="keyword">return</span> arg0.compareTo(arg1);</div><div class="line">									}</div><div class="line">								});</div></pre></td></tr></table></figure>
+
+<p>(2) ConcurrentHashMap不允许null key和null value，是因为ConcurrentHashMap的锁机制<br>对于get(Object key)如果返回null,ConcurrentHashMap没办法判断是key不存在还是value就是null。有人得问了那么hashmap呢, 为什么可以，hashmap我们可以通过下面代码实现判断</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">Map&lt;String, String&gt; map = Collections.synchronizedMap(<span class="keyword">new</span> HashMap&lt;String, String&gt;());</div><div class="line">String key = <span class="string">"aa"</span>, value;</div><div class="line"><span class="keyword">synchronized</span> (map) {</div><div class="line">    <span class="keyword">if</span> (map.containsKey(key)) {</div><div class="line">        value = map.get(key);</div><div class="line">    } <span class="keyword">else</span> {</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"key is not exist"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用Collections.synchronizedMap对hashmap加锁,Collections.synchronizedMap的锁是同步锁,就是对象本身,所以synchronized (map)与Collections.synchronizedMap内锁统一。而ConcurrentHashMap的并发控制是利用分离锁实现的(16个重入锁),在外部无法获得锁,自己也没有提供函数进行判断，所以无奈了。</p>
+<p>那么有没有办法既保证map的并发安全同时又允许null key和null value呢,当然了,两种方式<br>第一种实际上面已经展现了,通过Collections.synchronizedMap对hashmap加锁即可。synchronizedMap保证了线程安全,hashmap又允许null key和null value。<br>不过Collections.synchronizedMap的并发性能自然比不上ConcurrentHashMap的分桶锁机制,如果对性能要求较高<br>理论上也可以重写ConcurrentHashMap添加一个函数支持上面代码段的并发，但这个要求对ConcurrentHashMap的分离锁相当熟悉</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/4/">Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/6/">Next</a></nav>
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/4/">Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/6/">Next</a></nav>
 
 <nav id="pagination">
   
@@ -2674,7 +2563,7 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -2694,11 +2583,11 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -2708,7 +2597,7 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -2757,15 +2646,15 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

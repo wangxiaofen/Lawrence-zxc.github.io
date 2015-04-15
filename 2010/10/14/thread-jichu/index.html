@@ -144,6 +144,11 @@
 <li>隐式传参</li>
 </ul>
 <p>注意:使用ThreadLocal,一般都是声明在静态变量中,如果不断的创建ThreadLocal而且没有调用其remove方法,将会导致<code>内存泄露</code>。<br>同时请注意,如果是static的ThreadLocal,一般不需要调用remove。</p>
+<h3 id="线程间的协调(lock、condition、wait、notify、notifyAll)">线程间的协调(lock、condition、wait、notify、notifyAll)</h3>
+<h4 id="ReentrantLock和Synchronized">ReentrantLock和Synchronized</h4>
+<p>Synchronized是Lock的一种简化实现,一个Lock可以对应多个Condition,而synchronized把Lock和Condition合并了,一个synchronized Lock只对应一个Condition,可以说Synchronized是Lock的简化版本。<br>在JDK 5,Synchronized要比Lock慢很多,但是在JDK 6中,它们的效 率差不多。</p>
+<p><img src="/img/thread.jpg"></p>
+<p>不要在Lock和Condition上使用wait、notiffy、notifyAll方法!</p>
 
       
     </div>
@@ -152,12 +157,12 @@
 
         
           <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2011/01/12/spring-mvc-1/">SpringMVC中约定优于配置</a>
+            <em>上一篇: </em><a href="/2010/10/15/thread-executor/">Java并发执行任务Executor(ExecutorService和Future)</a>
           </div>
         
         
           <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2010/10/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a>
+            <em>下一篇: </em><a href="/2010/05/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a>
           </div>
           <div class="clearfix"></div>
         
@@ -220,10 +225,10 @@
 
 <nav id="pagination" >
     
-    <a href="/2011/01/12/spring-mvc-1/" class="alignleft prev" >上一页</a>
+    <a href="/2010/10/15/thread-executor/" class="alignleft prev" >上一页</a>
     
     
-    <a href="/2010/10/11/transient-volatile-strictfp/" class="alignright next" >下一页</a>
+    <a href="/2010/05/11/transient-volatile-strictfp/" class="alignright next" >下一页</a>
     
     <div class="clearfix"></div>
 </nav>
@@ -269,7 +274,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -289,11 +294,11 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -303,7 +308,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -352,15 +357,15 @@ var duoshuoQuery = {short_name:"zxc337"};
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

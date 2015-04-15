@@ -89,66 +89,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2013-06-18T08:15:01.000Z"><a href="/2013/06/18/hello/">6月 18 2013</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2013/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在apache-tomcat托管的应用里如果使用了dubbo的消费端，关闭tomcat时，会无法退出进程，应用会被关闭，connector端口也关闭了，但dubbo相关的一些线程仍存在，导致java进程并不会消失。</p>
-<p>这其实是由非daemon线程引起的，jvm里当前main线程在退出时，只要存在非daemon的子线程，就不会退出jvm，哪怕这个非daemon的线程是在一个daemon线程里启动的：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DaemonTest</span> </span>{</div><div class="line"></div><div class="line">    <span class="keyword">static</span> class MyThread extends Thread {</div><div class="line">        <span class="keyword">public</span> <span class="title">MyThread</span>(<span class="keyword">boolean</span> isDaemon){</div><div class="line">            <span class="keyword">this</span>.setDaemon(isDaemon);</div><div class="line">        }</div><div class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>(){</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                Thread.sleep(<span class="number">1000</span>*<span class="number">10000</span>);;</div><div class="line">            } <span class="keyword">catch</span> (Exception e) {</div><div class="line">            }</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) <span class="keyword">throws</span> Exception{</div><div class="line">        Thread t1 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t2 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t3 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>);</div><div class="line">        Thread t4 = <span class="keyword">new</span> MyThread(<span class="keyword">true</span>) {</div><div class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">                <span class="keyword">try</span> {</div><div class="line">                    <span class="keyword">new</span> MyThread(<span class="keyword">false</span>).start(); <span class="comment">//非daemon</span></div><div class="line">                    Thread.sleep(<span class="number">1000</span> * <span class="number">10000</span>);</div><div class="line">                } <span class="keyword">catch</span> (Exception e) {</div><div class="line">                }</div><div class="line">            }</div><div class="line">        };</div><div class="line"></div><div class="line"></div><div class="line">        t1.start();</div><div class="line">        t2.start();</div><div class="line">        t3.start();</div><div class="line">        t4.start();</div><div class="line"></div><div class="line">        Thread.sleep(<span class="number">2000</span>);</div><div class="line">        System.out.println(<span class="string">"main thread quit"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>上面启动了4个子线程，都是daemon的，其中有一个子线程又启动了一个非daemon线程，结果主线程退出时，jvm进程并不会退出，并且其他daemon线程也继续运行。</p>
-<p>Dubbo的线程都是daemon的，不过它使用的netty框架却有一个非daemon的“Hashed wheel timer”线程：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="string">"Hashed wheel timer #1"</span> #<span class="number">1582</span> prio=<span class="number">5</span> os_prio=<span class="number">0</span> tid=<span class="number">0x00002aaac5054800</span> nid=<span class="number">0x7fd3</span> waiting on condition [<span class="number">0x0000000041262000</span>]</div><div class="line">   java.lang.Thread.State: TIMED_WAITING (sleeping)</div><div class="line">    at java.lang.Thread.sleep(Native Method)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.waitForNextTick(HashedWheelTimer.java:<span class="number">459</span>)</div><div class="line">    at org.jboss.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:<span class="number">376</span>)</div><div class="line">    at org.jboss.netty.util.ThreadRenamingRunnable.run(ThreadRenamingRunnable.java:<span class="number">108</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</div></pre></td></tr></table></figure>
-
-<p>正是这个非daemon线程，导致tomcat的主线程退出后，jvm进程没能退出。类似的问题以前在HSF2里也存在，后来已经解决了。dubbo的这个问题可以通过kill来结束。</p>
-<p>在tomcat的脚本里，先使用正常的方式(viaport)停止tomcat，在不成功之后会尝试”kill”方式：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"># stop failed. Shutdown port disabled? Try a normal kill.</div><div class="line"><span class="keyword">if</span> [ $? != <span class="number">0</span> ]; then</div><div class="line">    <span class="keyword">if</span> [ ! -z <span class="string">"$CATALINA_PID"</span> ]; then</div><div class="line">      echo <span class="string">"The stop command failed. Attempting to signal the process to stop through OS signal."</span></div><div class="line">      kill -<span class="number">15</span> `cat <span class="string">"$CATALINA_PID"</span>` &gt;/dev/<span class="keyword">null</span> <span class="number">2</span>&gt;&<span class="number">1</span></div><div class="line">    fi</div><div class="line">fi</div></pre></td></tr></table></figure>
-
-<p>但这里的一个问题是”$CATALINA_PID”默认并没有被记录起来，所以没有执行kill，需要运维人员主意这一点。</p>
-<p>// 补充<br>发现这个问题并不是一定发生的，只在dubbo发生了某种异常的情况下会有。正常情况下tomcat关闭(viaport方式)还是可以让jvm进程退出的(估计dubbo或netty有逻辑去处理那个timer线程），但这个异常是怎么回事产生的暂没有精力去跟踪了。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2013-04-02T09:20:33.000Z"><a href="/2013/04/02/nginx-upstream/">4月 2 2013</a></time>
       
       
@@ -671,10 +611,10 @@
 <p><br></p>
 <h3 id="第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的">第三种方法是后台加Filter,对每个post请求的参数过滤一些关键字,替换成安全的</h3>
 <p>例如：&lt; &gt; ‘ “ \ /  # &amp;<br>方法是实现一个自定义的<code>HttpServletRequestWrapper</code>，然后在Filter里面调用它，替换掉getParameter函数即可。<br>首先添加一个<code>XssHttpServletRequestWrapper</code>:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.util.Enumeration;</div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequestWrapper;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssHttpServletRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{  </div><div class="line">    <span class="keyword">public</span> <span class="title">XssHttpServletRequestWrapper</span>(HttpServletRequest servletRequest) {</div><div class="line">        <span class="keyword">super</span>(servletRequest);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String[] <span class="title">getParameterValues</span>(String parameter) {</div><div class="line">      String[] values = <span class="keyword">super</span>.getParameterValues(parameter);</div><div class="line">      <span class="keyword">if</span> (values==<span class="keyword">null</span>)  {</div><div class="line">                  <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">          }</div><div class="line">      <span class="keyword">int</span> count = values.length;</div><div class="line">      String[] encodedValues = <span class="keyword">new</span> String[count];</div><div class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) {</div><div class="line">                 encodedValues[i] = cleanXSS(values[i]);</div><div class="line">       }</div><div class="line">      <span class="keyword">return</span> encodedValues;</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getParameter</span>(String parameter) {</div><div class="line">          String value = <span class="keyword">super</span>.getParameter(parameter);</div><div class="line">          <span class="keyword">if</span> (value == <span class="keyword">null</span>) {</div><div class="line">                 <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">                  }</div><div class="line">          <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">public</span> String <span class="title">getHeader</span>(String name) {</div><div class="line">        String value = <span class="keyword">super</span>.getHeader(name);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="keyword">private</span> String <span class="title">cleanXSS</span>(String value) {</div><div class="line">                <span class="comment">//You'll need to remove the spaces from the html entities below</span></div><div class="line">        value = value.replaceAll(<span class="string">"&lt;"</span>, <span class="string">"& lt;"</span>).replaceAll(<span class="string">"&gt;"</span>, <span class="string">"& gt;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"\\("</span>, <span class="string">"& #40;"</span>).replaceAll(<span class="string">"\\)"</span>, <span class="string">"& #41;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"'"</span>, <span class="string">"& #39;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"eval\\((.*)\\)"</span>, <span class="string">""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']"</span>, <span class="string">"\"\""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"script"</span>, <span class="string">""</span>);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    }</div><div class="line"></div><div class="line">}</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">import</span> java.util.Enumeration;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;</div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequestWrapper;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssHttpServletRequestWrapper</span> <span class="keyword">extends</span> <span class="title">HttpServletRequestWrapper</span> </span>{ </div><div class="line">    <span class="comment">// </span></div><div class="line">    <span class="keyword">public</span> <span class="title">XssHttpServletRequestWrapper</span>(HttpServletRequest servletRequest) {</div><div class="line">        <span class="keyword">super</span>(servletRequest);</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> String[] <span class="title">getParameterValues</span>(String parameter) {</div><div class="line">        String[] values = <span class="keyword">super</span>.getParameterValues(parameter);</div><div class="line">        <span class="keyword">if</span> (values==<span class="keyword">null</span>)  {</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        }</div><div class="line">        <span class="keyword">int</span> count = values.length;</div><div class="line">        String[] encodedValues = <span class="keyword">new</span> String[count];</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) {</div><div class="line">            encodedValues[i] = cleanXSS(values[i]);</div><div class="line">        }</div><div class="line">        <span class="keyword">return</span> encodedValues;</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> String <span class="title">getParameter</span>(String parameter) {</div><div class="line">        String value = <span class="keyword">super</span>.getParameter(parameter);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>) {</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        }</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> String <span class="title">getHeader</span>(String name) {</div><div class="line">        String value = <span class="keyword">super</span>.getHeader(name);</div><div class="line">        <span class="keyword">if</span> (value == <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">        <span class="keyword">return</span> cleanXSS(value);</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">private</span> String <span class="title">cleanXSS</span>(String value) {</div><div class="line">        <span class="comment">//You'll need to remove the spaces from the html entities below</span></div><div class="line">        value = value.replaceAll(<span class="string">"&lt;"</span>, <span class="string">"& lt;"</span>).replaceAll(<span class="string">"&gt;"</span>, <span class="string">"& gt;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"\\("</span>, <span class="string">"& #40;"</span>).replaceAll(<span class="string">"\\)"</span>, <span class="string">"& #41;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"'"</span>, <span class="string">"& #39;"</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"eval\\((.*)\\)"</span>, <span class="string">""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']"</span>, <span class="string">"\"\""</span>);</div><div class="line">        value = value.replaceAll(<span class="string">"script"</span>, <span class="string">""</span>);</div><div class="line">        <span class="keyword">return</span> value;</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>然后添加一个过滤器XssFilter ：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"></div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"></div><div class="line"><span class="keyword">import</span> javax.servlet.Filter;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterChain;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletException;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</div><div class="line"></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line">    FilterConfig filterConfig = <span class="keyword">null</span>;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span>(FilterConfig filterConfig) <span class="keyword">throws</span> ServletException {</div><div class="line">        <span class="keyword">this</span>.filterConfig = filterConfig;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span>() {</div><div class="line">        <span class="keyword">this</span>.filterConfig = <span class="keyword">null</span>;</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response,</div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException {</div><div class="line">        chain.doFilter(<span class="keyword">new</span> XssHttpServletRequestWrapper(</div><div class="line">                (HttpServletRequest) request), response);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">package</span> com.ibm.web.beans;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">import</span> java.io.IOException;  </div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">import</span> javax.servlet.Filter;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterChain;  </div><div class="line"><span class="keyword">import</span> javax.servlet.FilterConfig;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletException;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.ServletResponse;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletRequest;  </div><div class="line"><span class="keyword">import</span> javax.servlet.http.HttpServletResponse;</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XssFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>{</div><div class="line">    FilterConfig filterConfig = <span class="keyword">null</span>;</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span>(FilterConfig filterConfig) <span class="keyword">throws</span> ServletException {</div><div class="line">        <span class="keyword">this</span>.filterConfig = filterConfig;</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destroy</span>() {</div><div class="line">        <span class="keyword">this</span>.filterConfig = <span class="keyword">null</span>;</div><div class="line">    }</div><div class="line">    <span class="comment">//</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilter</span>(ServletRequest request, ServletResponse response,</div><div class="line">            FilterChain chain) <span class="keyword">throws</span> IOException, ServletException {</div><div class="line">        chain.doFilter(<span class="keyword">new</span> XssHttpServletRequestWrapper(</div><div class="line">                (HttpServletRequest) request), response);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
 
 <p>最后在web.xml里面配置一下，所有的请求的getParameter会被替换，如果参数里面含有<code>敏感词</code>会被替换掉：</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">filter</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-class</span>&gt;</span>com.ibm.web.beans.XssFilter<span class="tag">&lt;/<span class="title">filter-class</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter</span>&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">filter-mapping</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">filter-name</span>&gt;</span>XssSqlFilter<span class="tag">&lt;/<span class="title">filter-name</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">url-pattern</span>&gt;</span>/*<span class="tag">&lt;/<span class="title">url-pattern</span>&gt;</span></div><div class="line">   <span class="tag">&lt;<span class="title">dispatcher</span>&gt;</span>REQUEST<span class="tag">&lt;/<span class="title">dispatcher</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">filter-mapping</span>&gt;</span></div></pre></td></tr></table></figure>
@@ -1447,13 +1387,187 @@
 
 
 
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-07-10T04:28:13.000Z"><a href="/2012/07/10/show-busy-java-threads/">7月 10 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/07/10/show-busy-java-threads/">shell命令排查Java的CPU性能问题</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在排查Java的CPU性能问题时(<code>top us</code>值过高),要找出Java进程中消耗CPU多的线程,并查看它的线程栈,从而找出导致性能问题的方法调用。</p>
+<p>详细说明：top命令开启线程显示模式、按CPU使用率排序、记下Java进程里CPU高的线程号；手动转成十六进制（可以用printf %x 1234）；jstack，grep十六进制的线程id，找到线程栈。查问题时，会要多次这样操作，太繁琐。</p>
+<p>这个脚本的功能是，打印出在运行的Java进程中，消耗CPU最多的线程栈（缺省是5个线程）。</p>
+<h3 id="用法">用法</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt;</div><div class="line"><span class="comment"># 上面会从所有的Java进程中找出最消耗CPU的线程，这样用更方便。</span></div><div class="line"></div><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt; -p &lt;指定的Java Process&gt;</div></pre></td></tr></table></figure>
+
+<h3 id="示例">示例</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">$ show-busy-java-threads.sh </div><div class="line">The stack of busy(<span class="number">57.0</span>%) thread(<span class="number">23355</span>/<span class="number">0</span>x5b3b) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-1"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005b5c5000 nid=<span class="number">0</span>x5b3b runnable [<span class="number">0</span>x000000004062c000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">127</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">662</span>)</div><div class="line"></div><div class="line">The stack of busy(<span class="number">26.1</span>%) thread(<span class="number">24018</span>/<span class="number">0</span>x5dd2) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-2"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005a968800 nid=<span class="number">0</span>x5dd2 runnable [<span class="number">0</span>x00000000420e9000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.util.Arrays.copyOf(Arrays.java:<span class="number">2882</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:<span class="number">100</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:<span class="number">572</span>)</div><div class="line">    at java.lang.StringBuffer.append(StringBuffer.java:<span class="number">320</span>)</div><div class="line">    - locked &lt;<span class="number">0</span>x00000007908d0030&gt; (a java.lang.StringBuffer)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">890</span>)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">869</span>)</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">126</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">...</div></pre></td></tr></table></figure>
+
+<p>上面的线程栈可以看出，CPU消耗最高的2个线程都在执行java.text.DateFormat.format，业务代码对应的方法是shared.monitor.schedule.AppMonitorDataAvgScheduler.run。可以基本确定：</p>
+<ul>
+<li>AppMonitorDataAvgScheduler.run调用DateFormat.format次数比较频繁。</li>
+<li>DateFormat.format比较慢。（这个可以由DateFormat.format的实现确定。）</li>
+</ul>
+<p>多个执行几次show-busy-java-threads.sh，如果上面情况高概率出现，则可以确定上面的判定。<br>因为调用越少代码执行越快，则出现在线程栈的概率就越低。</p>
+<p>分析shared.monitor.schedule.AppMonitorDataAvgScheduler.run实现逻辑和调用方式，以优化实现解决问题。</p>
+<p>show-busy-java-threads.sh脚本:</p>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># @Function</span>
+    <span class="comment"># Find out the highest cpu consumed threads of java, and print the stack of these threads.</span>
+    <span class="comment">#</span>
+    <span class="comment"># @Usage</span>
+    <span class="comment">#   $ ./show-busy-java-threads.sh</span>
+    <span class="comment">#</span>
+    <span class="comment"># @author zxc</span>
+
+    PROG=`basename <span class="variable">$0</span>`
+
+    <span class="function"><span class="title">usage</span></span>() {
+        cat &lt;&lt;EOF
+    Usage: <span class="variable">${PROG}</span> [OPTION]...
+    Find out the highest cpu consumed threads of java, and print the stack of these threads.
+    Example: <span class="variable">${PROG}</span> -c <span class="number">10</span>
+    Options:
+        -p, --pid       find out the highest cpu consumed threads from the specifed java process,
+                        default from all java process.
+        -c, --count     <span class="keyword">set</span> the thread count to show, default is <span class="number">5</span>
+        -h, --help      display this <span class="built_in">help</span> and <span class="keyword">exit</span>
+    EOF
+        <span class="keyword">exit</span> <span class="variable">$1</span>
+    }
+
+    ARGS=`getopt -n <span class="string">"<span class="variable">$PROG</span>"</span> <span class="operator">-a</span> -o c:p:h <span class="operator">-l</span> count:,pid:,<span class="built_in">help</span> -- <span class="string">"<span class="variable">$@</span>"</span>`
+    [ $? <span class="operator">-ne</span> <span class="number">0</span> ] &amp;&amp; usage <span class="number">1</span>
+    <span class="built_in">eval</span> <span class="keyword">set</span> -- <span class="string">"<span class="variable">${ARGS}</span>"</span>
+
+    <span class="keyword">while</span> <span class="literal">true</span>; <span class="keyword">do</span>
+        <span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span>
+        -c|--count)
+            count=<span class="string">"<span class="variable">$2</span>"</span>
+            shift <span class="number">2</span>
+            ;;
+        -p|--pid)
+            pid=<span class="string">"<span class="variable">$2</span>"</span>
+            shift <span class="number">2</span>
+            ;;
+        -h|--help)
+            usage
+            ;;
+        --)
+            shift
+            <span class="keyword">break</span>
+            ;;
+        <span class="keyword">esac</span>
+    <span class="keyword">done</span>
+    count=<span class="variable">${count:-5}</span>
+
+    <span class="function"><span class="title">redEcho</span></span>() {
+        [ -c /dev/stdout ] &amp;&amp; {
+            <span class="comment"># if stdout is console, turn on color output.</span>
+            <span class="built_in">echo</span> <span class="operator">-ne</span> <span class="string">"\033[1;31m"</span>
+            <span class="built_in">echo</span> -n <span class="string">"<span class="variable">$@</span>"</span>
+            <span class="built_in">echo</span> <span class="operator">-e</span> <span class="string">"\033[0m"</span>
+        } || <span class="built_in">echo</span> <span class="string">"<span class="variable">$@</span>"</span>
+    }
+
+    <span class="comment"># Check the existence of jstack command!</span>
+    <span class="keyword">if</span> ! which jstack &amp;&gt; /dev/null; <span class="keyword">then</span>
+        [ -z <span class="string">"<span class="variable">$JAVA_HOME</span>"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        ! [ <span class="operator">-f</span> <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack file does NOT exists!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        ! [ -x <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
+            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack is NOT executalbe!"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        }
+        <span class="keyword">export</span> PATH=<span class="string">"<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span>"</span>
+    <span class="keyword">fi</span>
+
+    uuid=`date +%s`_<span class="variable">${RANDOM}</span>_$$
+
+    <span class="function"><span class="title">cleanupWhenExit</span></span>() {
+        rm /tmp/<span class="variable">${uuid}</span>_* &amp;&gt; /dev/null
+    }
+    trap <span class="string">"cleanupWhenExit"</span> EXIT
+
+    <span class="function"><span class="title">printStackOfThread</span></span>() {
+        <span class="keyword">while</span> <span class="built_in">read</span> threadLine ; <span class="keyword">do</span>
+            pid=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $1}'</span>`
+            threadId=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $2}'</span>`
+            threadId0x=`<span class="built_in">printf</span> %x <span class="variable">${threadId}</span>`
+            user=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $3}'</span>`
+            pcpu=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $5}'</span>`
+
+            jstackFile=/tmp/<span class="variable">${uuid}</span>_<span class="variable">${pid}</span>
+
+            [ ! <span class="operator">-f</span> <span class="string">"<span class="variable">${jstackFile}</span>"</span> ] &amp;&amp; {
+                jstack <span class="variable">${pid}</span> &gt; <span class="variable">${jstackFile}</span> || {
+                    redEcho <span class="string">"Fail to jstack java process <span class="variable">${pid}</span>!"</span>
+                    rm <span class="variable">${jstackFile}</span>
+                    <span class="keyword">continue</span>
+                }
+            }
+
+            redEcho <span class="string">"Busy(<span class="variable">${pcpu}</span>%) thread(<span class="variable">${threadId}</span>/0x<span class="variable">${threadId0x}</span>) stack of java process(<span class="variable">${pid}</span>) under user(<span class="variable">${user}</span>):"</span>
+            sed <span class="string">"/nid=0x<span class="variable">${threadId0x}</span> /,/^$/p"</span> -n <span class="variable">${jstackFile}</span>
+        <span class="keyword">done</span>
+    }
+
+    ps -Leo pid,lwp,user,comm,pcpu --no-headers | {
+        [ -z <span class="string">"<span class="variable">${pid}</span>"</span> ] &amp;&amp;
+        awk <span class="string">'$4=="java"{print $0}'</span> ||
+        awk -v <span class="string">"pid=<span class="variable">${pid}</span>"</span> <span class="string">'$1==pid,$4=="java"{print $0}'</span>
+    } | sort -k5 -r -n | head --lines <span class="string">"<span class="variable">${count}</span>"</span> | printStackOfThread
+</code></pre>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/3/">Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/5/">Next</a></nav>
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/3/">Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><a class="page-number" href="/page/6/">6</a><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/5/">Next</a></nav>
 
 <nav id="pagination">
   
@@ -1480,7 +1594,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -1500,11 +1614,11 @@
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -1514,7 +1628,7 @@
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -1563,15 +1677,15 @@
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

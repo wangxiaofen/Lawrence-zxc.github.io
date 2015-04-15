@@ -98,14 +98,15 @@
     </header>
     <div class="entry">
       
-        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是jvm crash的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
-<p>根据以往的经验，排除了oom killer或ulimit -t设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
-<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
+        <p>今天遇到的一个tomcat启动过程中jvm退出的问题，不是<code>jvm crash</code>的情况，用户日志配置的不正确导致一些信息没有展现出来，只看到pandora执行了shutdownhook的信息。这可能是启动时的逻辑有触发System.exit，或被系统或人为kill掉了。</p>
+<p>根据以往的经验，排除了<code>oom killer</code>或<code>ulimit -t</code>设置不当导致被内核给kill掉的情况，OS级别的signal通常不留机会给jvm执行shutdownhook的。如此一来singal的范围应该就是SIGTERM, SIGINT, SIGHUP这3种（参考这里）。</p>
+<p>虽然singal范围缩小，但依然不能确定是因为代码里调用了System.exit还是人为(或被其他进程)kill引起的。直接上大招用systemtap需要安装kernal debuginfo，没有权限的话，还要找到对应的人去做；</p>
+<p>如果现象较容易重现的话，可以先通过strace命令进一步缩小问题的范围，究竟是因为jvm内部执行了System.exit还是外界的kill引起的。</p>
 <p>这里通过启动一个scala的repl来模拟java进程，通过strace attach到jvm进程上，然后观察，如果是外界的kill所致，可以看到下面的信息：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1947</span></div><div class="line">Process <span class="number">1947</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGTERM (Terminated) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb762762360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb762762360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb7635959d0, FUTEX_WAIT, <span class="number">1948</span>, NULLPANIC: attached pid <span class="number">1947</span> exited with <span class="number">143</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">143</span>&gt;</div></pre></td></tr></table></figure>
 
-<p>里面的关键信息是SIGTERM或exit status 143(即SIGTERM的code)</p>
-<p>如果是kill -2或ctrl-c终止repl，可以看到有关SIGINT的信息</p>
+<p>里面的关键信息是SIGTERM或<code>exit status 143</code>(即SIGTERM的code)</p>
+<p>如果是<code>kill -2</code>或<code>ctrl-c</code>终止repl，可以看到有关SIGINT的信息</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ <span class="built_in">sudo</span> strace -p <span class="number">1813</span></div><div class="line">Process <span class="number">1813</span> attached - interrupt to quit</div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULL) = ? ERESTARTSYS (To be restarted)</div><div class="line">--- SIGINT (Interrupt) @ <span class="number">0</span> (<span class="number">0</span>) ---</div><div class="line">futex(<span class="number">0</span>x7fb24c327360, FUTEX_WAKE_PRIVATE, <span class="number">1</span>) = <span class="number">1</span></div><div class="line">rt_sigreturn(<span class="number">0</span>x7fb24c327360)            = <span class="number">202</span></div><div class="line">futex(<span class="number">0</span>x7fb24d15a9d0, FUTEX_WAIT, <span class="number">1814</span>, NULLPANIC: attached pid <span class="number">1813</span> exited with <span class="number">130</span></div><div class="line"> &lt;unfinished ... <span class="keyword">exit</span> status <span class="number">130</span>&gt;</div></pre></td></tr></table></figure>
 
 <p>如果是jvm自身执行了System.exit比如：</p>
@@ -123,7 +124,7 @@
 
         
           <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
+            <em>上一篇: </em><a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
           </div>
         
         
@@ -191,7 +192,7 @@
 
 <nav id="pagination" >
     
-    <a href="/2014/11/10/xmpp/" class="alignleft prev" >上一页</a>
+    <a href="/2014/11/10/oracle-partition/" class="alignleft prev" >上一页</a>
     
     
     <a href="/2014/10/28/load-balancing/" class="alignright next" >下一页</a>
@@ -240,7 +241,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -260,11 +261,11 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -274,7 +275,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -323,15 +324,15 @@ var duoshuoQuery = {short_name:"zxc337"};
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

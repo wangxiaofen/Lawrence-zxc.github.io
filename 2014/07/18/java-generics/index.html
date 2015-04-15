@@ -205,7 +205,8 @@
 <p>上面两段代码，表明了当与Raw类型造型时，&lt;?&gt;在编译器的处理方式的确与&lt;? Extends Object&gt;有所不同，根据场景它可能被编译器忽略掉泛型信息而直接当作Raw类型，而&lt;? Extends Object&gt;则不会。</p>
 <p>但这种差异，有些吹毛求疵，除了跟Raw类型转换方面存在差异，在语义上两者可以认为是完全等同的，见：<a href="http://bugs.sun.com/view_bug.do?bug_id=6480391" target="_blank" rel="external">http://bugs.sun.com/view_bug.do?bug_id=6480391</a></p>
 <p><em>The introduction of the capture conversion simplified a lot of things. One of the things it did is make “?” equivalent to “? extends Object”. Unfortunately, JLS3 doesn’t say they are equivalent.</em></p>
-<p>SUN的开发人员回复说：<br><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
+<p>SUN的开发人员回复说：</p>
+<p><em>? should be considered equivalent to ? extends Object. I will note this at the end of the text about bounds for wildcards in 4.5.1.<br>……<br>Hence, Foo&lt;?&gt; is semantically equivalent to Foo&lt;? extends Object&gt;</em></p>
 <p>但查了一下发现目前 JLS3中还依然没有增加他说要加的那句注释，见：</p>
 <p><a href="http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1" target="_blank" rel="external">http://java.sun.com/docs/books/jls/third_edition/html/typesValues.html#4.5.1</a></p>
 <p>我们暂从语义上认为两者相等。</p>
@@ -334,7 +335,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -354,11 +355,11 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -368,7 +369,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -417,15 +418,15 @@ var duoshuoQuery = {short_name:"zxc337"};
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

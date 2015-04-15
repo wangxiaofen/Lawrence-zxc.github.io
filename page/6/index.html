@@ -89,69 +89,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2011-12-26T13:45:29.000Z"><a href="/2011/12/26/concurrenthashmap/">12月 26 2011</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2011/12/26/concurrenthashmap/">由ConcurrentHashMap的一个NullPointerException异常引起的错误</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>开发中碰到ConcurrentHashMap NullPointerException not allow null key and value,由ConcurrentHashMap的一个NullPointerException异常引起，结合ConcurrentHashMap源码分析为什么ConcurrentHashMap不允许空key和value以及如何改造进行支持。</p>
-<p>1、异常分析<br>前几天碰到一个异常,日志信息如下：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">FATAL EXCEPTION: main</div><div class="line">java.lang.NullPointerException</div><div class="line">    at java.util.concurrent.ConcurrentHashMap.remove(ConcurrentHashMap.java:<span class="number">921</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.deleteDownloadAndUpdateViewInfo(AppSearchService.java:<span class="number">586</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.installFinish(AppSearchService.java:<span class="number">1111</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService.access$<span class="number">10</span>(AppSearchService.java:<span class="number">1102</span>)</div><div class="line">    at cn.trinea.appsearch.service.AppSearchService$MyHandler.handleMessage(AppSearchService.java:<span class="number">1062</span>)</div><div class="line">    at android.os.Handler.dispatchMessage(Handler.java:<span class="number">99</span>)</div><div class="line">    at android.os.Looper.loop(Looper.java:<span class="number">153</span>)</div><div class="line">    at android.app.ActivityThread.main(ActivityThread.java:<span class="number">5198</span>)</div><div class="line">    at java.lang.reflect.Method.invokeNative(Native Method)</div><div class="line">    at java.lang.reflect.Method.invoke(Method.java:<span class="number">511</span>)</div><div class="line">    at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:<span class="number">826</span>)</div><div class="line">    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:<span class="number">589</span>)</div><div class="line">    at dalvik.system.NativeStart.main(Native Method)</div></pre></td></tr></table></figure>
-
-<p>本以为是并发异常，后发现不对，因为ConcurrentHashMap已经使用继承自ReentrantLock的Segment，保证了线程安全，Java如果有这么大的bug肯定早修复了。看了下源码</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="javadoc">/**</span></div><div class="line"> * Removes the key (and its corresponding value) from this map.</div><div class="line"> * This method does nothing if the key is not in the map.</div><div class="line"> *</div><div class="line"> *<span class="javadoctag"> @param</span>  key the key that needs to be removed</div><div class="line"> *<span class="javadoctag"> @return</span> the previous value associated with &lt;tt&gt;key&lt;/tt&gt;, or</div><div class="line"> *         &lt;tt&gt;null&lt;/tt&gt; if there was no mapping for &lt;tt&gt;key&lt;/tt&gt;</div><div class="line"> *<span class="javadoctag"> @throws</span> NullPointerException if the specified key is null</div><div class="line"> */</div><div class="line"><span class="keyword">public</span> V <span class="title">remove</span>(Object key) {</div><div class="line">    <span class="keyword">int</span> hash = hash(key);</div><div class="line">    Segment&lt;K,V&gt; s = segmentForHash(hash);</div><div class="line">    <span class="keyword">return</span> s == <span class="keyword">null</span> ? <span class="keyword">null</span> : s.remove(key, hash, <span class="keyword">null</span>);</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>发现自己大意了，在获取hashCode时NPE(hashMap不会,因为它会对null key做一次处理)。ConcurrentHashMap不接受null key和null value这个常识一时疏忽了,调用的地方确实有可能传入null。这样在remove前进行null判断即可解决。</p>
-<p>在问题解决后,想到hashMap和linkedhashMap都允许null key和null value,treeMap不允许null key,但允许null value,而ConcurrentHashMap既不允许null key也不允许null value，why?</p>
-<p>2、not allow null key and value<br>stackoverflow并结合了源码分析了一下<br>(1) treeMap不允许null key是因为compare会导致NPE,可通过以下代码实现null key支持</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">SortedMap&lt;Integer, Integer&gt; map = <span class="keyword">new</span> TreeMap&lt;Integer, Integer&gt;(<span class="keyword">new</span> Comparator&lt;Integer&gt;() {</div><div class="line"></div><div class="line">									<span class="annotation">@Override</span></div><div class="line">									<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compare</span>(Integer arg0, Integer arg1) {</div><div class="line">										<span class="keyword">if</span> (arg0 == <span class="keyword">null</span>) {</div><div class="line">											<span class="keyword">if</span> (arg1 == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">											<span class="keyword">return</span> -<span class="number">1</span>;</div><div class="line">										}</div><div class="line">										<span class="keyword">if</span> (arg1 == <span class="keyword">null</span>) <span class="keyword">return</span> <span class="number">1</span>;</div><div class="line">										<span class="keyword">return</span> arg0.compareTo(arg1);</div><div class="line">									}</div><div class="line">								});</div></pre></td></tr></table></figure>
-
-<p>(2) ConcurrentHashMap不允许null key和null value，是因为ConcurrentHashMap的锁机制<br>对于get(Object key)如果返回null,ConcurrentHashMap没办法判断是key不存在还是value就是null。有人得问了那么hashmap呢, 为什么可以，hashmap我们可以通过下面代码实现判断</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">Map&lt;String, String&gt; map = Collections.synchronizedMap(<span class="keyword">new</span> HashMap&lt;String, String&gt;());</div><div class="line">String key = <span class="string">"aa"</span>, value;</div><div class="line"><span class="keyword">synchronized</span> (map) {</div><div class="line">    <span class="keyword">if</span> (map.containsKey(key)) {</div><div class="line">        value = map.get(key);</div><div class="line">    } <span class="keyword">else</span> {</div><div class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"key is not exist"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>使用Collections.synchronizedMap对hashmap加锁,Collections.synchronizedMap的锁是同步锁,就是对象本身,所以synchronized (map)与Collections.synchronizedMap内锁统一。而ConcurrentHashMap的并发控制是利用分离锁实现的(16个重入锁),在外部无法获得锁,自己也没有提供函数进行判断，所以无奈了。</p>
-<p>那么有没有办法既保证map的并发安全同时又允许null key和null value呢,当然了,两种方式<br>第一种实际上面已经展现了,通过Collections.synchronizedMap对hashmap加锁即可。synchronizedMap保证了线程安全,hashmap又允许null key和null value。<br>不过Collections.synchronizedMap的并发性能自然比不上ConcurrentHashMap的分桶锁机制,如果对性能要求较高<br>理论上也可以重写ConcurrentHashMap添加一个函数支持上面代码段的并发，但这个要求对ConcurrentHashMap的分离锁相当熟悉</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2011-11-10T08:50:10.000Z"><a href="/2011/11/10/my-java-dev-tools/">11月 10 2011</a></time>
       
       
@@ -215,6 +152,240 @@
 <p>3.虚心问牛人。</p>
 <p>六、最重要的是⋯⋯</p>
 <p>一颗永不停止学习的心。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-03-19T15:01:00.000Z"><a href="/2011/03/19/thread-lock/">3月 19 2011</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/03/19/thread-lock/">并发锁机制和Lock-Free算法</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="原子类型">原子类型</h3>
+<p>这是由硬件提供原子操作指令实现的。在非激烈竞争的情况下,开销更小,速度更快。<br>java.util.concurrent中实现的原子操作类包括: <code>AtomicBoolean</code>、<code>AtomicInteger</code>、<code>AtomicLong</code>、<code>AtomicReference</code></p>
+<p>不使用AtomicInteger</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">class Counter {</div><div class="line">	<span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> count = <span class="number">0</span>;</div><div class="line">	<span class="comment">//若要线程安全执行执行count++,需要加锁</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment</span>() { </div><div class="line">		count++;</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getCount</span>() {</div><div class="line">		<span class="keyword">return</span> count;</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用AtomicInteger</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">class Counter {</div><div class="line">	<span class="keyword">private</span> AtomicInteger count = <span class="keyword">new</span> AtomicInteger();</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">increment</span>() { </div><div class="line">		<span class="comment">//￼使用AtomicInteger之后,不需要加锁,也可以实现线程安全</span></div><div class="line">		count.incrementAndGet();</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getCount</span>() {</div><div class="line">		<span class="keyword">return</span> count.get();</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="非阻塞型同步(Non-blocking_Synchronization)">非阻塞型同步(Non-blocking Synchronization)</h3>
+<p>如何正确有效的保护共享数据是编写并行程序必须面临的一个难题,通常的手段就是同步;同步可分为阻塞型同步(Blocking Synchronization)和非阻塞型同步( Non-blocking Synchronization).</p>
+<p>阻塞型同步是指当一个线程到达临界区时,因另外一个线程已经持有访问该共享数据的锁, 从而不能获取锁资源而阻塞,直到另外一个线程释放锁。常见的同步原语有 mutex、 semaphore 等。如果同步方案采用不当,就会造成死锁(deadlock),活锁(livelock)和 优先级反转(priority inversion),以及效率低下等现象。</p>
+<p><img src="/img/threadLock.jpg"></p>
+<p>为了降低风险程度和提高程序运行效率,业界提出了不采用锁的同步方案,依照这种设计思路设计的算法称为非阻塞型算法,其本质特征就是停止一个线程的执行不会阻碍系统中其他执行实体的运行。<br>当今比较流行的 Non-blocking Synchronization 实现方案有三种: </p>
+<ul>
+<li><p>Wait-free<br>Wait-free是指任意线程的任何操作都可以在有限步之内结束,而不用关心其它线程的执行速度。Wait-free是基于 per-thread 的,可以认为是 starvation-free 的。非常遗憾的是实际情况并非如此,采用 Wait-free 的程序并不能保证 starvation-free,同时内存消耗也随线程数量而线性增长。目前只有极少数的非阻塞算法实现了这一点。</p>
+</li>
+<li><p>Lock-Free<br>Lock-Free是指能够确保执行它的所有线程中至少有一个能够继续往下执行。由于每个线程不是 starvation-free 的,即有些线程可能会被任意地延迟,然而在每一步都至少有一 个线程能够往下执行,因此系统作为一个整体是在持续执行的,可以认为是 system-wide 的。所有 Wait-free 的算法都是 Lock-Free 的。</p>
+</li>
+<li><p>Obstruction-free<br>Obstruction-free是指在任何时间点,一个孤立运行线程的每一个操作可以在有限步之内结束。只要没有竞争,线程就可以持续运行。一旦共享数据被修改,Obstruction-free 要 求中止已经完成的部分操作,并进行回滚。 所有 Lock-Free 的算法都是 Obstruction-free 的。</p>
+</li>
+</ul>
+<h3 id="使用Lock-Free算法">使用Lock-Free算法</h3>
+<p>不使用Lock-Free算法示例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">class Counter {</div><div class="line">	<span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">int</span> max = <span class="number">0</span>;</div><div class="line">	<span class="comment">//若要线程安全,需要加锁</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">set</span>(<span class="keyword">int</span> value) { </div><div class="line">		<span class="keyword">if</span> (value &gt; max) {</div><div class="line">			max = value; </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMax</span>() {</div><div class="line">		<span class="keyword">return</span> max;</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用Lock-Free算法代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">class Counter {</div><div class="line">	<span class="keyword">private</span> AtomicInteger max = <span class="keyword">new</span> AtomicInteger();</div><div class="line">	<span class="comment">//LockFree算法,不需要加锁。</span></div><div class="line">	<span class="comment">//通常都是三个部分组成: 1.循环 2.CAS (CompareAndSet) 3.回退</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span>(<span class="keyword">int</span> value) { </div><div class="line">		<span class="comment">//第一步循环</span></div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">int</span> current = max.get(); </div><div class="line">			<span class="keyword">if</span> (value &gt; current) {</div><div class="line">				<span class="comment">//第二步CAS</span></div><div class="line">				<span class="keyword">if</span> (max.compareAndSet(current, value)) { </div><div class="line">					<span class="comment">//第三步回退</span></div><div class="line">					<span class="keyword">break</span>;</div><div class="line">				} <span class="keyword">else</span> {</div><div class="line">					<span class="keyword">continue</span>;</div><div class="line">				}</div><div class="line">			} <span class="keyword">else</span> { </div><div class="line">				<span class="keyword">break</span>; </div><div class="line">			}</div><div class="line">	￼￼	} </div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMax</span>() {</div><div class="line">		<span class="keyword">return</span> max.get();</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>同样地实现,把for(;;)改成do…while循环</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">class Counter {</div><div class="line">	<span class="keyword">private</span> AtomicInteger max = <span class="keyword">new</span> AtomicInteger();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span>(<span class="keyword">int</span> value) { </div><div class="line">		<span class="keyword">int</span> current;</div><div class="line">		do {</div><div class="line">			current = max.get();</div><div class="line">			<span class="keyword">if</span> (value &lt;= current) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			}</div><div class="line">		} <span class="keyword">while</span> (!max.compareAndSet(current, value));</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getMax</span>() { </div><div class="line">		<span class="keyword">return</span> max.get();</div><div class="line">	} </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="使用Lock-Free数据结构">使用Lock-Free数据结构</h3>
+<p>使用HashMap</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">class BeanManager {</div><div class="line">	<span class="keyword">private</span> Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;String, Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">getBean</span>(String key) { </div><div class="line">		<span class="keyword">synchronized</span> (map) {</div><div class="line">			Object bean = map.get(key); </div><div class="line">			<span class="keyword">if</span> (bean == <span class="keyword">null</span>) {</div><div class="line">				map.put(key, createBean());</div><div class="line">				bean = map.get(key); </div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> bean; </div><div class="line">		} </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用ConcurrentHashMap</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">class BeanManager {</div><div class="line">	<span class="keyword">private</span> ConcurrentMap&lt;String, Object&gt; map = <span class="keyword">new</span> ConcurrentHashMap&lt;String, Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">getBean</span>(String key) { </div><div class="line">		Object bean = map.get(key);</div><div class="line">		<span class="keyword">if</span> (bean == <span class="keyword">null</span>) {</div><div class="line">			<span class="comment">//使用ConcurrentMap,避免直接使用锁,锁由数据结构来管理。</span></div><div class="line">			map.putIfAbsent(key, createBean()); </div><div class="line">			bean = map.get(key);</div><div class="line">		}</div><div class="line">		<span class="keyword">return</span> bean; </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>ConcurrentHashMap并没有实现Lock-Free,只是使用了分离锁的办法使得能够支持多个Writer并发。 ConcurrentHashMap需要使用更多的内存。</p>
+<h3 id="同样的思路用于更新数据库">同样的思路用于更新数据库</h3>
+<p>乐观锁</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SequenceDao</span> <span class="keyword">extends</span> <span class="title">SqlMapClientDaoSupport</span> </span>{</div><div class="line">	<span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">compareAndSet</span>(String name, <span class="keyword">int</span> value, <span class="keyword">int</span> expect) {</div><div class="line">		Map&lt;String, Object&gt; parameters = <span class="keyword">new</span> HashMap&lt;String, Object&gt;(); parameters.put(<span class="string">"name"</span>, name);</div><div class="line">		parameters.put(<span class="string">"value"</span>, value);</div><div class="line">		parameters.put(<span class="string">"expect"</span>, expect);</div><div class="line">		<span class="comment">// UPDATE t_sequence SET value = #value# WHERE name = #name# AND value = #expect#</span></div><div class="line">		<span class="keyword">int</span> updateCount = getSqlMapClientTemplate().update(<span class="string">"Sequence.compareAndSet"</span>, parameters); <span class="comment">//通过UpdateCount来实现 CompareAndSet</span></div><div class="line">		<span class="keyword">return</span> updateCount == <span class="number">1</span>;</div><div class="line">	}</div><div class="line">}</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SequenceService</span> </span>{</div><div class="line">	<span class="annotation">@Transactional</span>(propagation = Propagation.NOT_SUPPORTED) </div><div class="line">	<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment</span>(String sequenceName) {</div><div class="line">		<span class="comment">//三个部分:1.循环 2.CAS (CompareAndSet) 3.回退</span></div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">int</span> value = dao.getValue(sequenceName);</div><div class="line">			<span class="keyword">if</span> (dao.compareAndSet(sequenceName, value + <span class="number">1</span>, value)) {</div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			}</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>注意,乐观锁时必须使用:@Transactional(propagation = Propagation.NOT_SUPPORTED)</p>
+<p>对比,使用悲观锁版本</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SequenceDao</span> <span class="keyword">extends</span> <span class="title">SqlMapClientDaoSupport</span> </span>{ </div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValueForUpdate</span>(String name) {</div><div class="line">		<span class="comment">// SELECT value FROM t_sequence WHERE name = #name# FOR UPDATE</span></div><div class="line">		<span class="keyword">return</span> (Integer) getSqlMapClientTemplate().queryForObject(<span class="string">"Sequence.getValueForUpdate"</span>, name); </div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span>(String name, <span class="keyword">int</span> value) {</div><div class="line">		Map&lt;String, Object&gt; parameters = <span class="keyword">new</span> HashMap&lt;String, Object&gt;(); parameters.put(<span class="string">"name"</span>, name);</div><div class="line">		parameters.put(<span class="string">"value"</span>, value);</div><div class="line">		<span class="comment">// UPDATE t_sequence SET value = #value# WHERE name = #name#</span></div><div class="line">		getSqlMapClientTemplate().update(<span class="string">"Sequence.set"</span>, parameters); </div><div class="line">	}</div><div class="line">}</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SequenceService</span> </span>{</div><div class="line">	<span class="annotation">@Transactional</span>(propagation = Propagation.REQUIRED) </div><div class="line">	<span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">increment2</span>(String sequenceName) {</div><div class="line">		<span class="comment">//￼读取时,就开始加锁</span></div><div class="line">		<span class="keyword">int</span> value = dao.getValueForUpdate(sequenceName);</div><div class="line">		dao.set(sequenceName, value + <span class="number">1</span>); </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>Lock-Free算法,可以说是乐观锁,如果非激烈竞争的时候,不需要使用锁,从而开销更小,速度更快。</p>
+<h3 id="使用CopyOnWriteArrayList">使用CopyOnWriteArrayList</h3>
+<p>COW(CopyOnWrite)是一种很古老的技术,类似的并发数据结构有:<code>ConcurrentSkipListMap</code>,<code>ConcurrentSkipListSet</code>,<code>CopyOnWriteArrayList</code>,<code>CopyOnWriteArraySet</code></p>
+<p>不使用COW,使用ArrayList示例代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">class Engine {</div><div class="line">	<span class="keyword">private</span> List&lt;Listener&gt; listeners = <span class="keyword">new</span> ArrayList&lt;Listener&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">addListener</span>(Listener listener) { </div><div class="line">		<span class="keyword">synchronized</span> (listeners) {</div><div class="line">			<span class="keyword">return</span> listeners.add(listener); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doXXX</span>() { </div><div class="line">		<span class="keyword">synchronized</span> (listeners) {</div><div class="line">		<span class="keyword">for</span> (Listener listener : listeners) { </div><div class="line">			listener.handle();	</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用CopyOnWriteArrayList</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">class Engine {</div><div class="line">	<span class="keyword">private</span> List&lt;Listener&gt; listeners = <span class="keyword">new</span> CopyOnWriteArrayList &lt;Listener&gt;();</div><div class="line">	<span class="comment">//￼适当使用CopyOnWriteArrayList,能够提高读操作效率</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">addListener</span>(Listener listener) { </div><div class="line">		<span class="keyword">return</span> listeners.add(listener);</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doXXX</span>() {</div><div class="line">		<span class="keyword">for</span> (Listener listener : listeners) {</div><div class="line">			listeners.handle();</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="锁的使用">锁的使用</h3>
+<ul>
+<li><p>使用支持CAS的数据结构,避免使用锁,如: AtomicXXX、ConcurrentMap、CopyOnWriteList、ConcurrentLinkedQueue</p>
+</li>
+<li><p>一定要使用锁的时候,注意获得锁的顺序,相反顺序获得锁,就容易产生死锁。</p>
+</li>
+<li><p>死锁经常是无法完全避免的,鸵鸟策略被很多基础框架所采用。</p>
+</li>
+<li><p>通过Dump线程的StackTrace,例如linux下执行命令 <code>kill -3 &lt;pid&gt;</code>,或者<code>jstack –l &lt;pid&gt;</code>,或 者使用<code>Jconsole</code>连接上去查看线程的<code>StackTrace</code>,由此来诊断死锁问题。</p>
+</li>
+<li><p>外部锁常被忽视而导致死锁,例如数据库的锁</p>
+</li>
+<li><p>存在检测死锁的办法</p>
+</li>
+<li><p>存在一些预防死锁的手段,比如Lock的tryLock,JDK 7中引入的<code>Phaser</code>等。</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-03-14T13:45:57.000Z"><a href="/2011/03/14/thread-blocking/">3月 14 2011</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/03/14/thread-blocking/">Java并发阻塞队列(put和take、offer和poll、drainTo)的使用</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>阻塞队列,是一种常用的并发数据结构,常用于生产者-消费者模式。 </p>
+<h3 id="阻塞队列基础概念">阻塞队列基础概念</h3>
+<p>在Java中,有很多种阻塞队列:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ArrayBlockingQueue  	<span class="comment">//最常用</span></div><div class="line">LinkedBlockingQueue  	<span class="comment">//不会满的</span></div><div class="line">SynchronousQueue    	<span class="comment">//size为0</span></div><div class="line">PriorityBlockingQueue</div><div class="line">CompletionService 		<span class="comment">//BlockingQueue + Executor</span></div><div class="line">TransferQueue 			<span class="comment">//JDK 7中更快的SynchronousQueue</span></div></pre></td></tr></table></figure>
+
+<p>生产者消费者模型</p>
+<pre><code>        producer    <span class="comment">------------------------&gt;    consumer</span>
+                    +<span class="comment">----+----+----+----+----+</span>
+                    +    +      +    +    +    +
+                    +<span class="comment">----+----+----+----+----+</span>
+                  /                            \ <span class="keyword">for</span> (;;) {
+   <span class="comment"> // 如果队列满则阻塞                                blockingQ.take(); // 如果队列空则阻塞</span>
+    blockingQ.<span class="built_in">put</span>(object);                        }
+</code></pre><h3 id="使用阻塞队列">使用阻塞队列</h3>
+<pre><code><span class="code">        +--------------+-------------+</span>
+<span class="code">        |          Queue&lt;T&gt;          |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        | add(E) : boolean           |</span>
+<span class="code">        | remove() : E               |</span>
+<span class="code">        | offer() : boolean          |</span>
+<span class="code">        | poll() : E                 | </span>
+<span class="code">        | element() : E              |</span>
+<span class="code">        | peek() : E                 |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">                       ^</span>
+<span class="code">                      /|\</span>
+<span class="code">                继承自  |     </span>
+<span class="header">                       |
++----------------------+---------------------+</span>
+<span class="header">|             BlockingQueue&lt;T&gt;               |
++----------------------+---------------------+</span>
+<span class="code">+----------------------+</span>---------------------+
+| put(E)                                     |
+| take() : E                                 |
+| offer(E, long, TimeUnit) : boolean         |
+| poll(long, TimeUnit) : E                   |
+| remainingCapacity()                        |
+| drainTo(Collection&lt;? super E&gt;) : int       |
+<span class="header">| drainTo(Collection&lt;? super E&gt;, int ) : int |
++----------------------+---------------------+</span>
+</code></pre><p>BlockingQueue使用注意:</p>
+<ul>
+<li>使用BlockingQueue的时候,尽量不要使用从Queue继承下来的方法,否则就失去了Blocking的特性了。</li>
+<li>在BlockingQueue中,要使用put和take,而非offer和poll。如果 要使用offer和poll,也是要使用带等待时间参数的offer和poll。</li>
+<li>使用drainTo批量获得其中的内容,能够减少锁的次数。</li>
+</ul>
+<p>代码片段一(错误)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			Object object = blockingQ.poll();<span class="comment">//错误,不等待就会直接返回</span></div><div class="line">			handle(object);</div><div class="line">		} </div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段二</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.take(); <span class="comment">// 等到有数据才继续 </span></div><div class="line">				handle(object);</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段三</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.poll(<span class="number">1</span>, TimeUnit.SECONDS); <span class="comment">//防止死等 </span></div><div class="line">				<span class="keyword">if</span> (object == <span class="keyword">null</span>) {</div><div class="line">					<span class="keyword">continue</span>; <span class="comment">//或者做其他处理 </span></div><div class="line">				}</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<h3 id="实现一个简单的阻塞队列">实现一个简单的阻塞队列</h3>
+<p>未取得锁就直接执行wait、notfiy、notifyAll会抛异常</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行wait操作,必须先取得该对象的锁</span></div><div class="line">				<span class="comment">//执行wait操作之后,锁会释放</span></div><div class="line">				<span class="comment">//被唤醒之前,需要先获得锁</span></div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行notify和notifyAll操作,都必须先取得该对象的锁</span></div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Object notFull = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.notifyAll();</div><div class="line">				}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.wait();</div><div class="line">				}</div><div class="line">				linkedList.add(object); </div><div class="line">			}</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</div><div class="line">	<span class="comment">// 一个锁可以创建多个Condition</span></div><div class="line">	<span class="keyword">private</span> Condition notEmpty = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Condition notFull = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">// 要执行await操作,必须先取得该Condition的锁。 </span></div><div class="line">				<span class="comment">// 执行await操作之后,锁会释放。 </span></div><div class="line">				<span class="comment">// 被唤醒之前,需要先获得锁。</span></div><div class="line">				notEmpty.await();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.signalAll(); </div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//￼要执行signal和signalAll操作,都必须先取 得该对象</span></div><div class="line">				notEmpty.signalAll();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.await(); </div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>注意:未锁就直接执行await、signal、siganlAll会抛异常</p>
 
       
     </div>
@@ -377,7 +548,7 @@
       
       
   
-    <h1 class="title"><a href="/2011/02/11/git-help/">git使用帮助</a></h1>
+    <h1 class="title"><a href="/2011/02/11/git-help/">Git使用帮助</a></h1>
   
 
     </header>
@@ -615,6 +786,135 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-12-05T09:10:34.000Z"><a href="/2010/12/05/rizhi/">12月 5 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/12/05/rizhi/">琐忆</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <center><br>    年年如是，<br>    年年不同，<br>    依稀往事，<br>    如梦如风。<br></center>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2010-10-15T13:21:13.000Z"><a href="/2010/10/15/thread-executor/">10月 15 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/10/15/thread-executor/">Java并发执行任务Executor(ExecutorService和Future)</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>为了方便并发执行任务,出现了一种专门用来执行任务的实现,也就是Executor。 由此,任务提交者不需要再创建管理线程,使用更方便,也减少了开销。</p>
+<h3 id="Executor_任务的提交者和执行者">Executor 任务的提交者和执行者</h3>
+<pre><code>       Task Submitter <span class="command">\
+</span>                        <span class="command">\ </span>               ExecutorService
+                          <span class="command">\ </span>                                             Executor Thread
+                            <span class="command">\+</span>------+------+------+------+------+        
+       Task Submitter -------+ Task + Task + Task + Task + Task +        Executor Thread
+                             /+------+------+------+------+------+
+                           /                                             Executor Thread
+                         /
+       Task Submitter  /
+</code></pre><p>java.util.concurrent.Executors是Executor的工厂类,通过Executors可以创建你所需要的 Executor。</p>
+<h3 id="Future_任务的提交者和执行者之间的通讯手段">Future 任务的提交者和执行者之间的通讯手段</h3>
+<pre><code><span class="code">+--------------+</span>-------------+
+<span class="header">|            Future&lt;T&gt;       |
++--------------+-------------+</span>
+<span class="code">+--------------+</span>-------------+
+| cancel(boolean) : boolean  |
+| isCancelled() : boolean    |
+| isDone() : boolean         |
+| get() : T                  |
+<span class="header">| get(long, TimeUnit) : T    |
++--------------+-------------+</span>
+</code></pre><p>Task Submitter把任务提交给Executor执行,他们之间需要一种通 讯手段,这种手段的具体实现,通常叫做Future。Future通常包括 get(阻塞至任务完成), cancel,get(timeout)(等待一段时间) 等等。Future也用于异步变同步的场景。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">ExecutorService executor = Executors.newSingleThreadExecutor();</div><div class="line">Callable&lt;Object&gt; task = <span class="keyword">new</span> Callable&lt;Object&gt;() { </div><div class="line">	<span class="keyword">public</span> Object <span class="title">call</span>() <span class="keyword">throws</span> Exception {</div><div class="line">		Object result = <span class="string">"..."</span>;</div><div class="line">		<span class="keyword">return</span> result; </div><div class="line">	}</div><div class="line">};</div><div class="line">Future&lt;Object&gt; future = executor.submit(task); </div><div class="line">future.get(); <span class="comment">// 等待至完成</span></div></pre></td></tr></table></figure>
+
+<p>有两种任务:</p>
+<ul>
+<li>Runnable</li>
+<li>Callable Callable是需要返回值的任务</li>
+</ul>
+<p>Task Submitter</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Future&lt;Object&gt; future = executor.submit(task);</div><div class="line"><span class="comment">// 等待到任务被执行完毕返回结果</span></div><div class="line"><span class="comment">// 如果任务执行出错,这里会抛ExecutionException </span></div><div class="line">future.get();</div><div class="line"><span class="comment">//等待3秒,超时后会抛TimeoutException </span></div><div class="line">future.get(<span class="number">3</span>, TimeUnit.SECONDS);</div></pre></td></tr></table></figure>
+
+<p>Task Executor</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Callable&lt;Object&gt; task = <span class="keyword">new</span> Callable&lt;Object&gt;() { </div><div class="line">	<span class="keyword">public</span> Object <span class="title">call</span>() <span class="keyword">throws</span> Exception {</div><div class="line">		Object result = <span class="string">"..."</span>;</div><div class="line">		<span class="keyword">return</span> result; </div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2010-10-14T09:09:55.000Z"><a href="/2010/10/14/thread-jichu/">10月 14 2010</a></time>
       
       
@@ -671,6 +971,11 @@
 <li>隐式传参</li>
 </ul>
 <p>注意:使用ThreadLocal,一般都是声明在静态变量中,如果不断的创建ThreadLocal而且没有调用其remove方法,将会导致<code>内存泄露</code>。<br>同时请注意,如果是static的ThreadLocal,一般不需要调用remove。</p>
+<h3 id="线程间的协调(lock、condition、wait、notify、notifyAll)">线程间的协调(lock、condition、wait、notify、notifyAll)</h3>
+<h4 id="ReentrantLock和Synchronized">ReentrantLock和Synchronized</h4>
+<p>Synchronized是Lock的一种简化实现,一个Lock可以对应多个Condition,而synchronized把Lock和Condition合并了,一个synchronized Lock只对应一个Condition,可以说Synchronized是Lock的简化版本。<br>在JDK 5,Synchronized要比Lock慢很多,但是在JDK 6中,它们的效 率差不多。</p>
+<p><img src="/img/thread.jpg"></p>
+<p>不要在Lock和Condition上使用wait、notiffy、notifyAll方法!</p>
 
       
     </div>
@@ -707,11 +1012,11 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2010-10-11T08:53:37.000Z"><a href="/2010/10/11/transient-volatile-strictfp/">10月 11 2010</a></time>
+        <time datetime="2010-05-11T08:53:37.000Z"><a href="/2010/05/11/transient-volatile-strictfp/">5月 11 2010</a></time>
       
       
   
-    <h1 class="title"><a href="/2010/10/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
+    <h1 class="title"><a href="/2010/05/11/transient-volatile-strictfp/">java中的transient, volatile, strictfp关键字用法</a></h1>
   
 
     </header>
@@ -789,125 +1094,20 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2010-04-01T06:15:01.000Z"><a href="/2010/04/01/hello-world/">4月 1 2010</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2010/04/01/hello-world/">Hello World</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>Welcome to Lawrence-zxc’s Blog! Thank you!</p>
-<h3 id="for_Java">for Java</h3>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Hello</span></span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args){</div><div class="line">        System.out.println(<span class="string">"Hello, World!"</span>);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Python">for Python</h3>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env python</span></div><div class="line">print(<span class="string">"Hello, World!"</span>)</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Ruby">for Ruby</h3>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/ruby</span></div><div class="line">puts <span class="string">"Hello, World!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_PHP">for PHP</h3>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">&lt;?php</span></div><div class="line">    <span class="keyword">echo</span> <span class="string">'Hello, world!'</span>;</div><div class="line">    <span class="keyword">print</span> <span class="string">'Hello, world!'</span>;</div><div class="line"><span class="preprocessor">?&gt;</span></div><div class="line"><span class="comment">/* or another */</span></div><div class="line"><span class="preprocessor">&lt;?</span>= <span class="string">"Hello, World!"</span><span class="preprocessor">?&gt;</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_C">for C</h3>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="preprocessor">#<span class="keyword">include</span> &lt;stdio.h&gt;</span></div><div class="line"></div><div class="line"><span class="keyword">int</span> main() </div><div class="line">{</div><div class="line">    <span class="built_in">printf</span>(<span class="string">"Hello, World!"</span>);</div><div class="line">    <span class="keyword">return</span> <span class="number">0</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<h3 id="for_Lua">for Lua</h3>
-<figure class="highlight lua"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">print</span> <span class="string">"Hello, World!"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_JavaScript">for JavaScript</h3>
-<figure class="highlight JavaScript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">alert(<span class="string">"Hello, World!"</span>);</div><div class="line"><span class="comment">//or another</span></div><div class="line"><span class="built_in">console</span>.log(<span class="string">"Hello, World!"</span>);</div><div class="line"><span class="comment">//or another</span></div><div class="line"><span class="built_in">document</span>.write(<span class="string">"Hello, World!"</span>);</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Css">for Css</h3>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">*<span class="pseudo">:before</span>,</div><div class="line">*<span class="pseudo">:after</span> <span class="rules">{ <span class="rule"><span class="attribute">content</span>:<span class="value"><span class="string">'Hello, Word!'</span> </span></span></span>}</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Html">for Html</h3>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">&lt;!-- Direct output... --&gt;</span></div><div class="line">Hello, World!</div><div class="line"><span class="comment">&lt;!-- or --&gt;</span></div><div class="line"><span class="tag">&lt;<span class="title">html</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="title">head</span>&gt;</span></div><div class="line">		<span class="tag">&lt;<span class="title">title</span>&gt;</span> Hello, World! <span class="tag">&lt;/<span class="title">title</span>&gt;</span></div><div class="line">	<span class="tag">&lt;/<span class="title">head</span>&gt;</span></div><div class="line">	<span class="tag">&lt;<span class="title">body</span>&gt;</span></div><div class="line">		Hello, World!</div><div class="line">	<span class="tag">&lt;/<span class="title">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="title">html</span>&gt;</span></div></pre></td></tr></table></figure>
-
-<h3 id="for_Shell">for Shell</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">echo</span> <span class="string">"Hello, World!"</span></div><div class="line"><span class="comment">#or another</span></div><div class="line"><span class="built_in">printf</span> <span class="string">"Hello, World!\n"</span></div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Perl">for Perl</h3>
-<figure class="highlight perl"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/env perl</span></div><div class="line"><span class="keyword">print</span> <span class="string">"Hello, World!\n"</span>;</div><div class="line"></div><div class="line"><span class="comment">#or another </span></div><div class="line"></div><div class="line"><span class="comment">#!/usr/bin/env perl</span></div><div class="line"><span class="keyword">use</span> <span class="number">5.010</span>;</div><div class="line"><span class="keyword">say</span> <span class="string">"Hello, World!"</span>;</div></pre></td></tr></table></figure>
-
-<h3 id="for_Awk">for Awk</h3>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">awk 'BEGIN { <span class="literal">print</span> <span class="string">"Hello, World!"</span> }'</div></pre></td></tr></table></figure>
-
-
-
-<h3 id="for_Sed">for Sed</h3>
-<figure class="highlight sed"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">sed <span class="operator">-ne</span> <span class="string">'1s/.*/Hello, World!/p'</span></div></pre></td></tr></table></figure>
-
-<h3 id="for_SQL">for SQL</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> MESSAGE (<span class="built_in">TEXT</span> <span class="built_in">CHAR</span>(<span class="number">15</span>));</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> MESSAGE (<span class="built_in">TEXT</span>) <span class="keyword">VALUES</span> (<span class="string">'Hello, World!'</span>);</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="built_in">TEXT</span> <span class="keyword">FROM</span> MESSAGE;</span></div><div class="line"><span class="operator"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> MESSAGE;</span></div><div class="line"></div><div class="line"><span class="comment">-- or another</span></div><div class="line"></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="string">'Hello, World!'</span>;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
     <li><a class="page-next icon-chevron-sign-right" href="javascript:;" title="下一页"></a></li>
 </ul>
 
-    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/5/">Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span></nav>
+    <nav id="page-list" class="page-list"><a class="extend prev" rel="prev" href="/page/5/">Prev</a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><a class="page-number" href="/page/5/">5</a><span class="page-number current">6</span><a class="page-number" href="/page/7/">7</a><a class="extend next" rel="next" href="/page/7/">Next</a></nav>
 
 <nav id="pagination">
   
     <a href="/page/5/" class="alignleft prev">上一页</a>
   
+  
+    <a href="/page/7/" class="alignright next">下一页</a>
   
   <div class="clearfix"></div>
 </nav></div></div>
@@ -927,7 +1127,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>20</small></li>
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -947,11 +1147,11 @@
   
     <li><a href="/tags/Python/">Python</a><small>3</small></li>
   
-    <li><a href="/tags/XMPP/">XMPP</a><small>1</small></li>
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
   
-    <li><a href="/tags/其他/">其他</a><small>1</small></li>
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
   
-    <li><a href="/tags/开始/">开始</a><small>4</small></li>
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
   
     <li><a href="/tags/技术/">技术</a><small>1</small></li>
   
@@ -961,7 +1161,7 @@
   
     <li><a href="/tags/生活/">生活</a><small>1</small></li>
   
-    <li><a href="/tags/读书/">读书</a><small>1</small></li>
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
   
     <li><a href="/tags/随感/">随感</a><small>7</small></li>
   
@@ -1010,15 +1210,15 @@
       </li>
     
       <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
         <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
       </li>
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/11/10/xmpp/">xmpp通信过程分析</a>
       </li>
     
       <li>

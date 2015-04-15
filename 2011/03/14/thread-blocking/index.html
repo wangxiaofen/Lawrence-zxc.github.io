@@ -1,0 +1,433 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java并发阻塞队列(put和take、offer和poll、drainTo)的使用 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Java并发阻塞队列(put和take、offer和poll、drainTo)的使用"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-03-14T13:45:57.000Z"><a href="/2011/03/14/thread-blocking/">3月 14 2011</a></time>
+      
+      
+  
+    <h1 class="title">Java并发阻塞队列(put和take、offer和poll、drainTo)的使用</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>阻塞队列,是一种常用的并发数据结构,常用于生产者-消费者模式。 </p>
+<h3 id="阻塞队列基础概念">阻塞队列基础概念</h3>
+<p>在Java中,有很多种阻塞队列:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ArrayBlockingQueue  	<span class="comment">//最常用</span></div><div class="line">LinkedBlockingQueue  	<span class="comment">//不会满的</span></div><div class="line">SynchronousQueue    	<span class="comment">//size为0</span></div><div class="line">PriorityBlockingQueue</div><div class="line">CompletionService 		<span class="comment">//BlockingQueue + Executor</span></div><div class="line">TransferQueue 			<span class="comment">//JDK 7中更快的SynchronousQueue</span></div></pre></td></tr></table></figure>
+
+<p>生产者消费者模型</p>
+<pre><code>        producer    <span class="comment">------------------------&gt;    consumer</span>
+                    +<span class="comment">----+----+----+----+----+</span>
+                    +    +      +    +    +    +
+                    +<span class="comment">----+----+----+----+----+</span>
+                  /                            \ <span class="keyword">for</span> (;;) {
+   <span class="comment"> // 如果队列满则阻塞                                blockingQ.take(); // 如果队列空则阻塞</span>
+    blockingQ.<span class="built_in">put</span>(object);                        }
+</code></pre><h3 id="使用阻塞队列">使用阻塞队列</h3>
+<pre><code><span class="code">        +--------------+-------------+</span>
+<span class="code">        |          Queue&lt;T&gt;          |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        | add(E) : boolean           |</span>
+<span class="code">        | remove() : E               |</span>
+<span class="code">        | offer() : boolean          |</span>
+<span class="code">        | poll() : E                 | </span>
+<span class="code">        | element() : E              |</span>
+<span class="code">        | peek() : E                 |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">                       ^</span>
+<span class="code">                      /|\</span>
+<span class="code">                继承自  |     </span>
+<span class="header">                       |
++----------------------+---------------------+</span>
+<span class="header">|             BlockingQueue&lt;T&gt;               |
++----------------------+---------------------+</span>
+<span class="code">+----------------------+</span>---------------------+
+| put(E)                                     |
+| take() : E                                 |
+| offer(E, long, TimeUnit) : boolean         |
+| poll(long, TimeUnit) : E                   |
+| remainingCapacity()                        |
+| drainTo(Collection&lt;? super E&gt;) : int       |
+<span class="header">| drainTo(Collection&lt;? super E&gt;, int ) : int |
++----------------------+---------------------+</span>
+</code></pre><p>BlockingQueue使用注意:</p>
+<ul>
+<li>使用BlockingQueue的时候,尽量不要使用从Queue继承下来的方法,否则就失去了Blocking的特性了。</li>
+<li>在BlockingQueue中,要使用put和take,而非offer和poll。如果 要使用offer和poll,也是要使用带等待时间参数的offer和poll。</li>
+<li>使用drainTo批量获得其中的内容,能够减少锁的次数。</li>
+</ul>
+<p>代码片段一(错误)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			Object object = blockingQ.poll();<span class="comment">//错误,不等待就会直接返回</span></div><div class="line">			handle(object);</div><div class="line">		} </div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段二</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.take(); <span class="comment">// 等到有数据才继续 </span></div><div class="line">				handle(object);</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段三</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.poll(<span class="number">1</span>, TimeUnit.SECONDS); <span class="comment">//防止死等 </span></div><div class="line">				<span class="keyword">if</span> (object == <span class="keyword">null</span>) {</div><div class="line">					<span class="keyword">continue</span>; <span class="comment">//或者做其他处理 </span></div><div class="line">				}</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<h3 id="实现一个简单的阻塞队列">实现一个简单的阻塞队列</h3>
+<p>未取得锁就直接执行wait、notfiy、notifyAll会抛异常</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行wait操作,必须先取得该对象的锁</span></div><div class="line">				<span class="comment">//执行wait操作之后,锁会释放</span></div><div class="line">				<span class="comment">//被唤醒之前,需要先获得锁</span></div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行notify和notifyAll操作,都必须先取得该对象的锁</span></div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Object notFull = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.notifyAll();</div><div class="line">				}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.wait();</div><div class="line">				}</div><div class="line">				linkedList.add(object); </div><div class="line">			}</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</div><div class="line">	<span class="comment">// 一个锁可以创建多个Condition</span></div><div class="line">	<span class="keyword">private</span> Condition notEmpty = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Condition notFull = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">// 要执行await操作,必须先取得该Condition的锁。 </span></div><div class="line">				<span class="comment">// 执行await操作之后,锁会释放。 </span></div><div class="line">				<span class="comment">// 被唤醒之前,需要先获得锁。</span></div><div class="line">				notEmpty.await();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.signalAll(); </div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//￼要执行signal和signalAll操作,都必须先取 得该对象</span></div><div class="line">				notEmpty.signalAll();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.await(); </div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>注意:未锁就直接执行await、signal、siganlAll会抛异常</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2011/03/19/thread-lock/">并发锁机制和Lock-Free算法</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2011/02/12/git-pro/">Git配置和常用命令</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2011/03/14/thread-blocking/">
+                  http://lawrence-zxc.github.io/2011/03/14/thread-blocking/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2011/03/19/thread-lock/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2011/02/12/git-pro/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2011/03/14/thread-blocking/" data-title="Java并发阻塞队列(put和take、offer和poll、drainTo)的使用" data-url="http://lawrence-zxc.github.io/2011/03/14/thread-blocking/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>14</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>
