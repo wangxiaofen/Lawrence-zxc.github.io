@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2015-04-15T02:54:56.715Z</updated>
+  <updated>2015-04-16T04:09:15.772Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -727,24 +727,26 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     <link href="http://lawrence-zxc.github.io/2014/10/01/aboutMe/"/>
     <id>http://lawrence-zxc.github.io/2014/10/01/aboutMe/</id>
     <published>2014-10-01T06:55:13.000Z</published>
-    <updated>2015-04-07T09:36:26.000Z</updated>
+    <updated>2015-04-16T04:04:06.000Z</updated>
     <content type="html"><![CDATA[<p><br></p>
 <h3 id="张兄才"><em>张兄才</em></h3>
-<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<a href="http://lawrence-zxc.github.io/img/MyDeerCV.pdf" target="_blank" rel="external">我的简历</a><br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com" target="_blank" rel="external">爱屋及屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>、<a href="http://www.zuobian.com" target="_blank" rel="external">左边网</a>，现任左边网Java技术负责人。</p>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com/" target="_blank" rel="external">悦己网</a>、<a href="http://www.iwjw.com/" target="_blank" rel="external">爱屋吉屋</a>、<a href="http://www.lvmama.com/" target="_blank" rel="external">驴妈妈</a>，现任<a href="http://www.zuobian.com/" target="_blank" rel="external">左边网</a>Java技术负责人。</p>
+<p><strong>我的简历</strong>: <code>echo &#39;aHR0cDovL2xhd3JlbmNlLXp4Yy5naXRodWIuaW8vaW1nL015RGVlckNWLnBkZg==&#39;|base64 -D</code></p>
 <h3 id="技术领域"><em>技术领域</em></h3>
 <p><code>Java</code>、<code>Python</code>、<code>Oracle</code>、<code>Mysql</code>、<code>Ruby</code>、<code>Linux/Unix</code>、<code>JavaScript</code>、<code>Css/Html</code></p>
 <h3 id="足迹"><em>足迹</em></h3>
 <ul>
-<li><img src="/img/zhihu.png" width="16" height="16">知乎：<a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
+<li><img src="/img/zhihu.png" width="16" height="16">知乎: <a href="http://www.zhihu.com/people/zhang-xiong-cai" target="_blank" rel="external">http://www.zhihu.com/people/zhang-xiong-cai</a></li>
 <li><img src="/img/weibo.png">微博: <a href="http://weibo.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
-<li><img src="/img/yahoo.png">邮箱：xiongcaizhang@yahoo.com</li>
-<li><img src="/img/qq.png">QQ：407815772</li>
+<li><img src="/img/yahoo.png">邮箱: xiongcaizhang#yahoo.com(把#换成@)</li>
+<li><img src="/img/qq.png">QQ: 407815772</li>
 <li><img src="/img/twitter.png">Twitter: <a href="http://twitter.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
 <li><img src="/img/facebook.png">Facebook: <a href="https://www.facebook.com/zxc337" target="_blank" rel="external">@Jeck Zhang</a></li>
 <li><img src="/img/quora.png">Quora: <a href="http://quora.com/Jeck-Zhang" target="_blank" rel="external">@Jeck Zhang</a></li>
 <li><img src="/img/gmail.png">Gmail: zhangxiongcai337#gmail.com(把#换成@)</li>
 <li><img src="/img/github.png">Github: <a href="https://github.com/Lawrence-zxc" target="_blank" rel="external">@Lawrence-zxc</a></li>
 <li><img src="/img/dribbble.png">Dribbble: <a href="http://dribbble.com/zxc337" target="_blank" rel="external">@zxc337</a></li>
+<li><img src="/img/sina.png" width="16" height="16">新浪博客: <a href="http://blog.sina.com.cn/zxc141592" target="_blank" rel="external">@zxc</a></li>
 </ul>
 <h3 id="情怀"><em>情怀</em></h3>
 <p><code>爱狗</code>、<code>完美主义</code>、<code>Apple控</code>、<code>Google控</code>、<code>旅行</code>、<code>电影</code>、<code>吃货</code>、<code>游戏</code>、<code>豆瓣</code></p>
@@ -763,7 +765,7 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     <summary type="html">
     <![CDATA[<p><br></p>
 <h3 id="张兄才"><em>张兄才</em></h3>
-<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<a href="http://lawrence-zxc.github.io/img/MyDeerCV.pdf" ]]>
+<p>90后程序员、Blogger，@上海，业余承接Java/Python项目。<br>12年毕业，本科数学，先后就职于 <a href="http://www.yueji.com/" targ]]>
     </summary>
     
       <category term="开始" scheme="http://lawrence-zxc.github.io/tags/%E5%BC%80%E5%A7%8B/"/>
