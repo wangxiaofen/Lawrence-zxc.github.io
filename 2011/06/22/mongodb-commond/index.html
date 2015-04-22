@@ -1,0 +1,381 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>MongoDB常见操作命令整理 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="MongoDB常见操作命令整理"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2011-06-22T07:22:16.000Z"><a href="/2011/06/22/mongodb-commond/">6月 22 2011</a></time>
+      
+      
+  
+    <h1 class="title">MongoDB常见操作命令整理</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>近期学习了一些Nosql技术,主要是在看Mongodb相关知识,整理了一份mongodb的命令行操作指令,用的时候方便找</p>
+<p>数据库操作语法<br><code>mongo --path</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line">db.AddUser(username,password)  <span class="comment">#添加用户</span></div><div class="line">db.auth(usrename,password)     <span class="comment">#设置数据库连接验证</span></div><div class="line">db.cloneDataBase(fromhost)     <span class="comment">#从目标服务器克隆一个数据库</span></div><div class="line">db.commandHelp(name)           <span class="comment">#returns the help for the command</span></div><div class="line">db.copyDatabase(fromdb,todb,fromhost)  <span class="comment">#复制数据库fromdb---源数据库名称，todb---目标数据库名称，fromhost---源数据库服务器地址</span></div><div class="line">db.createCollection(name,{size:<span class="number">3333</span>,capped:<span class="number">333</span>,max:<span class="number">88888</span>})  <span class="comment">#创建一个数据集，相当于一个表</span></div><div class="line">db.currentOp()                 <span class="comment">#取消当前库的当前操作</span></div><div class="line">db.dropDataBase()              <span class="comment">#删除当前数据库</span></div><div class="line">db.eval(func,args)             <span class="comment">#run code server-side</span></div><div class="line">db.getCollection(cname)        <span class="comment">#取得一个数据集合，同用法：db['cname'] or db.cname</span></div><div class="line">db.getCollenctionNames()       <span class="comment">#取得所有数据集合的名称列表</span></div><div class="line">db.getLastError()              <span class="comment">#返回最后一个错误的提示消息</span></div><div class="line">db.getLastErrorObj()           <span class="comment">#返回最后一个错误的对象</span></div><div class="line">db.getMongo()                  <span class="comment">#取得当前服务器的连接对象get the server connection object</span></div><div class="line">db.getMondo().setSlaveOk()     <span class="comment">#allow this connection to read from then nonmaster membr of a replica pair</span></div><div class="line">db.getName()                   <span class="comment">#返回当操作数据库的名称</span></div><div class="line">db.getPrevError()              <span class="comment">#返回上一个错误对象</span></div><div class="line">db.getProfilingLevel()         <span class="comment">#获取分析等级</span></div><div class="line">db.getReplicationInfo()        <span class="comment">#获取复制信息</span></div><div class="line">db.getSisterDB(name)           <span class="comment">#get the db at the same server as this onew</span></div><div class="line">db.killOp()                    <span class="comment">#停止（杀死）在当前库的当前操作</span></div><div class="line">db.printCollectionStats()      <span class="comment">#返回当前库的数据集状态</span></div><div class="line">db.printReplicationInfo()</div><div class="line">db.printSlaveReplicationInfo()</div><div class="line">db.printShardingStatus()       <span class="comment">#返回当前数据库是否为共享数据库</span></div><div class="line">db.removeUser(username)        <span class="comment">#删除用户</span></div><div class="line">db.repairDatabase()            <span class="comment">#修复当前数据库</span></div><div class="line">db.resetError()                </div><div class="line">db.runCommand(cmdObj)          <span class="comment">#run a database command. if cmdObj is a string, turns it into {cmdObj:1}</span></div><div class="line">db.setProfilingLevel(level)    <span class="comment">#0=off,1=slow,2=all</span></div><div class="line">db.shutdownServer()            <span class="comment">#关闭当前服务程序</span></div><div class="line">db.version()                   <span class="comment">#返回当前程序的版本信息</span></div></pre></td></tr></table></figure>
+
+<p>数据集(表)操作语法</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">db.linlin.find({id:<span class="number">10</span>})          <span class="comment">#返回linlin数据集ID=10的数据集</span></div><div class="line">db.linlin.find({id:<span class="number">10</span>}).count()  <span class="comment">#返回linlin数据集ID=10的数据总数</span></div><div class="line">db.linlin.find({id:<span class="number">10</span>}).limit(<span class="number">2</span>) <span class="comment">#返回linlin数据集ID=10的数据集从第二条开始的数据集</span></div><div class="line">db.linlin.find({id:<span class="number">10</span>}).skip(<span class="number">8</span>)  <span class="comment">#返回linlin数据集ID=10的数据集从0到第八条的数据集</span></div><div class="line">db.linlin.find({id:<span class="number">10</span>}).limit(<span class="number">2</span>).skip(<span class="number">8</span>)  <span class="comment">#返回linlin数据集ID=1=的数据集从第二条到第八条的数据</span></div><div class="line">db.linlin.find({id:<span class="number">10</span>}).sort()   <span class="comment">#返回linlin数据集ID=10的排序数据集</span></div><div class="line">db.linlin.findOne([query])       <span class="comment">#返回符合条件的一条数据</span></div><div class="line">db.linlin.getDB()                <span class="comment">#返回此数据集所属的数据库名称</span></div><div class="line">db.linlin.getIndexes()           <span class="comment">#返回些数据集的索引信息</span></div><div class="line">db.linlin.group({key:...,initial:...,reduce:...[,cond:...]})</div><div class="line">db.linlin.mapReduce(mayFunction,reduceFunction,&lt;optional params&gt;)</div><div class="line">db.linlin.remove(query)                      <span class="comment">#在数据集中删除一条数据</span></div><div class="line">db.linlin.renameCollection(newName)          <span class="comment">#重命名些数据集名称</span></div><div class="line">db.linlin.save(obj)                          <span class="comment">#往数据集中插入一条数据</span></div><div class="line">db.linlin.stats()                            <span class="comment">#返回此数据集的状态</span></div><div class="line">db.linlin.storageSize()                      <span class="comment">#返回此数据集的存储大小</span></div><div class="line">db.linlin.totalIndexSize()                   <span class="comment">#返回此数据集的索引文件大小</span></div><div class="line">db.linlin.totalSize()                        <span class="comment">#返回些数据集的总大小</span></div><div class="line">db.linlin.update(query,object[,upsert_bool]) <span class="comment">#在此数据集中更新一条数据                         </span></div><div class="line">db.linlin.validate()                         <span class="comment">#验证此数据集                                        </span></div><div class="line">db.linlin.getShardVersion()                  <span class="comment">#返回数据集共享版本号</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">db.linlin.find({<span class="string">'name'</span>:<span class="string">'foobar'</span>})    <span class="comment">#select * from linlin where name='foobar'</span></div><div class="line">db.linlin.find()                     <span class="comment">#select * from linlin</span></div><div class="line">db.linlin.find({<span class="string">'ID'</span>:<span class="number">10</span>}).count()    <span class="comment">#select count(*) from linlin where ID=10</span></div><div class="line">db.linlin.find().skip(<span class="number">10</span>).limit(<span class="number">20</span>)  <span class="comment">#从查询结果的第十条开始读20条数据  select * from linlin limit 10,20  ----------mysql</span></div><div class="line">db.linlin.find({<span class="string">'ID'</span>:{<span class="variable">$in</span>:[<span class="number">25</span>,<span class="number">35</span>,<span class="number">45</span>]}})  <span class="comment">#select * from linlin where ID in (25,35,45)</span></div><div class="line">db.linlin.find().sort({<span class="string">'ID'</span>:-<span class="number">1</span>})      <span class="comment">#select * from linlin order by ID desc</span></div><div class="line">db.linlin.distinct(<span class="string">'name'</span>,{<span class="string">'ID'</span>:{<span class="variable">$lt</span>:<span class="number">20</span>}})   <span class="comment">#select distinct(name) from linlin where ID&lt;20</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">db.linlin.group({key:{<span class="string">'name'</span>:<span class="literal">true</span>},cond:{<span class="string">'name'</span>:<span class="string">'foo'</span>},reduce:function(obj,prev){prev.msum+=obj.marks;},initial:{msum:<span class="number">0</span>}}) <span class="comment">#select name,sum(marks) from linlin group by name</span></div><div class="line">db.linlin.find(<span class="string">'this.ID&lt;20'</span>,{name:<span class="number">1</span>})     <span class="comment">#select name from linlin where ID&lt;20</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">db.linlin.insert({<span class="string">'name'</span>:<span class="string">'foobar'</span>,<span class="string">'age'</span>:<span class="number">25</span>})  <span class="comment">#insert into linlin ('name','age') values('foobar',25)</span></div><div class="line">db.linlin.insert({<span class="string">'name'</span>:<span class="string">'foobar'</span>,<span class="string">'age'</span>:<span class="number">25</span>,<span class="string">'email'</span>:<span class="string">'cclove2@163.com'</span>})</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">db.linlin.remove({})                   <span class="comment">#相当于sql中的 delete * from linlin</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:<span class="number">20</span>})           <span class="comment">#delete linlin where age=20</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:{<span class="variable">$lt</span>:<span class="number">20</span>}})     <span class="comment">#delete linlin where age&lt;20</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:{<span class="variable">$lte</span>:<span class="number">20</span>}})    <span class="comment">#delete linlin where age&lt;=20</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:{<span class="variable">$gt</span>:<span class="number">20</span>}})     <span class="comment">#delete linlin where age&gt;20</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:{<span class="variable">$gte</span>:<span class="number">20</span>}})    <span class="comment">#delete linlin where age&gt;=20</span></div><div class="line">db.linlin.remove({<span class="string">'age'</span>:{<span class="variable">$ne</span>:<span class="number">20</span>}})     <span class="comment">#delete linlin where age!=20</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">db.linlin.update({<span class="string">'name'</span>:<span class="string">'foobar'</span>},{<span class="variable">$set</span>:{<span class="string">'age'</span>:<span class="number">36</span>}})  <span class="comment">#update linlin set age=36 where name='foobar'</span></div><div class="line">db.linlin.update({<span class="string">'name'</span>:<span class="string">'foobar'</span>},{<span class="variable">$inc</span>:{<span class="string">'age'</span>:<span class="number">3</span>}})   <span class="comment">#update linlin set age=age+3 where name='foobar'</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2011/11/10/my-java-dev-tools/">我的Java程序员开发常用工具集</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2011/03/19/thread-lock/">并发锁机制和Lock-Free算法</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2011/06/22/mongodb-commond/">
+                  http://lawrence-zxc.github.io/2011/06/22/mongodb-commond/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+        
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2011/11/10/my-java-dev-tools/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2011/03/19/thread-lock/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2011/06/22/mongodb-commond/" data-title="MongoDB常见操作命令整理" data-url="http://lawrence-zxc.github.io/2011/06/22/mongodb-commond/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

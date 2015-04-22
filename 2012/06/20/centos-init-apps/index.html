@@ -98,7 +98,7 @@
     </header>
     <div class="entry">
       
-        <p>分享一个公司正在使用的Linux开发环境搭建和部署脚本,主要针对<code>CentOS/Ubuntu</code>系统,安装<code>Nginx-1.7.1</code>,<code>JDK-7.55</code>,<code>Tomcat-7.54</code>以及<code>Memcached-1.4.15</code>等必须软件环境,当然也可以选用<code>Apache</code>,<code>JDK</code>,<code>Jetty</code>,<code>Redis</code>等组合,目前这里的安装脚本需要预先下载需要安装的程序软件压缩格式主要是<code>.tar.gz</code>;初始化环境变量,防火墙设置,nfs设置,hosts设置,yum更新等操作.</p>
+        <p>分享一个公司正在使用的Linux开发环境搭建和部署脚本,主要针对<code>CentOS/Ubuntu</code>系统,安装<code>Nginx-1.7.1</code>,<code>JDK-7.55</code>,<code>Tomcat-7.54</code>以及<code>Memcached-1.4.15</code>等必须软件环境,当然也可以选用<code>Apache</code>,<code>JDK</code>,<code>Jetty</code>,<code>Redis</code>等组合,目前这里的安装脚本需要预先下载需要安装的程序软件压缩格式主要是<code>.tar.gz</code>;初始化环境变量,关闭SElinux,防火墙设置,nfs设置,hosts设置,yum系统更新等操作.</p>
 <p>开发环境初始化脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/init_env_soft.sh" target="_blank" rel="external">init_env_soft.sh</a>,</p>
 <p>搭建java开发环境脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/init_apps_soft.sh" target="_blank" rel="external">init_apps_soft.sh</a>,</p>
 <p>Nginx自启动脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/nginx" target="_blank" rel="external">nginx</a>,放在<code>/etc/init.d/</code>目录下;</p>
@@ -179,6 +179,139 @@
         init_run_apps_env
     }
     main
+</code></pre><p>通常nginx是没有启动脚本的,这里分享一个自己随便写的,包括<code>start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest</code>功能,记得针对自己的环境修改一下代码中的路径</p>
+<p>Nginx自启动脚本源码如下:</p>
+<pre><code>    <span class="comment">#! /bin/bash</span>
+    <span class="comment"># by zxc</span>
+
+    <span class="comment"># nginx - this script starts and stops the nginx daemon</span>
+
+    <span class="comment"># chkconfig:    2345 08 99</span>
+    <span class="comment"># description:  Nginx is an HTTP(S) server, HTTP(S) reverse \</span>
+    <span class="comment">#               proxy and IMAP/POP3 proxy server</span>
+    <span class="comment"># processname:  Nginx</span>
+    <span class="comment"># config:       /etc/nginx/nginx.conf</span>
+    <span class="comment"># config:       /etc/sysconfig/nginx</span>
+    <span class="comment"># pidfile:      /var/run/nginx.pid</span>
+
+    <span class="comment"># Source function library.</span>
+    . /etc/rc.d/init.d/functions
+
+    <span class="comment"># Source networking configuration.</span>
+    . /etc/sysconfig/network
+
+    <span class="comment"># Check that networking is up.</span>
+    [ <span class="string">"<span class="variable">$NETWORKING</span>"</span> = <span class="string">"no"</span> ] &amp;&amp; <span class="keyword">exit</span> <span class="number">0</span>
+
+    nginx=<span class="string">"/usr/local/nginx/sbin/nginx"</span>
+    prog=$(basename <span class="variable">$nginx</span>)
+
+    NGINX_CONF_FILE=<span class="string">"/usr/local/nginx/conf/nginx.conf"</span>
+
+    [ <span class="operator">-f</span> /etc/sysconfig/nginx ] &amp;&amp; . /etc/sysconfig/nginx
+
+    lockfile=/var/lock/subsys/nginx
+
+    <span class="function"><span class="title">make_dirs</span></span>() {
+       <span class="comment"># make required directories</span>
+       user=`<span class="variable">$nginx</span> -V <span class="number">2</span>&gt;&amp;<span class="number">1</span> | grep <span class="string">"configure arguments:"</span> | sed <span class="string">'s/[^*]*--user=\([^ ]*\).*/\1/g'</span> -`
+       <span class="keyword">if</span> [ -z <span class="string">"`grep <span class="variable">$user</span> /etc/passwd`"</span> ]; <span class="keyword">then</span>
+           useradd -M <span class="operator">-s</span> /bin/nologin <span class="variable">$user</span>
+       <span class="keyword">fi</span>
+       options=`<span class="variable">$nginx</span> -V <span class="number">2</span>&gt;&amp;<span class="number">1</span> | grep <span class="string">'configure arguments:'</span>`
+       <span class="keyword">for</span> opt <span class="keyword">in</span> <span class="variable">$options</span>; <span class="keyword">do</span>
+           <span class="keyword">if</span> [ `<span class="built_in">echo</span> <span class="variable">$opt</span> | grep <span class="string">'.*-temp-path'</span>` ]; <span class="keyword">then</span>
+               value=`<span class="built_in">echo</span> <span class="variable">$opt</span> | cut <span class="operator">-d</span> <span class="string">"="</span> <span class="operator">-f</span> <span class="number">2</span>`
+               <span class="keyword">if</span> [ ! <span class="operator">-d</span> <span class="string">"<span class="variable">$value</span>"</span> ]; <span class="keyword">then</span>
+                   <span class="comment"># echo "creating" $value</span>
+                   mkdir -p <span class="variable">$value</span> &amp;&amp; chown -R <span class="variable">$user</span> <span class="variable">$value</span>
+               <span class="keyword">fi</span>
+           <span class="keyword">fi</span>
+       <span class="keyword">done</span>
+    }
+
+    <span class="function"><span class="title">start</span></span>() {
+        [ -x <span class="variable">$nginx</span> ] || <span class="keyword">exit</span> <span class="number">5</span>
+        [ <span class="operator">-f</span> <span class="variable">$NGINX_CONF_FILE</span> ] || <span class="keyword">exit</span> <span class="number">6</span>
+        make_<span class="built_in">dirs</span>
+        <span class="built_in">echo</span> -n $<span class="string">"Starting <span class="variable">$prog</span>: "</span>
+        <span class="comment">#-c命令指定nginx启动的配置文件路径</span>
+        daemon <span class="variable">$nginx</span> -c <span class="variable">$NGINX_CONF_FILE</span>
+        retval=$?
+        <span class="built_in">echo</span>
+        [ <span class="variable">$retval</span> <span class="operator">-eq</span> <span class="number">0</span> ] &amp;&amp; touch <span class="variable">$lockfile</span>
+        <span class="keyword">return</span> <span class="variable">$retval</span>
+    }
+
+    <span class="function"><span class="title">stop</span></span>() {
+        <span class="built_in">echo</span> -n $<span class="string">"Stopping <span class="variable">$prog</span>: "</span>
+        killproc <span class="variable">$prog</span> -QUIT
+        retval=$?
+        <span class="built_in">echo</span>
+        [ <span class="variable">$retval</span> <span class="operator">-eq</span> <span class="number">0</span> ] &amp;&amp; rm <span class="operator">-f</span> <span class="variable">$lockfile</span>
+        <span class="keyword">return</span> <span class="variable">$retval</span>
+    }
+
+    <span class="function"><span class="title">restart</span></span>() {
+        configtest || <span class="keyword">return</span> $?
+        stop
+        sleep <span class="number">1</span>
+        start
+    }
+
+    <span class="function"><span class="title">reload</span></span>() {
+        configtest || <span class="keyword">return</span> $?
+        <span class="built_in">echo</span> -n $<span class="string">"Reloading <span class="variable">$prog</span>: "</span>
+        killproc <span class="variable">$nginx</span> -HUP
+        RETVAL=$?
+        <span class="built_in">echo</span>
+    }
+
+    <span class="function"><span class="title">force_reload</span></span>() {
+        restart
+    }
+
+    <span class="function"><span class="title">configtest</span></span>() {
+      <span class="variable">$nginx</span> -t -c <span class="variable">$NGINX_CONF_FILE</span>
+    }
+
+    <span class="function"><span class="title">rh_status</span></span>() {
+        status <span class="variable">$prog</span>
+    }
+
+    <span class="function"><span class="title">rh_status_q</span></span>() {
+        rh_status &gt;/dev/null <span class="number">2</span>&gt;&amp;<span class="number">1</span>
+    }
+
+    <span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span>
+        start)
+            rh_status_q &amp;&amp; <span class="keyword">exit</span> <span class="number">0</span>
+            <span class="variable">$1</span>
+            ;;
+        stop)
+            rh_status_q || <span class="keyword">exit</span> <span class="number">0</span>
+            <span class="variable">$1</span>
+            ;;
+        restart|configtest)
+            <span class="variable">$1</span>
+            ;;
+        reload)
+            rh_status_q || <span class="keyword">exit</span> <span class="number">7</span>
+            <span class="variable">$1</span>
+            ;;
+        force-reload)
+            force_reload
+            ;;
+        status)
+            rh_status
+            ;;
+        condrestart|try-restart)
+            rh_status_q || <span class="keyword">exit</span> <span class="number">0</span>
+                ;;
+        *)
+            <span class="built_in">echo</span> $<span class="string">"Usage: <span class="variable">$0</span> {start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest}"</span>
+            <span class="keyword">exit</span> <span class="number">2</span>
+    <span class="keyword">esac</span>
 </code></pre>
       
     </div>
@@ -310,7 +443,7 @@ var duoshuoQuery = {short_name:"zxc337"};
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>16</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   

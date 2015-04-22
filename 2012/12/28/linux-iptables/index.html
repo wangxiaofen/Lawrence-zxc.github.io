@@ -1,0 +1,489 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>iptables管理脚本和使用总结 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="iptables管理脚本和使用总结"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-12-28T15:32:16.000Z"><a href="/2012/12/28/linux-iptables/">12月 28 2012</a></time>
+      
+      
+  
+    <h1 class="title">iptables管理脚本和使用总结</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><code>iptables</code>是个好东西，但是各种规则对于刚上手的朋友来说很不友好，一开始会摸不着头脑。经过一段时间的研究，终于摸着些门道。本文中的内容是终端下输的命令，不是<code>/etc/sysconfig/iptables</code>中的内容。</p>
+<p><strong>提示</strong>：下面中“|”表示“或”</p>
+<h3 id="对iptables操作的一般过程(命令)如下：">对iptables操作的一般过程(命令)如下：</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#列出iptable内容</span></div><div class="line">iptables -L -n</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#清除预设表filter中的所有规则链的规则</span></div><div class="line">iptables -F</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#清除预设表filter中使用者自定链中的规则</span></div><div class="line">iptables -X</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#修改规则，下面会有详细介绍</span></div><div class="line"><span class="comment">#保存iptables中规则</span></div><div class="line">service iptables save</div><div class="line">/etc/init.d/iptables save</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#重启iptables服务</span></div><div class="line">service iptables restart</div><div class="line">/etc/init.d/iptables restart</div></pre></td></tr></table></figure>
+
+<h3 id="iptables规则介绍如下：">iptables规则介绍如下：</h3>
+<p>参数说明：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">INPUT   --dport <span class="operator">-s</span></div><div class="line">OUTPUT  --sport <span class="operator">-d</span></div><div class="line"><span class="operator">-d</span>  <span class="comment">#IP或IP段</span></div><div class="line"><span class="operator">-s</span>  <span class="comment">#IP或IP段</span></div><div class="line">-p  <span class="comment">#匹配TCP/UDP/ICMP，可使用相应的整数值，ICMP是1，TCP是6，UDP是17，缺省设置ALL是0，协议列表以英文逗号分隔，可以以“!”取反</span></div><div class="line">-i  <span class="comment">#输入接口</span></div><div class="line">-o  <span class="comment">#输出接口</span></div></pre></td></tr></table></figure>
+
+<p>添加规则</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#INPUT/OUTPUT链</span></div><div class="line">iptables -A INPUT|OUTPUT <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP -p tcp|udp|icmp --sport 源端口 --dport 目的端口 -j ACCEPT|DROP</div><div class="line"><span class="comment">#FORWARD链</span></div><div class="line">iptables -A FORWARD -i 输入接口 -o 输出接口 -m state --state RELATED,ESTABLISHED -j ACCEPT|DROP</div><div class="line"><span class="comment">#NAT表</span></div><div class="line">iptables -t nat -A PREROUTING -i 输入接口 <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP --sport 源端口 --dport 目的端口 -j ACCEPT|DROP</div></pre></td></tr></table></figure>
+
+<p>删除规则</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#INPUT/OUTPUT链</span></div><div class="line">iptables -D INPUT|OUTPUT <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP -p tcp|udp|icmp --dport 端口 -j ACCEPT|DROP</div><div class="line"><span class="comment">#FORWARD链</span></div><div class="line">iptables -D FORWARD -i 输入接口 -o 输出接口 -m state --state RELATED,ESTABLISHED -j ACCEPT|DROP</div></pre></td></tr></table></figure>
+
+<h3 id="详细规则">详细规则</h3>
+<ul>
+<li><code>INPUT|OUTPUT</code>链</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#允许rsync到远程服务器</span></div><div class="line">iptables -A OUTPUT -p tcp --sport <span class="number">873</span> <span class="operator">-d</span> 目的IP -j ACCEPT</div><div class="line"><span class="comment">#允许WWW服务的80端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">80</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">80</span> -j ACCEPT</div><div class="line"><span class="comment">#允许邮件服务的25和110端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">25</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">25</span> -j ACCEPT</div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">110</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">110</span> -j ACCEPT</div><div class="line"><span class="comment">#允许FTP服务的21和20端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">21</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">21</span> -j ACCEPT</div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">20</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">20</span> -j ACCEPT</div><div class="line"><span class="comment">#允许DNS服务的53端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">53</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">53</span> -j ACCEPT</div><div class="line"><span class="comment">#允许rsync的873端口</span></div><div class="line">iptables -A INPUT -p all --dport <span class="number">873</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p all --sport <span class="number">873</span> -j ACCEPT</div><div class="line"><span class="comment">#允许NRPE的5666端口</span></div><div class="line">iptables -A INPUT <span class="operator">-s</span> 源IP -p all --dport <span class="number">5666</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT <span class="operator">-d</span> 目的IP -p all --sport <span class="number">5666</span> -j ACCEPT</div><div class="line"><span class="comment">#允许Ping</span></div><div class="line">iptables -A INPUT -p icmp -j ACCEPT</div><div class="line">iptables -A OUTPUT -p icmp -j ACCEPT</div><div class="line"><span class="comment">#允许loopback!(不然会导致DNS无法正常关闭等问题)</span></div><div class="line">iptables -A INPUT -i lo -p all -j ACCEPT</div><div class="line">iptables -A OUTPUT -o lo -p all -j ACCEPT</div><div class="line"><span class="comment">#只允许某IP或某网段的机器进行SSH连接</span></div><div class="line">iptables -A INPUT <span class="operator">-s</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -p tcp --dport <span class="number">22</span> -j ACCEPT</div><div class="line"><span class="comment">#允许所有已经建立的和相关的连接</span></div><div class="line">iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</div><div class="line">iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</div><div class="line"><span class="comment">#拒绝非法连接</span></div><div class="line">iptables -A INPUT   -m state --state INVALID -j DROP</div><div class="line">iptables -A OUTPUT  -m state --state INVALID -j DROP</div></pre></td></tr></table></figure>
+
+<ul>
+<li><code>FORWARD</code>链</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#开启转发功能(在做NAT时,FORWARD默认规则是DROP时,必须做)</span></div><div class="line">iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT</div><div class="line">iptables -A FORWARD -i eth1 -o eh0 -j ACCEPT</div><div class="line"><span class="comment">#丢弃坏的TCP包</span></div><div class="line">iptables -A FORWARD -p TCP ! --syn -m state --state NEW -j DROP</div><div class="line"><span class="comment">#处理IP碎片数量,防止攻击,允许每秒100个</span></div><div class="line">iptables -A FORWARD <span class="operator">-f</span> -m limit --limit <span class="number">100</span>/s --limit-burst <span class="number">100</span> -j ACCEPT</div><div class="line"><span class="comment">#设置ICMP包过滤,允许每秒1个包,限制触发条件是10个包.</span></div><div class="line">iptables -A FORWARD -p icmp -m limit --limit <span class="number">1</span>/s --limit-burst <span class="number">10</span> -j ACCEPT</div><div class="line"><span class="comment">#禁止非法连接</span></div><div class="line">iptables -A FORWARD -m state --state INVALID -j DROP</div></pre></td></tr></table></figure>
+
+<ul>
+<li><code>NAT</code>表</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#防止外网用内网IP欺骗</span></div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">10.0</span>.<span class="number">0.0</span>/<span class="number">8</span> -j DROP</div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">172.16</span>.<span class="number">0.0</span>/<span class="number">12</span> -j DROP</div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">16</span> -j DROP</div><div class="line"><span class="comment">#禁止与某IP或IP段的所有连接</span></div><div class="line">iptables -t nat -A PREROUTING  <span class="operator">-d</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -j DROP</div><div class="line"><span class="comment">#禁止连接某IP或IP段的FTP的21端口</span></div><div class="line">iptables -t nat -A PREROUTING  -p tcp --dport <span class="number">21</span> <span class="operator">-d</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -j DROP</div></pre></td></tr></table></figure>
+
+<h3 id="我的管理脚本">我的管理脚本</h3>
+<p>再分享一下一个简单方便的脚本用于管理iptables服务，相对于采用service的管理方式更加灵活。</p>
+<p>值得注意的是，由于启用了iptables防火墙，FTP的主被动模式方面需要留意一下。众所周知FTP使用的是21端口，但是在我们进行FTP文件传输时，客户端首先连接到21端口，进行用户的认证，认证成功后，当我们要传输文件时，服务器会开一个端口为20来进行传输数据文件，也就是说，端口20才是真正传输所用到的端口，端口21只用于FTP的登陆认证。例如使用vsftpd做ftp时，可以使用下面的配置来限制端口访问，并且方便iptables规则设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">pasv_min_port=<span class="number">2222</span></div><div class="line">pasv_max_port=<span class="number">2225</span></div></pre></td></tr></table></figure>
+
+<p>脚本代码如下:</p>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># by zxc</span>
+
+    <span class="type">PATH</span>=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+    <span class="keyword">export</span> <span class="type">PATH</span>
+
+    start(){
+        <span class="comment">#kernal setting</span>
+        echo <span class="string">"Kernal Setting..."</span>
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/icmp_echo_ignore_broadcasts
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/icmp_ignore_bogus_error_responses
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/accept_source_route
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/accept_redirects
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/send_redirects
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/rp_filter
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_syncookies
+        echo <span class="number">3</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_retries1
+        echo <span class="number">30</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_fin_timeout
+        echo <span class="number">1400</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_keepalive_time
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_window_scaling
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_sack
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_timestamps
+
+        <span class="comment">#iptables setting</span>
+        echo <span class="string">"Iptables Setting..."</span>
+        <span class="comment">#default policy</span>
+        iptables -P <span class="type">INPUT</span> <span class="type">DROP</span>
+        iptables -P <span class="type">OUTPUT</span> <span class="type">ACCEPT</span>
+        <span class="comment">#clear original rules</span>
+        iptables -F
+        <span class="comment">#input rule</span>
+        iptables -A <span class="type">INPUT</span> -i lo -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">22</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">5666</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">20</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">21</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">22</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">25</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">80</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">110</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">143</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">443</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">873</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">3306</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m state --state <span class="type">NEW</span> -m tcp --dport <span class="number">21</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp --dport <span class="number">2222</span>:<span class="number">2225</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p icmp -m icmp --icmp-<span class="keyword">type</span> <span class="number">8</span> -j <span class="type">DROP</span>
+        iptables -A <span class="type">INPUT</span> -p all -m state --state <span class="type">ESTABLISHED</span>,<span class="type">RELATED</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p all -m state --state <span class="type">INVALID</span>,<span class="type">NEW</span> -j <span class="type">DROP</span>
+
+        <span class="type">BADIPS</span>=<span class="string">"`curl -s http://feeds.dshield.org/block.txt | awk '/^[1-9]/ {print $1 "</span>/<span class="string">" $3}'`"</span>
+        <span class="keyword">if</span> [ <span class="string">"$BADIPS"</span> ];then
+            <span class="keyword">for</span> ip <span class="keyword">in</span> $<span class="type">BADIPS</span>
+            <span class="keyword">do</span>
+                iptables -I <span class="type">INPUT</span> -s $ip -j <span class="type">DROP</span>
+            done
+        fi
+    }
+
+    stop(){
+        echo <span class="string">"Cleaning your Iptables:..."</span>
+        iptables -F
+        iptables -X
+        iptables -Z
+        iptables -P <span class="type">INPUT</span> <span class="type">ACCEPT</span>
+        iptables -P <span class="type">OUTPUT</span> <span class="type">ACCEPT</span>
+        /etc/init.d/iptables stop
+        <span class="keyword">if</span> [ <span class="string">"$?"</span> == <span class="string">"0"</span> ];then
+            echo <span class="string">"Done!"</span>
+        fi
+    }
+
+    <span class="keyword">case</span> <span class="string">"$1"</span> <span class="keyword">in</span>
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop &amp;&amp; start
+        ;;
+    *)
+        echo $<span class="string">"Usage: $0 {start|stop|restart}"</span>
+        exit <span class="number">1</span>
+    esac
+    exit <span class="number">0</span>
+</code></pre><p>将它添加到rc.local中使能开机启动.</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2013/01/02/linux-shell-xml/">Linux Shell脚本读写XML文件</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2012/12/27/spring-mvc-wizard/">Spring MVC注解方式实现向导式跳转页面</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2012/12/28/linux-iptables/">
+                  http://lawrence-zxc.github.io/2012/12/28/linux-iptables/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Linux/">Linux</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2013/01/02/linux-shell-xml/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2012/12/27/spring-mvc-wizard/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2012/12/28/linux-iptables/" data-title="iptables管理脚本和使用总结" data-url="http://lawrence-zxc.github.io/2012/12/28/linux-iptables/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>22</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>2</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

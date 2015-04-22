@@ -442,6 +442,177 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2012-12-28T15:32:16.000Z"><a href="/2012/12/28/linux-iptables/">12月 28 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/12/28/linux-iptables/">iptables管理脚本和使用总结</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><code>iptables</code>是个好东西，但是各种规则对于刚上手的朋友来说很不友好，一开始会摸不着头脑。经过一段时间的研究，终于摸着些门道。本文中的内容是终端下输的命令，不是<code>/etc/sysconfig/iptables</code>中的内容。</p>
+<p><strong>提示</strong>：下面中“|”表示“或”</p>
+<h3 id="对iptables操作的一般过程(命令)如下：">对iptables操作的一般过程(命令)如下：</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#列出iptable内容</span></div><div class="line">iptables -L -n</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#清除预设表filter中的所有规则链的规则</span></div><div class="line">iptables -F</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#清除预设表filter中使用者自定链中的规则</span></div><div class="line">iptables -X</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#修改规则，下面会有详细介绍</span></div><div class="line"><span class="comment">#保存iptables中规则</span></div><div class="line">service iptables save</div><div class="line">/etc/init.d/iptables save</div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#重启iptables服务</span></div><div class="line">service iptables restart</div><div class="line">/etc/init.d/iptables restart</div></pre></td></tr></table></figure>
+
+<h3 id="iptables规则介绍如下：">iptables规则介绍如下：</h3>
+<p>参数说明：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">INPUT   --dport <span class="operator">-s</span></div><div class="line">OUTPUT  --sport <span class="operator">-d</span></div><div class="line"><span class="operator">-d</span>  <span class="comment">#IP或IP段</span></div><div class="line"><span class="operator">-s</span>  <span class="comment">#IP或IP段</span></div><div class="line">-p  <span class="comment">#匹配TCP/UDP/ICMP，可使用相应的整数值，ICMP是1，TCP是6，UDP是17，缺省设置ALL是0，协议列表以英文逗号分隔，可以以“!”取反</span></div><div class="line">-i  <span class="comment">#输入接口</span></div><div class="line">-o  <span class="comment">#输出接口</span></div></pre></td></tr></table></figure>
+
+<p>添加规则</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#INPUT/OUTPUT链</span></div><div class="line">iptables -A INPUT|OUTPUT <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP -p tcp|udp|icmp --sport 源端口 --dport 目的端口 -j ACCEPT|DROP</div><div class="line"><span class="comment">#FORWARD链</span></div><div class="line">iptables -A FORWARD -i 输入接口 -o 输出接口 -m state --state RELATED,ESTABLISHED -j ACCEPT|DROP</div><div class="line"><span class="comment">#NAT表</span></div><div class="line">iptables -t nat -A PREROUTING -i 输入接口 <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP --sport 源端口 --dport 目的端口 -j ACCEPT|DROP</div></pre></td></tr></table></figure>
+
+<p>删除规则</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#INPUT/OUTPUT链</span></div><div class="line">iptables -D INPUT|OUTPUT <span class="operator">-s</span> 源IP <span class="operator">-d</span> 目的IP -p tcp|udp|icmp --dport 端口 -j ACCEPT|DROP</div><div class="line"><span class="comment">#FORWARD链</span></div><div class="line">iptables -D FORWARD -i 输入接口 -o 输出接口 -m state --state RELATED,ESTABLISHED -j ACCEPT|DROP</div></pre></td></tr></table></figure>
+
+<h3 id="详细规则">详细规则</h3>
+<ul>
+<li><code>INPUT|OUTPUT</code>链</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#允许rsync到远程服务器</span></div><div class="line">iptables -A OUTPUT -p tcp --sport <span class="number">873</span> <span class="operator">-d</span> 目的IP -j ACCEPT</div><div class="line"><span class="comment">#允许WWW服务的80端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">80</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">80</span> -j ACCEPT</div><div class="line"><span class="comment">#允许邮件服务的25和110端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">25</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">25</span> -j ACCEPT</div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">110</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">110</span> -j ACCEPT</div><div class="line"><span class="comment">#允许FTP服务的21和20端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">21</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">21</span> -j ACCEPT</div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">20</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">20</span> -j ACCEPT</div><div class="line"><span class="comment">#允许DNS服务的53端口</span></div><div class="line">iptables -A INPUT -p tcp --dport <span class="number">53</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p tcp --dport <span class="number">53</span> -j ACCEPT</div><div class="line"><span class="comment">#允许rsync的873端口</span></div><div class="line">iptables -A INPUT -p all --dport <span class="number">873</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT -p all --sport <span class="number">873</span> -j ACCEPT</div><div class="line"><span class="comment">#允许NRPE的5666端口</span></div><div class="line">iptables -A INPUT <span class="operator">-s</span> 源IP -p all --dport <span class="number">5666</span> -j ACCEPT</div><div class="line">iptables -A OUTPUT <span class="operator">-d</span> 目的IP -p all --sport <span class="number">5666</span> -j ACCEPT</div><div class="line"><span class="comment">#允许Ping</span></div><div class="line">iptables -A INPUT -p icmp -j ACCEPT</div><div class="line">iptables -A OUTPUT -p icmp -j ACCEPT</div><div class="line"><span class="comment">#允许loopback!(不然会导致DNS无法正常关闭等问题)</span></div><div class="line">iptables -A INPUT -i lo -p all -j ACCEPT</div><div class="line">iptables -A OUTPUT -o lo -p all -j ACCEPT</div><div class="line"><span class="comment">#只允许某IP或某网段的机器进行SSH连接</span></div><div class="line">iptables -A INPUT <span class="operator">-s</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -p tcp --dport <span class="number">22</span> -j ACCEPT</div><div class="line"><span class="comment">#允许所有已经建立的和相关的连接</span></div><div class="line">iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</div><div class="line">iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT</div><div class="line"><span class="comment">#拒绝非法连接</span></div><div class="line">iptables -A INPUT   -m state --state INVALID -j DROP</div><div class="line">iptables -A OUTPUT  -m state --state INVALID -j DROP</div></pre></td></tr></table></figure>
+
+<ul>
+<li><code>FORWARD</code>链</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#开启转发功能(在做NAT时,FORWARD默认规则是DROP时,必须做)</span></div><div class="line">iptables -A FORWARD -i eth0 -o eth1 -m state --state RELATED,ESTABLISHED -j ACCEPT</div><div class="line">iptables -A FORWARD -i eth1 -o eh0 -j ACCEPT</div><div class="line"><span class="comment">#丢弃坏的TCP包</span></div><div class="line">iptables -A FORWARD -p TCP ! --syn -m state --state NEW -j DROP</div><div class="line"><span class="comment">#处理IP碎片数量,防止攻击,允许每秒100个</span></div><div class="line">iptables -A FORWARD <span class="operator">-f</span> -m limit --limit <span class="number">100</span>/s --limit-burst <span class="number">100</span> -j ACCEPT</div><div class="line"><span class="comment">#设置ICMP包过滤,允许每秒1个包,限制触发条件是10个包.</span></div><div class="line">iptables -A FORWARD -p icmp -m limit --limit <span class="number">1</span>/s --limit-burst <span class="number">10</span> -j ACCEPT</div><div class="line"><span class="comment">#禁止非法连接</span></div><div class="line">iptables -A FORWARD -m state --state INVALID -j DROP</div></pre></td></tr></table></figure>
+
+<ul>
+<li><code>NAT</code>表</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#防止外网用内网IP欺骗</span></div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">10.0</span>.<span class="number">0.0</span>/<span class="number">8</span> -j DROP</div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">172.16</span>.<span class="number">0.0</span>/<span class="number">12</span> -j DROP</div><div class="line">iptables -t nat -A PREROUTING -i eth0 <span class="operator">-s</span> <span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">16</span> -j DROP</div><div class="line"><span class="comment">#禁止与某IP或IP段的所有连接</span></div><div class="line">iptables -t nat -A PREROUTING  <span class="operator">-d</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -j DROP</div><div class="line"><span class="comment">#禁止连接某IP或IP段的FTP的21端口</span></div><div class="line">iptables -t nat -A PREROUTING  -p tcp --dport <span class="number">21</span> <span class="operator">-d</span> <span class="number">192.168</span>.<span class="number">0.8</span>|<span class="number">192.168</span>.<span class="number">0.0</span>/<span class="number">24</span> -j DROP</div></pre></td></tr></table></figure>
+
+<h3 id="我的管理脚本">我的管理脚本</h3>
+<p>再分享一下一个简单方便的脚本用于管理iptables服务，相对于采用service的管理方式更加灵活。</p>
+<p>值得注意的是，由于启用了iptables防火墙，FTP的主被动模式方面需要留意一下。众所周知FTP使用的是21端口，但是在我们进行FTP文件传输时，客户端首先连接到21端口，进行用户的认证，认证成功后，当我们要传输文件时，服务器会开一个端口为20来进行传输数据文件，也就是说，端口20才是真正传输所用到的端口，端口21只用于FTP的登陆认证。例如使用vsftpd做ftp时，可以使用下面的配置来限制端口访问，并且方便iptables规则设置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">pasv_min_port=<span class="number">2222</span></div><div class="line">pasv_max_port=<span class="number">2225</span></div></pre></td></tr></table></figure>
+
+<p>脚本代码如下:</p>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># by zxc</span>
+
+    <span class="type">PATH</span>=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+    <span class="keyword">export</span> <span class="type">PATH</span>
+
+    start(){
+        <span class="comment">#kernal setting</span>
+        echo <span class="string">"Kernal Setting..."</span>
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/icmp_echo_ignore_broadcasts
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/icmp_ignore_bogus_error_responses
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/accept_source_route
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/accept_redirects
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/send_redirects
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/conf/all/rp_filter
+        echo <span class="number">1</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_syncookies
+        echo <span class="number">3</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_retries1
+        echo <span class="number">30</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_fin_timeout
+        echo <span class="number">1400</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_keepalive_time
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_window_scaling
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_sack
+        echo <span class="number">0</span> &gt; /<span class="keyword">proc</span>/sys/net/ipv4/tcp_timestamps
+
+        <span class="comment">#iptables setting</span>
+        echo <span class="string">"Iptables Setting..."</span>
+        <span class="comment">#default policy</span>
+        iptables -P <span class="type">INPUT</span> <span class="type">DROP</span>
+        iptables -P <span class="type">OUTPUT</span> <span class="type">ACCEPT</span>
+        <span class="comment">#clear original rules</span>
+        iptables -F
+        <span class="comment">#input rule</span>
+        iptables -A <span class="type">INPUT</span> -i lo -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">22</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">5666</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">20</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">21</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">22</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">25</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">80</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">110</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">143</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">443</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">873</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m tcp --dport <span class="number">3306</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp -m state --state <span class="type">NEW</span> -m tcp --dport <span class="number">21</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p tcp --dport <span class="number">2222</span>:<span class="number">2225</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p icmp -m icmp --icmp-<span class="keyword">type</span> <span class="number">8</span> -j <span class="type">DROP</span>
+        iptables -A <span class="type">INPUT</span> -p all -m state --state <span class="type">ESTABLISHED</span>,<span class="type">RELATED</span> -j <span class="type">ACCEPT</span>
+        iptables -A <span class="type">INPUT</span> -p all -m state --state <span class="type">INVALID</span>,<span class="type">NEW</span> -j <span class="type">DROP</span>
+
+        <span class="type">BADIPS</span>=<span class="string">"`curl -s http://feeds.dshield.org/block.txt | awk '/^[1-9]/ {print $1 "</span>/<span class="string">" $3}'`"</span>
+        <span class="keyword">if</span> [ <span class="string">"$BADIPS"</span> ];then
+            <span class="keyword">for</span> ip <span class="keyword">in</span> $<span class="type">BADIPS</span>
+            <span class="keyword">do</span>
+                iptables -I <span class="type">INPUT</span> -s $ip -j <span class="type">DROP</span>
+            done
+        fi
+    }
+
+    stop(){
+        echo <span class="string">"Cleaning your Iptables:..."</span>
+        iptables -F
+        iptables -X
+        iptables -Z
+        iptables -P <span class="type">INPUT</span> <span class="type">ACCEPT</span>
+        iptables -P <span class="type">OUTPUT</span> <span class="type">ACCEPT</span>
+        /etc/init.d/iptables stop
+        <span class="keyword">if</span> [ <span class="string">"$?"</span> == <span class="string">"0"</span> ];then
+            echo <span class="string">"Done!"</span>
+        fi
+    }
+
+    <span class="keyword">case</span> <span class="string">"$1"</span> <span class="keyword">in</span>
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop &amp;&amp; start
+        ;;
+    *)
+        echo $<span class="string">"Usage: $0 {start|stop|restart}"</span>
+        exit <span class="number">1</span>
+    esac
+    exit <span class="number">0</span>
+</code></pre><p>将它添加到rc.local中使能开机启动.</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2012-12-27T02:57:11.000Z"><a href="/2012/12/27/spring-mvc-wizard/">12月 27 2012</a></time>
       
       
@@ -549,6 +720,164 @@
 
 <p> (这个Filter也可以防止SQL注入攻击) </p>
 
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-11-12T07:36:40.000Z"><a href="/2012/11/12/linux-rsync/">11月 12 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/11/12/linux-rsync/">Linux用rsync进行多机备份脚本</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>近期做服务器维护相关的工作,用<code>rsync</code>进行两机备份的话比较好,对数据保全比较好. 因此写了这个脚本,加进<code>crontab</code>当中,定期对服务器备份数据库以及www目录下的网站.</p>
+<p>脚本如下,使用前请先针对自己的服务器环境设置变量值:</p>
+<pre><code>    <span class="comment">#! /bin/bash</span>
+
+    <span class="comment"># by zxc</span>
+    <span class="comment"># This script is used to do backup and rsync works for servers.</span>
+    <span class="comment"># ./backup.sh (db_rsync|www_rsync)</span>
+
+    <span class="comment"># 获取可执行文件路径</span>
+    BINPATH=<span class="string">"/usr/bin"</span>
+    LOGPATH=<span class="string">"/home/backlogs"</span>
+
+    <span class="comment">#定义数据库dump目录</span>
+    DB_DUMP=<span class="string">"/home/database/"</span>
+    LOCAL_WWW=<span class="string">"/home/www/"</span>
+
+    <span class="comment">#定义MySQL认证信息</span>
+    DB_USER=<span class="string">"test"</span>
+    DB_PASS=<span class="string">"test1234"</span>
+    DB_HOST=<span class="string">"127.0.0.1"</span>
+
+    <span class="comment">#定义本地rsync密码文件位置</span>
+    PASSFILE=<span class="string">"/xxx/xxxxx"</span>
+    RSYNC_NAME=<span class="string">"xxxxxx"</span>
+    RSYNC_IP=<span class="string">"xxx.xxx.xxx.xxx"</span>
+
+    <span class="comment">#获取本地AccessIP用作后面rsync的文件夹</span>
+    <span class="comment">#pay attention to the sed part of this sentence, check it before using!</span>
+    IP=`ifconfig | grep <span class="string">"venet0:0"</span> --after-context=<span class="number">1</span> | sed -n <span class="string">'s/..*addr:\(..*\)  P-t-P..*/\1/p'</span> | sed <span class="string">'/127.0.0.1/d'</span>`
+
+    <span class="function"><span class="title">db_dump</span></span>(){
+      DBS=`<span class="variable">$BINPATH</span>/mysql --user=<span class="variable">$DB_USER</span> --host=<span class="variable">$DB_HOST</span> --password=<span class="variable">$DB_PASS</span> -Bse <span class="string">'show databases'</span>`
+      <span class="keyword">for</span> db <span class="keyword">in</span> <span class="variable">$DBS</span>
+      <span class="keyword">do</span>
+        <span class="keyword">case</span> <span class="variable">$db</span> <span class="keyword">in</span>
+          <span class="string">"information_schema"</span>)
+          ;;
+          <span class="string">"mysql"</span>)
+          ;;
+          <span class="string">"test"</span>)
+          ;;
+          *)
+            <span class="built_in">echo</span> <span class="string">"Dump <span class="variable">$db</span> begin at <span class="variable">$(date)</span>"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/db_dump.log
+            <span class="variable">$BINPATH</span>/mysqldump --opt <span class="variable">$db</span> --user=<span class="variable">$DB_USER</span> --host=<span class="variable">$DB_HOST</span> --password=<span class="variable">$DB_PASS</span>  &gt; <span class="variable">$DB_DUMP</span>/<span class="variable">$db</span>-$(date +%F).sql
+            <span class="built_in">echo</span> <span class="string">"Dump <span class="variable">$db</span> done at <span class="variable">$(date)</span>"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/db_dump.log
+          ;;
+        <span class="keyword">esac</span>
+      <span class="keyword">done</span>
+    }
+
+    <span class="function"><span class="title">db_rsync</span></span>(){
+      <span class="built_in">echo</span> <span class="string">"Doing db_rsync..."</span>
+      <span class="built_in">echo</span> <span class="string">"db_rsync begin at <span class="variable">$(date)</span>!"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/db_rsync.log
+      rsync -rvlHpogDtS --delete --password-file=<span class="variable">$PASSFILE</span> <span class="variable">$DB_DUMP</span> --exclude *\log\* --exclude *\backup\* --exclude *.rar --exclude *.zip --exclude *mysql* --exclude *.err* --exclude *.pid* --exclude *\test\* rsync://<span class="variable">$RSYNC_NAME</span>@<span class="variable">$RSYNC_IP</span>/<span class="variable">${IP}</span>_db_lio &gt;&gt; <span class="variable">$LOGPATH</span>/db_rsync.log
+      <span class="built_in">echo</span> <span class="string">"db_rsync done at <span class="variable">$(date)</span>!"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/db_rsync.log
+    }
+
+    <span class="function"><span class="title">www_rsync</span></span>(){
+      <span class="built_in">echo</span> <span class="string">"Doing www_rsync..."</span>
+      <span class="built_in">echo</span> <span class="string">"www_rsync begin at <span class="variable">$(date)</span>!"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/www_rsync.log
+      rsync -rvlHpogDtS --delete --password-file=<span class="variable">$PASSFILE</span> <span class="variable">$LOCAL_WWW</span> --exclude *\log\* --exclude *\backup\* --exclude *.rar --exclude *.zip rsync://<span class="variable">$RSYNC_NAME</span>@<span class="variable">$RSYNC_IP</span>/<span class="variable">${IP}</span>_www_lio &gt;&gt; <span class="variable">$LOGPATH</span>/www_rsync.log
+      <span class="built_in">echo</span> <span class="string">"www_rsync done at <span class="variable">$(date)</span>!"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/www_rsync.log
+    }
+
+    <span class="comment">#Script begin here</span>
+
+    <span class="keyword">if</span> [ ! <span class="operator">-d</span> <span class="variable">$LOGPATH</span> ];<span class="keyword">then</span>
+      mkdir <span class="variable">$LOGPATH</span>
+    <span class="keyword">fi</span>
+
+    <span class="keyword">case</span> <span class="variable">$1</span> <span class="keyword">in</span>
+      db_rsync)
+        db_dump <span class="number">2</span>&gt;&gt; <span class="variable">$LOGPATH</span>/rsync_error.log
+        db_rsync <span class="number">2</span>&gt;&gt; <span class="variable">$LOGPATH</span>/rsync_error.log
+      ;;
+      www_rsync)
+        www_rsync <span class="number">2</span>&gt;&gt; <span class="variable">$LOGPATH</span>/rsync_error.log
+      ;;
+      *)
+        <span class="built_in">echo</span> <span class="string">"<span class="variable">$(date)</span> You didn't add parameter in your crontab."</span> &gt;&gt; <span class="variable">$LOGPATH</span>/crontab.log
+        <span class="built_in">echo</span> <span class="string">"Syntax: backup.sh (db_rsync|www_rsync)"</span> &gt;&gt; <span class="variable">$LOGPATH</span>/crontab.log
+      ;;
+    <span class="keyword">esac</span>
+
+    <span class="keyword">exit</span> <span class="number">0</span>
+</code></pre><p>另有一脚本，用于在备份机上rsyncd.conf中添加记录，如下：</p>
+<pre><code>    #! /bin/bash
+    # ./rsyncd.<span class="keyword">sh</span> IP
+
+    # <span class="keyword">for</span> db
+    <span class="keyword">echo</span> <span class="string">""</span>
+    <span class="keyword">echo</span> <span class="string">"[$1_db_lio]"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"path = /backup/mysql/$1"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"uid = root"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"gid = root"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"read only = false"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"ignore errors"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"secrets file = /etc/rsyncd.pas"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"host allow $1"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+
+    #for www
+    <span class="keyword">echo</span> <span class="string">""</span>
+    <span class="keyword">echo</span> <span class="string">"[$1_www_lio]"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"path = /backup/vhosts/rsyncfiles/$1"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"uid = root"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"gid = root"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"read only = false"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"ignore errors"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"secrets file = /etc/rsyncd.pas"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+    <span class="keyword">echo</span> <span class="string">"host allow $1"</span> &gt;&gt; /etc/rsyncd.<span class="keyword">conf</span>
+
+    tail -<span class="keyword">n</span> <span class="number">17</span> /etc/rsyncd.<span class="keyword">conf</span>
+</code></pre>
       
     </div>
     <footer>
@@ -1315,268 +1644,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2012-07-10T04:28:13.000Z"><a href="/2012/07/10/show-busy-java-threads/">7月 10 2012</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/07/10/show-busy-java-threads/">shell命令排查Java的CPU性能问题</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>在排查Java的CPU性能问题时(<code>top us</code>值过高),要找出Java进程中消耗CPU多的线程,并查看它的线程栈,从而找出导致性能问题的方法调用。</p>
-<p>详细说明：top命令开启线程显示模式、按CPU使用率排序、记下Java进程里CPU高的线程号；手动转成十六进制（可以用printf %x 1234）；jstack，grep十六进制的线程id，找到线程栈。查问题时，会要多次这样操作，太繁琐。</p>
-<p>这个脚本的功能是，打印出在运行的Java进程中，消耗CPU最多的线程栈（缺省是5个线程）。</p>
-<h3 id="用法">用法</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt;</div><div class="line"><span class="comment"># 上面会从所有的Java进程中找出最消耗CPU的线程，这样用更方便。</span></div><div class="line"></div><div class="line">show-busy-java-threads.sh -c &lt;要显示的线程栈数&gt; -p &lt;指定的Java Process&gt;</div></pre></td></tr></table></figure>
-
-<h3 id="示例">示例</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">$ show-busy-java-threads.sh </div><div class="line">The stack of busy(<span class="number">57.0</span>%) thread(<span class="number">23355</span>/<span class="number">0</span>x5b3b) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-1"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005b5c5000 nid=<span class="number">0</span>x5b3b runnable [<span class="number">0</span>x000000004062c000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">127</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">    at java.lang.Thread.run(Thread.java:<span class="number">662</span>)</div><div class="line"></div><div class="line">The stack of busy(<span class="number">26.1</span>%) thread(<span class="number">24018</span>/<span class="number">0</span>x5dd2) of java process(<span class="number">23269</span>) of user(admin):</div><div class="line"><span class="string">"pool-1-thread-2"</span> prio=<span class="number">10</span> tid=<span class="number">0</span>x000000005a968800 nid=<span class="number">0</span>x5dd2 runnable [<span class="number">0</span>x00000000420e9000]</div><div class="line">   java.lang.Thread.State: RUNNABLE</div><div class="line">    at java.util.Arrays.copyOf(Arrays.java:<span class="number">2882</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:<span class="number">100</span>)</div><div class="line">    at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:<span class="number">572</span>)</div><div class="line">    at java.lang.StringBuffer.append(StringBuffer.java:<span class="number">320</span>)</div><div class="line">    - locked &lt;<span class="number">0</span>x00000007908d0030&gt; (a java.lang.StringBuffer)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">890</span>)</div><div class="line">    at java.text.SimpleDateFormat.format(SimpleDateFormat.java:<span class="number">869</span>)</div><div class="line">    at java.text.DateFormat.format(DateFormat.java:<span class="number">316</span>)</div><div class="line">    at com.xxx.foo.services.common.DateFormatUtil.format(DateFormatUtil.java:<span class="number">41</span>)</div><div class="line">    at com.xxx.foo.shared.monitor.schedule.AppMonitorDataAvgScheduler.run(AppMonitorDataAvgScheduler.java:<span class="number">126</span>)</div><div class="line">    at com.xxx.foo.services.common.utils.AliTimer<span class="variable">$2</span>.run(AliTimer.java:<span class="number">128</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.runTask(ThreadPoolExecutor.java:<span class="number">886</span>)</div><div class="line">    at java.util.concurrent.ThreadPoolExecutor<span class="variable">$Worker</span>.run(ThreadPoolExecutor.java:<span class="number">908</span>)</div><div class="line">...</div></pre></td></tr></table></figure>
-
-<p>上面的线程栈可以看出，CPU消耗最高的2个线程都在执行java.text.DateFormat.format，业务代码对应的方法是shared.monitor.schedule.AppMonitorDataAvgScheduler.run。可以基本确定：</p>
-<ul>
-<li>AppMonitorDataAvgScheduler.run调用DateFormat.format次数比较频繁。</li>
-<li>DateFormat.format比较慢。（这个可以由DateFormat.format的实现确定。）</li>
-</ul>
-<p>多个执行几次show-busy-java-threads.sh，如果上面情况高概率出现，则可以确定上面的判定。<br>因为调用越少代码执行越快，则出现在线程栈的概率就越低。</p>
-<p>分析shared.monitor.schedule.AppMonitorDataAvgScheduler.run实现逻辑和调用方式，以优化实现解决问题。</p>
-<p><a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/my_usefull_script/shell/show-busy-java-threads.sh" target="_blank" rel="external">show-busy-java-threads.sh</a>脚本:</p>
-<pre><code>    <span class="comment">#!/bin/bash</span>
-    <span class="comment"># @Function</span>
-    <span class="comment"># Find out the highest cpu consumed threads of java, and print the stack of these threads.</span>
-    <span class="comment">#</span>
-    <span class="comment"># @Usage</span>
-    <span class="comment">#   $ ./show-busy-java-threads.sh</span>
-    <span class="comment">#</span>
-    <span class="comment"># @author zxc</span>
-
-    PROG=`basename <span class="variable">$0</span>`
-
-    <span class="function"><span class="title">usage</span></span>() {
-        cat &lt;&lt;EOF
-    Usage: <span class="variable">${PROG}</span> [OPTION]...
-    Find out the highest cpu consumed threads of java, and print the stack of these threads.
-    Example: <span class="variable">${PROG}</span> -c <span class="number">10</span>
-    Options:
-        -p, --pid       find out the highest cpu consumed threads from the specifed java process,
-                        default from all java process.
-        -c, --count     <span class="keyword">set</span> the thread count to show, default is <span class="number">5</span>
-        -h, --help      display this <span class="built_in">help</span> and <span class="keyword">exit</span>
-    EOF
-        <span class="keyword">exit</span> <span class="variable">$1</span>
-    }
-
-    ARGS=`getopt -n <span class="string">"<span class="variable">$PROG</span>"</span> <span class="operator">-a</span> -o c:p:h <span class="operator">-l</span> count:,pid:,<span class="built_in">help</span> -- <span class="string">"<span class="variable">$@</span>"</span>`
-    [ $? <span class="operator">-ne</span> <span class="number">0</span> ] &amp;&amp; usage <span class="number">1</span>
-    <span class="built_in">eval</span> <span class="keyword">set</span> -- <span class="string">"<span class="variable">${ARGS}</span>"</span>
-
-    <span class="keyword">while</span> <span class="literal">true</span>; <span class="keyword">do</span>
-        <span class="keyword">case</span> <span class="string">"<span class="variable">$1</span>"</span> <span class="keyword">in</span>
-        -c|--count)
-            count=<span class="string">"<span class="variable">$2</span>"</span>
-            shift <span class="number">2</span>
-            ;;
-        -p|--pid)
-            pid=<span class="string">"<span class="variable">$2</span>"</span>
-            shift <span class="number">2</span>
-            ;;
-        -h|--help)
-            usage
-            ;;
-        --)
-            shift
-            <span class="keyword">break</span>
-            ;;
-        <span class="keyword">esac</span>
-    <span class="keyword">done</span>
-    count=<span class="variable">${count:-5}</span>
-
-    <span class="function"><span class="title">redEcho</span></span>() {
-        [ -c /dev/stdout ] &amp;&amp; {
-            <span class="comment"># if stdout is console, turn on color output.</span>
-            <span class="built_in">echo</span> <span class="operator">-ne</span> <span class="string">"\033[1;31m"</span>
-            <span class="built_in">echo</span> -n <span class="string">"<span class="variable">$@</span>"</span>
-            <span class="built_in">echo</span> <span class="operator">-e</span> <span class="string">"\033[0m"</span>
-        } || <span class="built_in">echo</span> <span class="string">"<span class="variable">$@</span>"</span>
-    }
-
-    <span class="comment"># Check the existence of jstack command!</span>
-    <span class="keyword">if</span> ! which jstack &amp;&gt; /dev/null; <span class="keyword">then</span>
-        [ -z <span class="string">"<span class="variable">$JAVA_HOME</span>"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        ! [ <span class="operator">-f</span> <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack file does NOT exists!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        ! [ -x <span class="string">"<span class="variable">$JAVA_HOME</span>/bin/jstack"</span> ] &amp;&amp; {
-            redEcho <span class="string">"Error: jstack not found on PATH and <span class="variable">$JAVA_HOME</span>/bin/jstack is NOT executalbe!"</span>
-            <span class="keyword">exit</span> <span class="number">1</span>
-        }
-        <span class="keyword">export</span> PATH=<span class="string">"<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span>"</span>
-    <span class="keyword">fi</span>
-
-    uuid=`date +%s`_<span class="variable">${RANDOM}</span>_$$
-
-    <span class="function"><span class="title">cleanupWhenExit</span></span>() {
-        rm /tmp/<span class="variable">${uuid}</span>_* &amp;&gt; /dev/null
-    }
-    trap <span class="string">"cleanupWhenExit"</span> EXIT
-
-    <span class="function"><span class="title">printStackOfThread</span></span>() {
-        <span class="keyword">while</span> <span class="built_in">read</span> threadLine ; <span class="keyword">do</span>
-            pid=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $1}'</span>`
-            threadId=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $2}'</span>`
-            threadId0x=`<span class="built_in">printf</span> %x <span class="variable">${threadId}</span>`
-            user=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $3}'</span>`
-            pcpu=`<span class="built_in">echo</span> <span class="variable">${threadLine}</span> | awk <span class="string">'{print $5}'</span>`
-
-            jstackFile=/tmp/<span class="variable">${uuid}</span>_<span class="variable">${pid}</span>
-
-            [ ! <span class="operator">-f</span> <span class="string">"<span class="variable">${jstackFile}</span>"</span> ] &amp;&amp; {
-                jstack <span class="variable">${pid}</span> &gt; <span class="variable">${jstackFile}</span> || {
-                    redEcho <span class="string">"Fail to jstack java process <span class="variable">${pid}</span>!"</span>
-                    rm <span class="variable">${jstackFile}</span>
-                    <span class="keyword">continue</span>
-                }
-            }
-
-            redEcho <span class="string">"Busy(<span class="variable">${pcpu}</span>%) thread(<span class="variable">${threadId}</span>/0x<span class="variable">${threadId0x}</span>) stack of java process(<span class="variable">${pid}</span>) under user(<span class="variable">${user}</span>):"</span>
-            sed <span class="string">"/nid=0x<span class="variable">${threadId0x}</span> /,/^$/p"</span> -n <span class="variable">${jstackFile}</span>
-        <span class="keyword">done</span>
-    }
-
-    ps -Leo pid,lwp,user,comm,pcpu --no-headers | {
-        [ -z <span class="string">"<span class="variable">${pid}</span>"</span> ] &amp;&amp;
-        awk <span class="string">'$4=="java"{print $0}'</span> ||
-        awk -v <span class="string">"pid=<span class="variable">${pid}</span>"</span> <span class="string">'$1==pid,$4=="java"{print $0}'</span>
-    } | sort -k5 -r -n | head --lines <span class="string">"<span class="variable">${count}</span>"</span> | printStackOfThread
-</code></pre>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2012-07-07T09:34:56.000Z"><a href="/2012/07/07/monitor-host/">7月 7 2012</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/07/07/monitor-host/">简单的linux服务器监控脚本</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="这是一个简单的服务器监控脚本代码,复杂一些的监控脚本可以在我的github上阅读">这是一个简单的服务器监控脚本代码,复杂一些的监控脚本可以在我的<a href="https://github.com/Lawrence-zxc/usefull-develop-tools/tree/master/my_usefull_script/monitor" target="_blank" rel="external">github上阅读</a></h3>
-<p>monitor-host.sh源码如下:</p>
-<pre><code>    <span class="comment">#!/bin/bash</span>
-    <span class="comment"># @Function</span>
-    <span class="comment"># monitor host:network io memory cpu </span>
-    <span class="comment">#</span>
-    <span class="comment"># @Usage</span>
-    <span class="comment">#   $ ./monitor-host.sh</span>
-    <span class="comment">#</span>
-    <span class="comment"># @author zxc</span>
-
-    DELAY=<span class="number">10</span>
-    COUNT=<span class="number">60</span>
-
-    LOG_PATH=<span class="string">'monitor_path'</span>
-
-    <span class="keyword">if</span> ! [ <span class="operator">-d</span> <span class="variable">$LOG_PATH</span> ]; <span class="keyword">then</span>
-        mkdir -p <span class="variable">$LOG_PATH</span>
-    <span class="keyword">fi</span>
-
-    cur_date=<span class="string">"`date +%Y%m%d`"</span>
-
-    top_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/top_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
-    memory_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/memory_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
-    cpu_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/cpu_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
-    io_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/io_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
-    network_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/network_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
-
-    <span class="comment"># total performance check</span>
-    top -b <span class="operator">-d</span> <span class="variable">$DELAY</span> -n <span class="variable">$COUNT</span> &gt; <span class="variable">$top_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
-
-    <span class="comment"># memory check</span>
-    vmstat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$memory_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
-
-    <span class="comment"># cpu check</span>
-    sar -u <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$cpu_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
-
-    <span class="comment"># IO check</span>
-    iostat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$io_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
-
-    <span class="comment"># network check</span>
-    sar -n DEV <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$network_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
-</code></pre>
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1616,7 +1683,7 @@
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>16</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
