@@ -549,6 +549,192 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-04-01T09:08:52.000Z"><a href="/2010/04/01/thinking-in-java/">4月 1 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/04/01/thinking-in-java/">Thinking In java读书笔记(java编程思想)</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>寒假在家正好一直没事情,就一直看书,看了不下五本左右的编程专业书籍,是该花时间整理下写写读书笔记否则读了忘没有用,读书的时候是把书读厚,写笔记目的是把书写薄,下面是 <strong>Think in java</strong> 这本书的读书笔记,估算了下大概花了三个月左右时间去看它,内容很多很全,很符合入门级程序员和中级但偶尔有些迷茫的程序员的口味.</p>
+<h3 id="第一章：对象简介">第一章：对象简介</h3>
+<p>1、Java的五大特征,也是面向对象的五大特征:</p>
+<ul>
+<li>Everything is an object: 万物皆对象</li>
+<li>A program is a bunch of objects telling each other what to do by sending messages: 程序就是一组相互之间传递信息,告诉对方该干些什么的对象</li>
+<li>Each object has its own memory made up of other objects: 每个对象都利用别的对象来组建它自己的记忆</li>
+<li>Every object has a type: 对象都有类型</li>
+<li>All objects of a particular type can receive the same messages: 所有属于同一类型的对象能接收同样的信息</li>
+</ul>
+<p>2、作者在第一章讲的是一些OOP概念上的东西,在我看来也有许多哲学上的东西,多看几遍或许会顿悟.</p>
+<h3 id="第二章：万物皆对象">第二章：万物皆对象</h3>
+<p>1、在Java中，我们直接操控的不是类本身，而是类的一个实例，或者说是Reference。Java没有地址传递之说。</p>
+<p>2、Java把对象，也就是类存放在“堆”里，而把其他数据和对象的reference存放在“栈”里，对操作来收，栈比堆要快。</p>
+<p>3、因为栈比堆要快，所以作为特例，Java的primitive类型的变量也存放在栈里，这样可以提高效率，另外一方面来说，primitive类型的数据不是类，所以，它们也没有reference。</p>
+<p>4、Java不允许在同一个方法中定义同样名称的变量,如:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">{</div><div class="line">	<span class="keyword">int</span> x = <span class="number">12</span>;</div><div class="line"> 	{</div><div class="line">	   	<span class="keyword">int</span> x = <span class="number">16</span>;</div><div class="line"> 	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这在C++中是允许的,在Java中却会出现编译错误.</p>
+<p>5、无需关心清理不再被使用的reference,Java的Gabage Collector会帮你做这一切的.</p>
+<p>6、对于primitive类型的变量，如果这个变量是类的成员，则类会对其进行初始化，如果不是类的成员，则不会对其初始化，它可能是一个任意的值。</p>
+<p>7、javadoc非常强大，但要求我们写程序的时候要有丰富的注释和良好的习惯。</p>
+<h3 id="第三章：流程控制">第三章：流程控制</h3>
+<p>1、几乎所有的运算符都只能作用于primitive。但”=”、”==”、”!=”是例外，它们可以运用于所有对象，此外，String类也支持”+”和”+=”。</p>
+<p>2、Reference变量的赋值，会使表达式左边的reference丢失原来的对象，原来的对象成了没有reference的内存垃圾。</p>
+<p>3、Java的书籍总是强调Java没有地址传递，但我觉得reference传递就是地址传递。</p>
+<p>4、equals比较的是reference</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">Integer</span> n1 <span class="subst">=</span> <span class="literal">new</span> <span class="built_in">Integer</span>(<span class="number">47</span>);</div><div class="line"><span class="built_in">Integer</span> n2 <span class="subst">=</span> <span class="literal">new</span> <span class="built_in">Integer</span>(<span class="number">47</span>);</div><div class="line">System<span class="built_in">.</span>out<span class="built_in">.</span>println(n1<span class="built_in">.</span><span class="keyword">equals</span>(n2)); <span class="comment">//println true</span></div></pre></td></tr></table></figure>
+
+<p>打印的结果是true，不要认为理所当然就是这样，其实，equals比较的是reference，这里是两个reference，显然不会相等，之所以输出true，是因为Integer类中已经对equals函数做了处理，如果是自己写的类，而没有重载equals，那么打印的肯定是false。</p>
+<p>5、Java提供了位操作符，但我觉得没有必要使用它。</p>
+<p>6、在Java中，逗号运算符只能用在for循环中。</p>
+<p>7、switch只能用char、byte、short、int。</p>
+<h3 id="第四章:初始化与清理">第四章:初始化与清理</h3>
+<p>1、primitive类型的重载慎用。</p>
+<p>2、返回值不能重载，因为存在虽然方法有返回值，但程序中并不关注返回值的情况，如：<br>定义：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> f(){}; </div><div class="line">String f(){};</div></pre></td></tr></table></figure>
+
+<p>调用 f()，此时虚拟机就不知道该调用哪个f了。</p>
+<p>3、类中的普通方法不能调用构造函数，构造函数能相互调用，但只能用this关键字。</p>
+<p>4、一般来说，类中无需使用finalize()，因为虚拟机会自动进行垃圾清理，但有种特殊情况，声明了一个对象，但并没有refrence，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">class Aclass(){....};</div><div class="line">   ...</div><div class="line"><span class="keyword">new</span> Aclass();</div></pre></td></tr></table></figure>
+
+<p>因为没有refrence，那么虚拟机会认为它已经没有用了，就可以回收了，但此时如果你不希望它回收，那么可以在finalize函数中实现，具体可参考书本的例子。</p>
+<p>5、内部变量在使用之前必须初始化；所谓“使用”是指出现在表达式右边、方法的参数等，而不是表达式的左边，例如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">String s = <span class="string">"i love java"</span>;</div><div class="line"><span class="keyword">int</span> i;</div><div class="line">i = s.length();</div></pre></td></tr></table></figure>
+
+<p>是正确的；而</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> i;</div><div class="line">i++;</div></pre></td></tr></table></figure>
+
+<p>是错误的。因为i++相对于i = i + 1<br>但是，如果不是内部变量而是类的的成员数据，则不需要初始化，因为编译器不知道会在哪个方法中被初始化。对于primitive的成员数据，Java会自动赋予初始值，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">boolean</span> = <span class="keyword">false</span></div><div class="line"><span class="keyword">char</span>  = (<span class="keyword">char</span>)<span class="number">0</span>  <span class="comment">//----空格</span></div><div class="line"><span class="keyword">byte</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">int</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">long</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">float</span> = <span class="number">0</span></div><div class="line"><span class="keyword">double</span> = <span class="number">0</span></div></pre></td></tr></table></figure>
+
+<p>对于对象的成员数据，没有初始化之前等于null，所以，primitive的成员数据没有初始化之前被使用并不会发生错误，但对象数据在运行时就会发生exception。<br>有一种特殊情况，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> [] a = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">4</span>];</div></pre></td></tr></table></figure>
+
+<p>此时，看上去只初始化了数组的大小而没有初始化数组的成员，但在java中，这也是没有问题的，java给每个数组成员自动进行了初始化。</p>
+<p>6、类实例化的时候总是先执行成员数据的定义（如果在定义的时候进行初始化的话此时就初始化了），然后再执行构造函数，而不管在代码顺序上成员数据在前还是构造函数在前。</p>
+<p>7、对于static类型的成员变量，static类型的成员变量总是比其他成员变量先初始化，static类型的成员变量只初始化一次，只有被用到的static成员变量才会被初始化。<br>   此处，“被用到”在我来理解，是从main函数开始检查的，如果main函数中定义了静态变量或者被main函数调用的其他类中定义了静态变量，这些静态变量就“被用到”了。</p>
+<p>8、primitive类型的数组可以用new来初始化，如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span>[] a = <span class="keyword">new</span> <span class="keyword">int</span>[]{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</div></pre></td></tr></table></figure>
+
+<p>也可以直接用形如</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span>[] a = {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</div></pre></td></tr></table></figure>
+
+
+<p>的方式来初始化，但如果不是primitive的变量就只能用new来初始化。</p>
+<p>9、数组初始化的时候，int[] a = {1,2,3,4,}; 4后面有逗号，对不对？答：对，最后的逗号有与没有都可以。</p>
+<h3 id="第五章：隐藏实现">第五章：隐藏实现</h3>
+<p>1、并非每一个java文件都需要一个public类，但一个java文件只能有一个public类。如果没有public类，那么文件名可以随便取。</p>
+<p>2、使用import的时候，引用的类库要么能在CLASSPAHT中找到，要么在当前路径在加上import的相对路径中能找到，如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> com.spring.util,</div></pre></td></tr></table></figure>
+
+<p>如果当前路径是D:\JavaWork，那么这些被import的类库可以在D:\workspace\com\spring\util目录下。</p>
+<p>3、关于Java的package，如果打包成jar文件，必须把这个文件放到CLASSPATH能找到的路径中去。</p>
+<p>4、Java的访问符包括，public、protected、private和没有访问符（package），此处的访问符是指类的成员的访问符。其访问权限分别是：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span>&gt;<span class="keyword">package</span>&gt;<span class="keyword">protected</span>&gt;<span class="keyword">private</span></div></pre></td></tr></table></figure>
+
+<p>package的访问权限不仅仅是使同一个package中其他类能访问这个类的public、protected、package成员，也能访问private成员。</p>
+<p>5、相对于成员的访问权限，类没有private的访问权限，因为private的类没有任何价值；同时也没有protected的访问权限。</p>
+<h3 id="第六章：复用类">第六章：复用类</h3>
+<p>1、toString是一个特殊的方法，当编译器需要一个String而你的类是一个对象的时候，编译器会自动调用toString方法，当然，你得保证你的类里面有这个方法。</p>
+<p>2、往每个类中都写一个main函数，会使调试方便得多。</p>
+<p>3、如果基类中没有默认的（即没有参数的）构造函数而有有参数的构造函数，则在子类的构造函数中必须调用基类的构造函数，否则编译会出错。也就是说，当子类实例化的时候虚拟机自动去调用基类的默认的构造函数，除非在子类的构造函数中显式地调用了基类的非默认的构造函数。</p>
+<p>4、编译器会强制将你基类的构造函数的调用放在派生类的构造函数的最前面。也就是说，在它之前不能有任何东西。</p>
+<p>5、虽然编译器会强制你对基类进行初始化，并且会要求你在构造函数的开始部分完成初始化，但它不会检查你是不是进行了成员对象的初始化。</p>
+<p>6、合成还是继承？一般来说，合成用于新类要使用旧类的功能，而不是其接口的场合。也就是说，把对象嵌进去，用它实现新类的功能，但是用户看到的是新累的接口，而不是嵌进去的对象的接口。</p>
+<p>7、一般情况下，应该将类的成员数据定义成private。</p>
+<p>8、上传（upcasting）总是安全的。</p>
+<p>9、private方法都隐含有final的意思。由于你不能访问private的方法，因此你也不能复写它。你可以给一个private方法加final修饰符，但这样做什么意义也没有。</p>
+<p>10、9中提到的不能复写private函数，是指，该函数在基类中是private的，并且在派生类中也是private的。如果在派生类中不是private的，则可以复写。</p>
+<h3 id="第七章：多态性">第七章：多态性</h3>
+<p>1、”封装”通过将数据的特征与行为结合在一起，创建了一种新的数据类型。“隐藏实现”通过将细节设置成private，完成了接口与实现的分离。而多态性是站在“类”的角度来处理这种逻辑上的分离的。</p>
+<p>2、”上传”使得类的动态性得以实现，但需要注意的是，只有基类是public的情况下，扩展类的复写才可以实现，比如下面的例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>{</div><div class="line"> 	<span class="keyword">private</span> <span class="keyword">void</span> <span class="title">f</span>() {</div><div class="line">  		System.out.println(<span class="string">"private f()"</span>);</div><div class="line"> 	}</div><div class="line"> 	#</div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">  		Test po = <span class="keyword">new</span> Derived();</div><div class="line">  		po.f();</div><div class="line"> 	}</div><div class="line">}</div><div class="line">#</div><div class="line">class Derived extends Test {</div><div class="line"> 	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">f</span>() {</div><div class="line">  		System.out.println(<span class="string">"public f()"</span>);</div><div class="line"> 	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>例子中，Test.f是private的，所以Derived.f其实不是Test.f的复写，Derived.f是一个全新的方法，它连重载都算不上，因为Derived根本看不到基类的f()。<br>所以，输出的应该是private f()，而不是public f()。</p>
+<p>3、如果类包含一个或多个抽象方法，那么这个类必须定义为abstract，但如果类没有abstract方法，也可以将类定义为abstract。</p>
+<p>4、构造函数的调用顺序：</p>
+<ul>
+<li>调用基类的构造函数。这是一个递归过程，因此会先创建继承体系的根，然后是下一级派生类，依此类推，直到最后一个继承类的构造函数</li>
+<li>成员对象按照其声明的顺序进行初始化</li>
+<li>执行继承类的构造函数的正文。</li>
+</ul>
+<p>其实，还不如这样表述表决方便：在一个类的初始化过程中，先按成员对象的声明顺序初始化这些成员变量，然后执行其构造函数；如果有基类，则先初始化基类。</p>
+<p>5、如果要内存清理，则可以从基类开始写一个函数，函数名可以自己定，但调用的时候，必须从顶层开始执行，这刚好与构造函数的调用顺序相反。</p>
+<p>6、开始做Java的时候，不要想着把整个程序做成一个类系，比较好的办法是合成。</p>
+<h3 id="第八章：接口与内部类">第八章：接口与内部类</h3>
+<p>1、接口中的方法是自动public的，即，如果你没有对其进行设置，它不会象类一样认为它是package，而是认为是public，另外，接口中的方法是不允许为private和protected的。</p>
+<p>2、在继承和实现同时进行的时候，在声明一个类的时候，应该先继承后实现。</p>
+<p>3、使用接口还是抽象类？如果没有成员数据和方法的实现，则应该优先考虑使用接口。</p>
+<p>4、接口中的成员变量自动就是public和final的，所以不必特别声明，这样可以实现与C语言的enum相似的功能。如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Months</span> </span>{</div><div class="line">	<span class="keyword">int</span> JANUARY = <span class="number">1</span>, FEBRUARY = <span class="number">2</span>, MARCH = <span class="number">3</span>, APRIL = <span class="number">4</span>, MAY = <span class="number">5</span>, JUNE = <span class="number">6</span>, JULY = <span class="number">7</span>, AUGUST = <span class="number">8</span>, SEPTEMBER = <span class="number">9</span>, OCTOBER = <span class="number">10</span>,NOVEMBER = <span class="number">11</span>, DECEMBER = <span class="number">12</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>5、内部类是一种非常有价值的特性，它能让你在逻辑上将相互从属的类组织起来，并且在类的内部访问控制权限。但是切记，内部类和合成是截然不同的。</p>
+<p>6、内部类可以被创建在方法里，甚至是任意一个作用域里。</p>
+<p>7、内部类能访问宿主类的任何成员。</p>
+<p>8、嵌套类就是static的内部类。</p>
+<p>9、每个内部类都可以独立地继承某个“实现（implementation）。因此，内部类不会受“宿主类是否已经继承了别的实现”的约束。</p>
+<p>10、虽然作者说了很多内部类的好处，但我觉得我还是看不太懂，留待以后慢慢琢磨吧。</p>
+<h3 id="第九章：异常带来处理错误">第九章：异常带来处理错误</h3>
+<p>1、如果一个方法在声明的时候抛出一个异常，比如public void f() throws SimpleException，那么在调用的时候必须进行异常捕捉。</p>
+<p>2、打印错误信息是时候，System.err比System.out好，因为后者可能不重定向。</p>
+<p>3、自己创建的异常类可以有带参数的构造函数，也可以有其他的成员。</p>
+<p>4、Throwable类的printStackTrace方法返回“被调用的方法是经过怎样一个顺序到达异常发生地点”的信息。</p>
+<p>5、异常说明（即在方法后面跟上throws关键字和要抛出的异常的类名称）可以让程序员很明确的知道这个方法可能会抛出什么样的异常。</p>
+<p>6、异常NullPointerReference虚拟机会自动抛出，不必处处调用。</p>
+<p>7、无论是否抛出异常，finally块总是会被执行。</p>
+<p>8、异常运用原则：</p>
+<ul>
+<li>在合适的地方处理问题。（避免在自己还不知道该如何处理的情况下去捕捉异常）</li>
+<li>把问题解决掉，然后重新调用那个引起问题的方法</li>
+<li>修正一下问题，然后染过那个方法在继续下去</li>
+<li>用一些别的，不准备让这个方法返回的数字来进行计算</li>
+<li>把当前允许环境下能做的事情全部做完，然后把相同的异常抛到更高层</li>
+<li>把当前允许环境下能做的事情全部做完，然后把抛一个不同的异常到更高层</li>
+<li>中止程序</li>
+<li>简化（如果异常结构把事情搞得太复杂了，那用起来会非常痛苦也很烦人）</li>
+<li>把类库和程序做得更安全（这既是在为调试作短期投资，也是在为程序的健壮性作长期投资）</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2010-04-01T06:15:01.000Z"><a href="/2010/04/01/hello-world/">4月 1 2010</a></time>
       
       
@@ -670,7 +856,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>22</small></li>
+    <li><a href="/tags/Java/">Java</a><small>23</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
