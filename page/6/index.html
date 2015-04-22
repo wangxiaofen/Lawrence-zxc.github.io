@@ -89,6 +89,330 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2012-03-10T09:15:44.000Z"><a href="/2012/03/10/leetcode-database/">3月 10 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/03/10/leetcode-database/">LeetCode数据库题目解答</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>在之前做程序算法题的途中发现，LeetCode上面推出了数据库解答，有十道题，于是这两天晚上时间就给做了。解答是次要主要的好处是，正好复习复习SQL一些查询语句的写法，比如自定义变量和常用函数。题目都比较简单，少做解释，以贴题目和答案为主。</p>
+<table>
+<thead>
+<tr>
+<th><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Title</a></th>
+<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Acceptance</a></th>
+<th style="text-align:center"><a href="https://leetcode.com/problemset/database/" target="_blank" rel="external">Difficulty</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#combine-two-tables">Combine Two Tables</a></td>
+<td style="text-align:center">32.5%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#second-highest-salary">Second Highest Salary</a></td>
+<td style="text-align:center">23.8%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#nth-highest-salary">Nth Highest Salary</a></td>
+<td style="text-align:center">14.1%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#rank-scores">Rank Scores</a></td>
+<td style="text-align:center">20.7%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#consecutive-numbers">Consecutive Numbers</a></td>
+<td style="text-align:center">20.2%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#employees-earning-more-than-their-managers">Employees Earning More Than Their Managers</a></td>
+<td style="text-align:center">44.2%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#duplicate-emails">Duplicate Emails</a></td>
+<td style="text-align:center">38.0%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#customers-who-never-order">Customers Who Never Order</a></td>
+<td style="text-align:center">34.2%</td>
+<td style="text-align:center">Easy</td>
+</tr>
+<tr>
+<td><a href="#department-highest-salary">Department Highest Salary</a></td>
+<td style="text-align:center">19.2%</td>
+<td style="text-align:center">Medium</td>
+</tr>
+<tr>
+<td><a href="#department-top-three-salaries">Department Top Three Salaries</a></td>
+<td style="text-align:center">16.3%</td>
+<td style="text-align:center">Hard</td>
+</tr>
+</tbody>
+</table>
+<h3 id="Combine_Two_Tables"><span id="combine-two-tables" style="color: #ff0000;">Combine Two Tables</span></h3>
+<p>【题目】</p>
+<p>Table: Person</p>
+<pre><code><span class="code">+-------------+</span>---------+
+<span class="header">| Column Name | Type    |
++-------------+---------+</span>
+| PersonId    | int     |
+| FirstName   | varchar |
+<span class="header">| LastName    | varchar |
++-------------+---------+</span>
+</code></pre><p>PersonId is the primary key column for this table.<br>Table: Address</p>
+<pre><code><span class="code">+-------------+</span>---------+
+<span class="header">| Column Name | Type    |
++-------------+---------+</span>
+| AddressId   | int     |
+| PersonId    | int     |
+| City        | varchar |
+<span class="header">| State       | varchar |
++-------------+---------+</span>
+</code></pre><p>AddressId is the primary key column for this table.<br>Write a SQL query for a report that provides the following information for each person in the Person table, regardless if there is an address for each of those people:</p>
+<p>FirstName, LastName, City, State<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> p.FirstName, p.LastName, a.City, a.State <span class="keyword">from</span> Person p <span class="keyword">left</span> <span class="keyword">outer</span> <span class="keyword">join</span> Address a <span class="keyword">on</span> p.PersonId=a.PersonId;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Second_Highest_Salary"><span id="second-highest-salary" style="color: #ff0000;">Second Highest Salary</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to get the second highest salary from the Employee table.</p>
+<pre><code><span class="code">+----+</span>--------+
+<span class="header">| Id | Salary |
++----+--------+</span>
+| 1  | 100    |
+| 2  | 200    |
+<span class="header">| 3  | 300    |
++----+--------+</span>
+</code></pre><p>For example, given the above Employee table, the second highest salary is 200. If there is no second highest salary, then the query should return null.</p>
+<p>【解答】 题目简单，但是如果和我一样，发现几个常用函数都不记得了，可以<a href="http://www.tutorialspoint.com/mysql/mysql-useful-functions.htm" target="_blank" rel="external">复习一下</a>。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">IFNULL</span>( (<span class="keyword">select</span> e.Salary <span class="keyword">from</span> Employee e <span class="keyword">group</span> <span class="keyword">by</span> e.Salary <span class="keyword">order</span> <span class="keyword">by</span> e.Salary <span class="keyword">desc</span> <span class="keyword">limit</span> <span class="number">1</span>, <span class="number">1</span>), <span class="literal">NULL</span>) SecondHighestSalary;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Nth_Highest_Salary"><span id="nth-highest-salary" style="color: #ff0000;">Nth Highest Salary</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to get the nth highest salary from the Employee table.</p>
+<pre><code><span class="code">+----+</span>--------+
+<span class="header">| Id | Salary |
++----+--------+</span>
+| 1  | 100    |
+| 2  | 200    |
+<span class="header">| 3  | 300    |
++----+--------+</span>
+</code></pre><p>For example, given the above Employee table, the nth highest salary where n = 2 is 200. If there is no nth highest salary, then the query should return null.</p>
+<p>【解答】第n高，这就得用自定义变量了，平时很少用这东西，于是<a href="http://dev.mysql.com/doc/refman/5.0/en/user-variables.html" target="_blank" rel="external">复习了一下</a>先。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> getNthHighestSalary(N <span class="built_in">INT</span>) <span class="keyword">RETURNS</span> <span class="built_in">INT</span></span></div><div class="line"><span class="keyword">BEGIN</span></div><div class="line">    <span class="keyword">RETURN</span> (</div><div class="line">        <span class="keyword">select</span> <span class="keyword">IFNULL</span>(Salary, <span class="literal">NULL</span>) Salary <span class="keyword">from</span> (</div><div class="line">            <span class="keyword">select</span> @row_num := @row_num+<span class="number">1</span> Rank, Salary <span class="keyword">from</span> (</div><div class="line">                <span class="keyword">select</span> Salary <span class="keyword">from</span> Employee <span class="keyword">group</span> <span class="keyword">by</span> Salary <span class="keyword">desc</span></div><div class="line">            ) t1 <span class="keyword">join</span> (</div><div class="line">                <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">            ) t2</div><div class="line">        ) t <span class="keyword">where</span> t.Rank=N</div><div class="line">    );</div><div class="line"><span class="operator"><span class="keyword">END</span></span></div></pre></td></tr></table></figure>
+
+<h3 id="Rank_Scores"><span id="rank-scores" style="color: #ff0000;">Rank Scores</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to rank scores. If there is a tie between two scores, both should have the same ranking. Note that after a tie, the next ranking number should be the next consecutive integer value. In other words, there should be no “holes” between ranks.</p>
+<pre><code><span class="code">+----+</span>-------+
+<span class="header">| Id | Score |
++----+-------+</span>
+| 1  | 3.50  |
+| 2  | 3.65  |
+| 3  | 4.00  |
+| 4  | 3.85  |
+| 5  | 4.00  |
+<span class="header">| 6  | 3.65  |
++----+-------+</span>
+</code></pre><p>For example, given the above Scores table, your query should generate the following report (order by highest score):<br>    +———-+———+<br>    | Score | Rank |<br>    +———-+———+<br>    | 4.00  | 1    |<br>    | 4.00  | 1    |<br>    | 3.85  | 2    |<br>    | 3.65  | 3    |<br>    | 3.65  | 3    |<br>    | 3.50  | 4    |<br>    +———-+———+<br>【解答】又是一道自定义变量的题目，这种模式应当熟悉，还是挺常见的。如果不能使用“set @var_name=0;”的话（要求用一句SQL搞定），那可以在子句里面定义“select @var_name:=0”，再在它的外面使用这个变量。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> s.Score, t.Rank <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> @row_num:=@row_num+<span class="number">1</span> Rank, Score <span class="keyword">from</span> (</div><div class="line">         <span class="keyword">select</span> Score <span class="keyword">from</span> Scores <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span></div><div class="line">    ) t1 <span class="keyword">join</span> (</div><div class="line">        <span class="keyword">select</span> @row_num := <span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) t, Scores s <span class="keyword">where</span> s.Score=t.Score <span class="keyword">group</span> <span class="keyword">by</span> Score <span class="keyword">desc</span>, Rank <span class="keyword">asc</span>, Id;</div></pre></td></tr></table></figure>
+
+<h3 id="Consecutive_Numbers"><span id="consecutive-numbers" style="color: #ff0000;">Consecutive Numbers</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to find all numbers that appear at least three times consecutively.</p>
+<pre><code><span class="code">+----+</span>-----+
+<span class="header">| Id | Num |
++----+-----+</span>
+| 1  |  1  |
+| 2  |  1  |
+| 3  |  1  |
+| 4  |  2  |
+| 5  |  1  |
+| 6  |  2  |
+<span class="header">| 7  |  2  |
++----+-----+</span>
+</code></pre><p>For example, given the above Logs table, 1 is the only number that appears consecutively for at least three times.<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">DISTINCT</span>(l1.Num) <span class="keyword">from</span> <span class="keyword">Logs</span> l1, <span class="keyword">Logs</span> l2, <span class="keyword">Logs</span> l3 <span class="keyword">where</span> l1.Id+<span class="number">1</span>=l2.Id <span class="keyword">and</span> l1.Id+<span class="number">2</span>=l3.Id <span class="keyword">and</span> l1.Num=l2.Num <span class="keyword">and</span> l1.Num=l3.Num;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Employees_Earning_More_Than_Their_Managers"><span id="employees-earning-more-than-their-managers" style="color: #ff0000;">Employees Earning More Than Their Managers</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees including their managers. Every employee has an Id, and there is also a column for the manager Id.</p>
+<pre><code><span class="code">+----+</span>-------<span class="code">+--------+</span>-----------+
+<span class="header">| Id | Name  | Salary | ManagerId |
++----+-------+--------+-----------+</span>
+| 1  | Joe   | 70000  | 3         |
+| 2  | Henry | 80000  | 4         |
+| 3  | Sam   | 60000  | NULL      |
+<span class="header">| 4  | Max   | 90000  | NULL      |
++----+-------+--------+-----------+</span>
+</code></pre><p>Given the Employee table, write a SQL query that finds out employees who earn more than their managers. For the above table, Joe is the only employee who earns more than his manager.</p>
+<pre><code><span class="code">+----------+</span>
+<span class="header">| Employee |
++----------+</span>
+<span class="header">| Joe      |
++----------+</span>
+</code></pre><p>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> e.Name <span class="keyword">from</span> Employee e, Employee m <span class="keyword">where</span> e.ManagerId=m.Id <span class="keyword">and</span> e.Salary&gt;m.Salary;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Duplicate_Emails"><span id="duplicate-emails" style="color: #ff0000;">Duplicate Emails</span></h3>
+<p>【题目】</p>
+<p>Write a SQL query to find all duplicate emails in a table named Person.</p>
+<pre><code><span class="code">+----+</span>---------+
+<span class="header">| Id | Email   |
++----+---------+</span>
+| 1  | a@b.com |
+| 2  | c@d.com |
+<span class="header">| 3  | a@b.com |
++----+---------+</span>
+</code></pre><p>For example, your query should return the following for the above table:</p>
+<pre><code><span class="code">+---------+</span>
+<span class="header">| Email   |
++---------+</span>
+<span class="header">| a@b.com |
++---------+</span>
+</code></pre><p>Note: All emails are in lowercase.<br>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> <span class="keyword">distinct</span>(p.Email) <span class="keyword">from</span> Person p, Person q <span class="keyword">where</span> p.Id!=q.Id <span class="keyword">and</span> p.Email=q.Email;</span></div></pre></td></tr></table></figure>
+
+<h3 id="Customers_Who_Never_Order"><span id="customers-who-never-order" style="color: #ff0000;">Customers Who Never Order</span></h3>
+<p>【题目】</p>
+<p>Suppose that a website contains two tables, the Customers table and the Orders table. Write a SQL query to find all customers who never order anything.</p>
+<p>Table: Customers.</p>
+<pre><code><span class="code">+----+</span>-------+
+<span class="header">| Id | Name  |
++----+-------+</span>
+| 1  | Joe   |
+| 2  | Henry |
+| 3  | Sam   |
+<span class="header">| 4  | Max   |
++----+-------+</span>
+</code></pre><p>Table: Orders.</p>
+<pre><code><span class="code">+----+</span>------------+
+<span class="header">| Id | CustomerId |
++----+------------+</span>
+| 1  | 3          |
+<span class="header">| 2  | 1          |
++----+------------+</span>
+</code></pre><p>Using the above tables as example, return the following:</p>
+<pre><code><span class="code">+-----------+</span>
+<span class="header">| Customers |
++-----------+</span>
+| Henry     |
+<span class="header">| Max       |
++-----------+</span>
+</code></pre><p>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> c.Name Customers <span class="keyword">from</span> Customers c <span class="keyword">where</span> c.Id <span class="keyword">not</span> <span class="keyword">in</span> (</span></div><div class="line">    <span class="keyword">select</span> CustomerId <span class="keyword">from</span> Orders</div><div class="line">)</div></pre></td></tr></table></figure>
+
+<h3 id="Department_Highest_Salary"><span id="department-highest-salary" style="color: #ff0000;">Department Highest Salary</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees. Every employee has an Id, a salary, and there is also a column for the department Id.</p>
+<pre><code><span class="code">+----+</span>-------<span class="code">+--------+</span>--------------+
+<span class="header">| Id | Name  | Salary | DepartmentId |
++----+-------+--------+--------------+</span>
+| 1  | Joe   | 70000  | 1            |
+| 2  | Henry | 80000  | 2            |
+| 3  | Sam   | 60000  | 2            |
+<span class="header">| 4  | Max   | 90000  | 1            |
++----+-------+--------+--------------+</span>
+</code></pre><p>The Department table holds all departments of the company.</p>
+<pre><code><span class="code">+----+</span>----------+
+<span class="header">| Id | Name     |
++----+----------+</span>
+| 1  | IT       |
+<span class="header">| 2  | Sales    |
++----+----------+</span>
+</code></pre><p>Write a SQL query to find employees who have the highest salary in each of the departments. For the above tables, Max has the highest salary in the IT department and Henry has the highest salary in the Sales department.</p>
+<pre><code><span class="code">+------------+</span>----------<span class="code">+--------+</span>
+<span class="header">| Department | Employee | Salary |
++------------+----------+--------+</span>
+| IT         | Max      | 90000  |
+<span class="header">| Sales      | Henry    | 80000  |
++------------+----------+--------+</span>
+</code></pre><p>【解答】</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> d.Name Department, e.Name Employee, s.Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span> <span class="keyword">MAX</span>(e.Salary) Salary, e.DepartmentId <span class="keyword">from</span> Employee e, Department d <span class="keyword">where</span> e.DepartmentId=d.Id <span class="keyword">group</span> <span class="keyword">by</span> e.DepartmentId</div><div class="line">) s, Employee e, Department d <span class="keyword">where</span> s.Salary=e.Salary <span class="keyword">and</span> e.DepartmentId=d.Id <span class="keyword">and</span> e.DepartmentId=s.DepartmentId;</div></pre></td></tr></table></figure>
+
+<h3 id="Department_Top_Three_Salaries"><span id="department-top-three-salaries" style="color: #ff0000;">Department Top Three Salaries</span></h3>
+<p>【题目】</p>
+<p>The Employee table holds all employees. Every employee has an Id, and there is also a column for the department Id.</p>
+<pre><code><span class="code">+----+</span>-------<span class="code">+--------+</span>--------------+
+<span class="header">| Id | Name  | Salary | DepartmentId |
++----+-------+--------+--------------+</span>
+| 1  | Joe   | 70000  | 1            |
+| 2  | Henry | 80000  | 2            |
+| 3  | Sam   | 60000  | 2            |
+| 4  | Max   | 90000  | 1            |
+| 5  | Janet | 69000  | 1            |
+<span class="header">| 6  | Randy | 85000  | 1            |
++----+-------+--------+--------------+</span>
+</code></pre><p>The Department table holds all departments of the company.</p>
+<pre><code><span class="code">+----+</span>----------+
+<span class="header">| Id | Name     |
++----+----------+</span>
+| 1  | IT       |
+<span class="header">| 2  | Sales    |
++----+----------+</span>
+</code></pre><p>Write a SQL query to find employees who earn the top three salaries in each of the department. For the above tables, your SQL query should return the following rows.</p>
+<pre><code><span class="code">+------------+</span>----------<span class="code">+--------+</span>
+<span class="header">| Department | Employee | Salary |
++------------+----------+--------+</span>
+| IT         | Max      | 90000  |
+| IT         | Randy    | 85000  |
+| IT         | Joe      | 70000  |
+| Sales      | Henry    | 80000  |
+<span class="header">| Sales      | Sam      | 60000  |
++------------+----------+--------+</span>
+</code></pre><p>【解答】这道题拿MySql做其实是有点难了，如果我用Oracle，我就可以 rank() over(partition by xxx order by xxx desc) 这样搞了，但是MySql比较挫的地方在于没有这样分区操作的东西。不过最后还是借助了三个自定义变量搞定。意思就不解释了，还是好懂的：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> Department, Employee, Salary <span class="keyword">from</span> (</span></div><div class="line">    <span class="keyword">select</span></div><div class="line">        <span class="keyword">IF</span>(@lastDep!=t1.Department, @<span class="keyword">count</span>:=<span class="number">0</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>), <span class="keyword">IF</span>(@lastDep=t1.Department <span class="keyword">and</span> @lastSalary!=t1.Salary, @<span class="keyword">count</span>:=@<span class="keyword">count</span>+<span class="number">1</span>, @<span class="keyword">count</span>:=@<span class="keyword">count</span>) Cnt,</div><div class="line">        @lastDep:=t1.Department, @lastSalary:=t1.Salary,</div><div class="line">        t1.Department, t1.Employee, t1.Salary</div><div class="line">    <span class="keyword">from</span> (</div><div class="line">        <span class="keyword">select</span> d.Name Department, e.Name Employee, e.Salary</div><div class="line">        <span class="keyword">from</span> Department d, Employee e <span class="keyword">where</span> d.Id=e.DepartmentId <span class="keyword">order</span> <span class="keyword">by</span> Department <span class="keyword">asc</span>, Salary <span class="keyword">desc</span></div><div class="line">    ) t1, (</div><div class="line">            <span class="keyword">select</span> @lastDep:=<span class="literal">null</span>, @lastSalary:=<span class="number">0</span>, @<span class="keyword">count</span>:=<span class="number">0</span> <span class="keyword">from</span> dual</div><div class="line">    ) t2</div><div class="line">) f <span class="keyword">where</span> Cnt&lt;<span class="number">3</span>;</div></pre></td></tr></table></figure>
+
+<p>事后，我去看了看讨论区，发现一个漂亮的解答，没有用任何自定义变量，关键就是distinct(Salary)去和原Salary比较，过滤掉这个条件下出现次数大于3的情况：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">select</span> D.Name <span class="keyword">as</span> Department, E.Name <span class="keyword">as</span> Employee, E.Salary <span class="keyword">as</span> Salary </span></div><div class="line">  <span class="keyword">from</span> Employee E, Department D</div><div class="line">   <span class="keyword">where</span> (<span class="keyword">select</span> <span class="keyword">count</span>(<span class="keyword">distinct</span>(Salary)) <span class="keyword">from</span> Employee </div><div class="line">           <span class="keyword">where</span> DepartmentId = E.DepartmentId <span class="keyword">and</span> Salary &gt; E.Salary) <span class="keyword">in</span> (<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>)</div><div class="line">         <span class="keyword">and</span></div><div class="line">           E.DepartmentId = D.Id </div><div class="line">         <span class="keyword">order</span> <span class="keyword">by</span> E.DepartmentId, E.Salary <span class="keyword">DESC</span>;</div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2011-12-26T13:45:29.000Z"><a href="/2011/12/26/concurrenthashmap/">12月 26 2011</a></time>
       
       
@@ -961,103 +1285,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2010-10-14T09:09:55.000Z"><a href="/2010/10/14/thread-jichu/">10月 14 2010</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2010/10/14/thread-jichu/">线程的使用经验(设置名称、响应中断、使用ThreadLocal)</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="启动线程的注意事项">启动线程的注意事项</h3>
-<p>方式一</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"thread name"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="comment">// do xxx</span></div><div class="line">	}</div><div class="line">};</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>方式二</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>{ </div><div class="line">	<span class="keyword">public</span> <span class="title">MyThread</span>() {</div><div class="line">		<span class="keyword">super</span>(<span class="string">"thread name"</span>);</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="comment">// do xxx</span></div><div class="line">	} </div><div class="line">};</div><div class="line">MyThread thread = <span class="keyword">new</span> MyThread (); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>方式三</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread() { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="comment">// do xxx  </span></div><div class="line">	}</div><div class="line">};</div><div class="line">thread.setName(<span class="string">"thread name"</span>); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>方式四</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Thread thread = new Thread(task); </div><div class="line">// 传入任务 </div><div class="line">thread.setName(“thread name"); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>方式五</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Thread thread = new Thread(task, “thread name");</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>无论何种方式,启动一个线程,就要给它一个名字!这对排错诊断系统监控有帮助。否则诊断问题时,无法直观知道某个线程的用途。</p>
-<h3 id="要响应线程中断">要响应线程中断</h3>
-<p>thread.interrupt();<br>方式一</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"interrupt test"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="keyword">for</span> (;;) { </div><div class="line">			doXXX();</div><div class="line">			<span class="keyword">if</span> (Thread.interrupted()) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>方式二</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">	<span class="keyword">if</span> (Thread.interrupted()) {</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException(); </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>方式三</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"interrupt test"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="keyword">for</span> (;;) { </div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				doXXX();</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle Exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">}; </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
-
-<p>程序应该对线程中断作出恰当的响应。</p>
-<h3 id="ThreadLocal">ThreadLocal</h3>
-<pre><code><span class="code">+-------------+</span>---------+
-<span class="header">|     ThreadLocal&lt;T&gt;    |
-+-------------+---------+</span>
-<span class="code">+-------------+</span>---------+
-| initialValue() : T    |
-| get() : T             |
-| set(T value)          |
-<span class="header">| remove()              |
-+-------------+---------+</span>
-</code></pre><p>顾名思义它是local variable(线程局部变量)。它的功用非常简单,就是为每一个使用该变量的线程都提供一个变量值的副本,是每一个线程都可以独立地改变自己的副本,而不 会和其它线程的副本冲突。从线程的角度看,就好像每一个线程都完全拥有该变量。</p>
-<p>使用场景</p>
-<ul>
-<li>To keep state with a thread (user-id, transaction-id, logging-id) </li>
-<li>To cache objects which you need frequently</li>
-<li>隐式传参</li>
-</ul>
-<p>注意:使用ThreadLocal,一般都是声明在静态变量中,如果不断的创建ThreadLocal而且没有调用其remove方法,将会导致<code>内存泄露</code>。<br>同时请注意,如果是static的ThreadLocal,一般不需要调用remove。</p>
-<h3 id="线程间的协调(lock、condition、wait、notify、notifyAll)">线程间的协调(lock、condition、wait、notify、notifyAll)</h3>
-<h4 id="ReentrantLock和Synchronized">ReentrantLock和Synchronized</h4>
-<p>Synchronized是Lock的一种简化实现,一个Lock可以对应多个Condition,而synchronized把Lock和Condition合并了,一个synchronized Lock只对应一个Condition,可以说Synchronized是Lock的简化版本。<br>在JDK 5,Synchronized要比Lock慢很多,但是在JDK 6中,它们的效 率差不多。</p>
-<p><img src="/img/thread.jpg"></p>
-<p>不要在Lock和Condition上使用wait、notiffy、notifyAll方法!</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1097,7 +1324,7 @@
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>15</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>16</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>分享一个用户自发需求的反向O2O设想 | Jeck_Zhang</title>
+  <title>分享一个切换hosts的python脚本 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="分享一个用户自发需求的反向O2O设想"/>
+  <meta property="og:title" content="分享一个切换hosts的python脚本"/>
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -88,42 +88,123 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2015-04-01T01:41:22.000Z"><a href="/2015/04/01/reverse-o2o/">4月 1 2015</a></time>
+        <time datetime="2012-06-19T09:08:18.000Z"><a href="/2012/06/19/switch-hosts/">6月 19 2012</a></time>
       
       
   
-    <h1 class="title">分享一个用户自发需求的反向O2O设想</h1>
+    <h1 class="title">分享一个切换hosts的python脚本</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>这个想法来自<a href="http://shixian.com/" target="_blank" rel="external">实现网</a></p>
-<p>去年5月份左右，产生了一个做校园兼职APP的想法，当时在老家，三线小城市，就想靠微信和微信订阅号先试水市场，慢慢运营。边做边思考如何让用户在毕业之后依然使用APP。</p>
-<p>后来，口袋兼职融到资，火了。我才知道我不是唯一一个想到这个idea的人。</p>
-<p>再后来，4、5家校园兼职都融到资了，我放弃之前维护的三线小城市，来到上海。想找投资，更想找技术团队。</p>
-<p>但是，我还是要做校园兼职么？NO！</p>
-<p>兼职，是人类使用自己的闲置技能满足别人无法完成的工作的行为。</p>
-<p>so.</p>
-<p>有的技能可以开店，比如会做美甲，能修电脑，会做推拿……</p>
-<p>有的技能不可以开店，不能开店的技能不是说技能不好，而是拥有技能的人没有资金，没有人脉，没有……等等一系列的缺乏。</p>
-<p>好了，仔细一看，这不就是O2O么。</p>
-<p>把传统商业上线，让用户在线上挑选。</p>
-<p>原本的校园兼职是把兼职上线，现在也有把美甲服务上线的，推拿按摩服务上线的，上周去某院校听讲座，还有把洗车上线的，做卫生上线的……</p>
-<p>如果O2O只是把线上的商业服务做上线，那我们的手机里该下载多少款APP？</p>
-<p>而且，这些服务，我们并不需要每天使用。</p>
-<p>美甲需求，6周产生一次。</p>
-<p>按摩需求，1周产生一次。</p>
-<p>洗车需求，1月产生一次。</p>
-<p>……</p>
-<p>如果为了偶尔产生一次的需求，我们就要下载一款APP，使用，完成，最后我们也一定会卸载，然后下次产生需求的时候再安装，如此反复，我们也就厌烦了。</p>
-<p>所以，我想。</p>
-<p>做一个APP，上面不是商家，而是用户发布的需求，供用户周边的传统商家有的放矢，当然除了商家，更会有很多非商家的个人也可以满足用户的需求。</p>
-<p>所以，我的标题是，连接用户需求和“手艺”。</p>
-<p>未来，你是想要自己的手机里有N多个APP，或者自己记住N多个APP的名字来满足自己N多个的需求；还是只要一个APP，就满足自己的所有需求？</p>
-<p>目前我在上海，拿到了一份投资意向，但对方需要我找到技术团队之后才能启动。</p>
-<p>so,我们距离成功，只差一步,资金和技术人才。</p>
+        <p>切换hosts的python脚本,<a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/my_usefull_script/hosts/changehosts.py" target="_blank" rel="external">switchosts.py</a>脚本如下(有兴趣可以阅读我github上源码):</p>
+<pre><code>    <span class="comment">#!/usr/bin/python</span>
 
+    <span class="comment">################################################</span>
+    <span class="comment">#        开发环境SwitchHosts Tools</span>
+    <span class="comment"># (初始化开发环境,安装相关开发软件,服务器）</span>
+    <span class="comment">#</span>
+    <span class="comment">#V1.0      Writen by: zxc       Date:2012-06-19</span>
+    <span class="comment">################################################</span>
+
+    <span class="keyword">import</span> re
+    <span class="keyword">import</span> sys
+
+    <span class="function"><span class="keyword">def</span> <span class="title">switchhosts</span><span class="params">()</span>:</span>
+        hostsmap = {}
+        envlist = []
+        hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'r'</span>)
+        current_env = <span class="string">''</span>
+        <span class="keyword">for</span> line <span class="keyword">in</span> hosts:
+            line = line.strip()
+            env_p = re.search(<span class="string">'^###\s*(\S+)\s*###$'</span>, line)
+            <span class="keyword">if</span> env_p <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+                current_env = env_p.group(<span class="number">1</span>)
+                <span class="keyword">if</span> current_env <span class="keyword">in</span> envlist:
+                    <span class="keyword">raise</span> <span class="string">'duplicate defined host env name: %s'</span> % current_env
+                envlist.append(current_env)
+                hostsmap[current_env] = [] 
+                <span class="keyword">continue</span>
+            <span class="keyword">if</span> current_env == <span class="string">''</span>:
+                <span class="keyword">continue</span>
+            hostsmap[current_env].append(line)
+        hosts.close()
+
+        iter_idx = <span class="number">0</span>
+        <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:
+            <span class="keyword">print</span> <span class="string">'(%s) %s'</span> % (iter_idx, env_iter)
+            iter_idx = iter_idx+<span class="number">1</span>
+        hostsmapCount = {}
+        <span class="keyword">for</span> env <span class="keyword">in</span> hostsmap:
+            <span class="keyword">for</span> line <span class="keyword">in</span> hostsmap[env]:
+                <span class="keyword">if</span> <span class="keyword">not</span> line.startswith(<span class="string">'#'</span>):
+                    <span class="keyword">if</span> env <span class="keyword">in</span> hostsmapCount:
+                        hostsmapCount[env] = hostsmapCount[env]+<span class="number">1</span>
+                    <span class="keyword">else</span>:
+                        hostsmapCount[env] = <span class="number">1</span>
+        current_env = <span class="keyword">None</span>
+        max_count = <span class="number">0</span>
+        <span class="keyword">for</span> env <span class="keyword">in</span> hostsmapCount:
+            <span class="keyword">if</span> env != <span class="string">'base'</span> <span class="keyword">and</span> hostsmapCount[env] &gt; max_count:
+                current_env = env 
+                max_count = hostsmapCount[env]
+        <span class="keyword">if</span> max_count == <span class="number">0</span>:
+            current_env = <span class="string">'base'</span>
+        <span class="keyword">print</span> <span class="string">'current env: %s, chose your hosts env &gt; '</span> % current_env
+        env = envlist[int(sys.stdin.readline().strip())]
+        writehosts(env, envlist, hostsmap)
+
+    <span class="function"><span class="keyword">def</span> <span class="title">writehosts</span><span class="params">(env, envlist, hostsmap)</span>:</span>
+        hosts = open(<span class="string">'/etc/hosts'</span>, <span class="string">'w'</span>)
+        <span class="keyword">for</span> env_iter <span class="keyword">in</span> envlist:
+            hosts.write(<span class="string">'### %s ###'</span> % env_iter)
+            hosts.write(<span class="string">'\n'</span>)
+            desc = (env == env_iter <span class="keyword">or</span> env_iter == <span class="string">'base'</span>)
+            <span class="keyword">for</span> item <span class="keyword">in</span> hostsmap[env_iter]:
+                <span class="keyword">while</span> item.startswith(<span class="string">'#'</span>):
+                    item = item[<span class="number">1</span> : len(item)]
+                <span class="keyword">if</span> desc:
+                    hosts.write(<span class="string">'%s'</span> % item.strip())
+                <span class="keyword">else</span>:
+                    hosts.write(<span class="string">'# %s'</span> % item.strip())
+                hosts.write(<span class="string">'\n'</span>)
+        hosts.close()
+
+    <span class="function"><span class="keyword">def</span> <span class="title">print_example</span><span class="params">()</span>:</span>
+        example = <span class="string">"""&gt; cat /etc/hosts
+    ### base ###
+    127.0.0.1           localhost
+    127.0.0.1           zxc-rMBP
+    255.255.255.255     broadcasthost
+    ::1                 localhost
+    fe80::1%lo0         localhost
+
+    91.213.30.151       www.google.com
+    91.213.30.151       www.google.com.hk
+    91.213.30.151       accounts.google.com
+    91.213.30.151       accounts.google.com.hk
+    91.213.30.151       mail.google.com
+    91.213.30.151       mail.google.com.hk
+    91.213.30.151       plus.google.com
+    91.213.30.151       plus.google.com.hk
+    ### server190 ###
+    192.168.0.190       web.msun.com
+    ### server150 ###
+    192.168.0.150       web.msun.com
+    ### localdev ###
+    127.0.0.1           web.msun.com
+    ### run ###
+    """</span>
+        <span class="keyword">print</span> example
+
+    <span class="keyword">if</span> __name__ == <span class="string">'__main__'</span>:
+        <span class="keyword">if</span> len(sys.argv) &gt; <span class="number">1</span> <span class="keyword">and</span> (sys.argv[<span class="number">1</span>] == <span class="string">'-h'</span> <span class="keyword">or</span> sys.argv[<span class="number">1</span>] == <span class="string">'-help'</span>):
+            <span class="keyword">print</span> <span class="string">'usage: defined /etc/hosts and run switchhosts.py, make sure /etc/hosts writeable, example:'</span>
+            print_example()
+            sys.exit(<span class="number">1</span>)
+        switchhosts()
+</code></pre>
       
     </div>
     <footer>
@@ -131,12 +212,12 @@
 
         
           <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+            <em>上一篇: </em><a href="/2012/06/20/centos-init-apps/">Linux服务器环境部署,安装Nginx,JDK,Tomcat,Memcached</a>
           </div>
         
         
           <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+            <em>下一篇: </em><a href="/2012/06/17/jquery1/">jQuery选择器分享总结</a>
           </div>
           <div class="clearfix"></div>
         
@@ -149,8 +230,8 @@
             
               <span class="from-link">
                 <em>本文链接地址:</em>
-                <a href="/2015/04/01/reverse-o2o/">
-                  http://lawrence-zxc.github.io/2015/04/01/reverse-o2o/
+                <a href="/2012/06/19/switch-hosts/">
+                  http://lawrence-zxc.github.io/2012/06/19/switch-hosts/
                 </a>
               </span>
             
@@ -165,7 +246,7 @@
         
   
   <div class="tags">
-    <a href="/tags/随感/">随感</a>
+    <a href="/tags/Python/">Python</a>, <a href="/tags/Linux/">Linux</a>
   </div>
 
         
@@ -199,10 +280,10 @@
 
 <nav id="pagination" >
     
-    <a href="/2015/04/04/jishu-hehuoren/" class="alignleft prev" >上一页</a>
+    <a href="/2012/06/20/centos-init-apps/" class="alignleft prev" >上一页</a>
     
     
-    <a href="/2015/03/08/shujiawang/" class="alignright next" >下一页</a>
+    <a href="/2012/06/17/jquery1/" class="alignright next" >下一页</a>
     
     <div class="clearfix"></div>
 </nav>
@@ -213,7 +294,7 @@
     	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     </div>
 <!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2015/04/01/reverse-o2o/" data-title="分享一个用户自发需求的反向O2O设想" data-url="http://lawrence-zxc.github.io/2015/04/01/reverse-o2o/"></div>
+	<div class="ds-thread" data-thread-key="2012/06/19/switch-hosts/" data-title="分享一个切换hosts的python脚本" data-url="http://lawrence-zxc.github.io/2012/06/19/switch-hosts/"></div>
 <!-- 多说评论框 end -->
 <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 <script type="text/javascript">

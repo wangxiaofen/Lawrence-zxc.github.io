@@ -89,78 +89,6 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2013-04-02T09:20:33.000Z"><a href="/2013/04/02/nginx-upstream/">4月 2 2013</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2013/04/02/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>在需要使用负载均衡的server中增加</p>
-<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
-
-<p>每个设备的状态设置为:</p>
-<ul>
-<li>1.down 表示单前的server暂时不参与负载</li>
-<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
-<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
-<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
-<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
         <time datetime="2013-03-21T04:00:35.000Z"><a href="/2013/03/21/nginx-gzip/">3月 21 2013</a></time>
       
       
@@ -1430,7 +1358,7 @@
 </ul>
 <p>多个执行几次show-busy-java-threads.sh，如果上面情况高概率出现，则可以确定上面的判定。<br>因为调用越少代码执行越快，则出现在线程栈的概率就越低。</p>
 <p>分析shared.monitor.schedule.AppMonitorDataAvgScheduler.run实现逻辑和调用方式，以优化实现解决问题。</p>
-<p>show-busy-java-threads.sh脚本:</p>
+<p><a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/my_usefull_script/shell/show-busy-java-threads.sh" target="_blank" rel="external">show-busy-java-threads.sh</a>脚本:</p>
 <pre><code>    <span class="comment">#!/bin/bash</span>
     <span class="comment"># @Function</span>
     <span class="comment"># Find out the highest cpu consumed threads of java, and print the stack of these threads.</span>
@@ -1561,6 +1489,94 @@
 
 
 
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-07-07T09:34:56.000Z"><a href="/2012/07/07/monitor-host/">7月 7 2012</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2012/07/07/monitor-host/">简单的linux服务器监控脚本</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="这是一个简单的服务器监控脚本代码,复杂一些的监控脚本可以在我的github上阅读">这是一个简单的服务器监控脚本代码,复杂一些的监控脚本可以在我的<a href="https://github.com/Lawrence-zxc/usefull-develop-tools/tree/master/my_usefull_script/monitor" target="_blank" rel="external">github上阅读</a></h3>
+<p>monitor-host.sh源码如下:</p>
+<pre><code>    <span class="comment">#!/bin/bash</span>
+    <span class="comment"># @Function</span>
+    <span class="comment"># monitor host:network io memory cpu </span>
+    <span class="comment">#</span>
+    <span class="comment"># @Usage</span>
+    <span class="comment">#   $ ./monitor-host.sh</span>
+    <span class="comment">#</span>
+    <span class="comment"># @author zxc</span>
+
+    DELAY=<span class="number">10</span>
+    COUNT=<span class="number">60</span>
+
+    LOG_PATH=<span class="string">'monitor_path'</span>
+
+    <span class="keyword">if</span> ! [ <span class="operator">-d</span> <span class="variable">$LOG_PATH</span> ]; <span class="keyword">then</span>
+        mkdir -p <span class="variable">$LOG_PATH</span>
+    <span class="keyword">fi</span>
+
+    cur_date=<span class="string">"`date +%Y%m%d`"</span>
+
+    top_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/top_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    memory_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/memory_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    cpu_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/cpu_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    io_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/io_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+    network_log_path=<span class="variable">$LOG_PATH</span><span class="string">'/network_'</span><span class="variable">$cur_date</span><span class="string">'.log'</span>
+
+    <span class="comment"># total performance check</span>
+    top -b <span class="operator">-d</span> <span class="variable">$DELAY</span> -n <span class="variable">$COUNT</span> &gt; <span class="variable">$top_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># memory check</span>
+    vmstat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$memory_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># cpu check</span>
+    sar -u <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$cpu_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># IO check</span>
+    iostat <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$io_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+
+    <span class="comment"># network check</span>
+    sar -n DEV <span class="variable">$DELAY</span> <span class="variable">$COUNT</span> &gt; <span class="variable">$network_log_path</span> <span class="number">2</span>&gt;&amp;<span class="number">1</span> &amp;
+</code></pre>
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1600,7 +1616,7 @@
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>15</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>16</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   

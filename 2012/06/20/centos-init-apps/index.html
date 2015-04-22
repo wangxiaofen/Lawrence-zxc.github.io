@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>分享一个用户自发需求的反向O2O设想 | Jeck_Zhang</title>
+  <title>Linux服务器环境部署,安装Nginx,JDK,Tomcat,Memcached | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="分享一个用户自发需求的反向O2O设想"/>
+  <meta property="og:title" content="Linux服务器环境部署,安装Nginx,JDK,Tomcat,Memcached"/>
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -88,42 +88,98 @@
   <div class="post-content">
     <header>
       
-        <time datetime="2015-04-01T01:41:22.000Z"><a href="/2015/04/01/reverse-o2o/">4月 1 2015</a></time>
+        <time datetime="2012-06-20T09:16:12.000Z"><a href="/2012/06/20/centos-init-apps/">6月 20 2012</a></time>
       
       
   
-    <h1 class="title">分享一个用户自发需求的反向O2O设想</h1>
+    <h1 class="title">Linux服务器环境部署,安装Nginx,JDK,Tomcat,Memcached</h1>
   
 
     </header>
     <div class="entry">
       
-        <p>这个想法来自<a href="http://shixian.com/" target="_blank" rel="external">实现网</a></p>
-<p>去年5月份左右，产生了一个做校园兼职APP的想法，当时在老家，三线小城市，就想靠微信和微信订阅号先试水市场，慢慢运营。边做边思考如何让用户在毕业之后依然使用APP。</p>
-<p>后来，口袋兼职融到资，火了。我才知道我不是唯一一个想到这个idea的人。</p>
-<p>再后来，4、5家校园兼职都融到资了，我放弃之前维护的三线小城市，来到上海。想找投资，更想找技术团队。</p>
-<p>但是，我还是要做校园兼职么？NO！</p>
-<p>兼职，是人类使用自己的闲置技能满足别人无法完成的工作的行为。</p>
-<p>so.</p>
-<p>有的技能可以开店，比如会做美甲，能修电脑，会做推拿……</p>
-<p>有的技能不可以开店，不能开店的技能不是说技能不好，而是拥有技能的人没有资金，没有人脉，没有……等等一系列的缺乏。</p>
-<p>好了，仔细一看，这不就是O2O么。</p>
-<p>把传统商业上线，让用户在线上挑选。</p>
-<p>原本的校园兼职是把兼职上线，现在也有把美甲服务上线的，推拿按摩服务上线的，上周去某院校听讲座，还有把洗车上线的，做卫生上线的……</p>
-<p>如果O2O只是把线上的商业服务做上线，那我们的手机里该下载多少款APP？</p>
-<p>而且，这些服务，我们并不需要每天使用。</p>
-<p>美甲需求，6周产生一次。</p>
-<p>按摩需求，1周产生一次。</p>
-<p>洗车需求，1月产生一次。</p>
-<p>……</p>
-<p>如果为了偶尔产生一次的需求，我们就要下载一款APP，使用，完成，最后我们也一定会卸载，然后下次产生需求的时候再安装，如此反复，我们也就厌烦了。</p>
-<p>所以，我想。</p>
-<p>做一个APP，上面不是商家，而是用户发布的需求，供用户周边的传统商家有的放矢，当然除了商家，更会有很多非商家的个人也可以满足用户的需求。</p>
-<p>所以，我的标题是，连接用户需求和“手艺”。</p>
-<p>未来，你是想要自己的手机里有N多个APP，或者自己记住N多个APP的名字来满足自己N多个的需求；还是只要一个APP，就满足自己的所有需求？</p>
-<p>目前我在上海，拿到了一份投资意向，但对方需要我找到技术团队之后才能启动。</p>
-<p>so,我们距离成功，只差一步,资金和技术人才。</p>
+        <p>分享一个公司正在使用的Linux开发环境搭建和部署脚本,主要针对<code>CentOS/Ubuntu</code>系统,安装<code>Nginx-1.7.1</code>,<code>JDK-7.55</code>,<code>Tomcat-7.54</code>以及<code>Memcached-1.4.15</code>等必须软件环境,当然也可以选用<code>Apache</code>,<code>JDK</code>,<code>Jetty</code>,<code>Redis</code>等组合,目前这里的安装脚本需要预先下载需要安装的程序软件压缩格式主要是<code>.tar.gz</code>;初始化环境变量,防火墙设置,nfs设置,hosts设置,yum更新等操作.</p>
+<p>开发环境初始化脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/init_env_soft.sh" target="_blank" rel="external">init_env_soft.sh</a>,</p>
+<p>搭建java开发环境脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/init_apps_soft.sh" target="_blank" rel="external">init_apps_soft.sh</a>,</p>
+<p>Nginx自启动脚本 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/nginx" target="_blank" rel="external">nginx</a>,放在<code>/etc/init.d/</code>目录下;</p>
+<p>以上脚本均可以在我的 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/tree/master/devTools/bin" target="_blank" rel="external">github</a> 上看到,下面是 <a href="https://github.com/Lawrence-zxc/usefull-develop-tools/blob/master/devTools/bin/init_apps_soft.sh" target="_blank" rel="external">init_apps_soft.sh</a> 源码:</p>
+<pre><code>    <span class="comment">#! /bin/bash</span>
 
+    <span class="comment">############################################</span>
+    <span class="comment">#           服务器系统开发环境安装</span>
+    <span class="comment"># (install maven,tomcat,jdk,memcached,nginx)</span>
+    <span class="comment">#</span>
+    <span class="comment">#V1.0   Writen by:zxc   Date:2012-06-10</span>
+    <span class="comment">############################################</span>
+
+    <span class="comment">#set config</span>
+    msun=<span class="string">'/data'</span>
+    msun_run=<span class="string">'/data/run'</span>
+    msun_run_bin=<span class="string">'/data/run/bin'</span>
+    msun_<span class="built_in">source</span>=<span class="string">'/data/run/source'</span>
+    msun_binary=<span class="string">'/data/run/binary'</span>
+
+    function pre_check {
+        <span class="keyword">if</span> [ ! <span class="operator">-e</span> <span class="variable">${msun_run}</span> ] || [ ! <span class="operator">-e</span> <span class="variable">${msun_source}</span> ] || [ ! <span class="operator">-e</span> <span class="variable">${msun_binary}</span> ]; <span class="keyword">then</span>
+            <span class="built_in">echo</span> <span class="string">"ERROR"</span>
+            <span class="keyword">exit</span> <span class="number">1</span>
+        <span class="keyword">fi</span>
+    }
+
+    function init_run_apps_env {
+
+        <span class="keyword">for</span> i <span class="keyword">in</span> maven tomcat jdk memcached nginx
+        <span class="keyword">do</span>
+            <span class="keyword">if</span> [ <span class="operator">-e</span> <span class="variable">${msun_run}</span>/<span class="variable">${i}</span> ]; <span class="keyword">then</span>
+                rm -rf <span class="variable">${msun_run}</span>/<span class="variable">${i}</span>
+            <span class="keyword">fi</span>
+        <span class="keyword">done</span>
+        <span class="keyword">for</span> i <span class="keyword">in</span> apache-maven-<span class="number">3.0</span>.<span class="number">5</span> apache-tomcat-<span class="number">7.0</span>.<span class="number">54</span> jdk1.<span class="number">7.0</span>_55 memcached-<span class="number">1.4</span>.<span class="number">15</span> nginx-<span class="number">1.7</span>.<span class="number">1</span>
+        <span class="keyword">do</span>
+            <span class="keyword">if</span> [ <span class="operator">-e</span> <span class="variable">${msun_binary}</span>/<span class="variable">${i}</span> ]; <span class="keyword">then</span>
+                rm -rf <span class="variable">${msun_binary}</span>/<span class="variable">${i}</span>
+            <span class="keyword">fi</span>
+        <span class="keyword">done</span>
+        <span class="keyword">if</span> [ <span class="operator">-e</span> <span class="variable">${msun_source}</span>/jdk1.<span class="number">7.0</span>_55 ]; <span class="keyword">then</span>
+            rm -rf <span class="variable">${msun_source}</span>/jdk1.<span class="number">7.0</span>_55
+        <span class="keyword">fi</span>
+
+        tar -xf <span class="variable">${msun_source}</span>/apache-maven-<span class="number">3.0</span>.<span class="number">5</span>-bin.tar.gz -C <span class="variable">${msun_binary}</span>
+        ln <span class="operator">-s</span> <span class="variable">${msun_binary}</span>/apache-maven-<span class="number">3.0</span>.<span class="number">5</span> <span class="variable">${msun_run}</span>/maven
+        cp <span class="variable">${msun_run}</span>/maven/conf/settings.xml <span class="variable">${msun_run}</span>/maven/conf/settings.xml.orgi
+        <span class="comment">##cp ${msun_run_bin}/settings.xml ${msun_run}/maven/conf</span>
+
+        tar -xf <span class="variable">${msun_source}</span>/apache-tomcat-<span class="number">7.0</span>.<span class="number">54</span>.tar.gz -C <span class="variable">${msun_binary}</span>
+        ln <span class="operator">-s</span> <span class="variable">${msun_binary}</span>/apache-tomcat-<span class="number">7.0</span>.<span class="number">54</span> <span class="variable">${msun_run}</span>/tomcat
+
+        tar -xf <span class="variable">${msun_source}</span>/jdk-<span class="number">7</span>u55-linux-x64.tar.gz -C <span class="variable">${msun_binary}</span>
+        ln <span class="operator">-s</span> <span class="variable">${msun_binary}</span>/jdk1.<span class="number">7.0</span>_55 <span class="variable">${msun_run}</span>/jdk
+
+        tar -xf <span class="variable">${msun_source}</span>/memcached-<span class="number">1.4</span>.<span class="number">15</span>.tar.gz -C <span class="variable">${compile_dir}</span>
+        <span class="built_in">cd</span> <span class="variable">${compile_dir}</span>/memcached-<span class="number">1.4</span>.<span class="number">15</span>
+        ./configure  --enable-<span class="number">64</span>bit  --prefix=<span class="variable">${msun_binary}</span>/memcached-<span class="number">1.4</span>.<span class="number">15</span>  --with-libevent=/usr/local/ &amp;&amp; make &amp;&amp; make install &amp;&amp; ln <span class="operator">-s</span> <span class="variable">${msun_binary}</span>/memcached-<span class="number">1.4</span>.<span class="number">15</span> <span class="variable">${msun_run}</span>/memcached
+        <span class="built_in">cd</span> -
+
+        timestamp=<span class="string">"init_env_"</span>`date +%s`
+        compile_dir=<span class="string">"/tmp/<span class="variable">${timestamp}</span>"</span>
+        <span class="keyword">if</span> [ <span class="operator">-e</span> <span class="variable">${compile_dir}</span> ]; <span class="keyword">then</span>
+            rm -rf <span class="variable">${compile_dir}</span>
+        <span class="keyword">fi</span>
+        mkdir <span class="variable">${compile_dir}</span>
+
+        tar -xf <span class="variable">${msun_source}</span>/nginx-<span class="number">1.7</span>.<span class="number">1</span>.tar.gz -C <span class="variable">${compile_dir}</span>
+        <span class="built_in">cd</span> <span class="variable">${compile_dir}</span>/nginx-<span class="number">1.7</span>.<span class="number">1</span>
+        ./configure   --without-mail_pop3_module   --without-mail_imap_module   --without-mail_smtp_module  --prefix=<span class="variable">${msun_binary}</span>/nginx-<span class="number">1.7</span>.<span class="number">1</span>  --with-http_gzip_static_module  --with-http_stub_status_module&amp;&amp; make &amp;&amp; make install &amp;&amp; ln <span class="operator">-s</span> <span class="variable">${msun_binary}</span>/nginx-<span class="number">1.7</span>.<span class="number">1</span> <span class="variable">${msun_run}</span>/nginx
+        <span class="built_in">cd</span> -
+
+    }
+
+    function main {
+        pre_check
+        init_run_apps_env
+    }
+    main
+</code></pre>
       
     </div>
     <footer>
@@ -131,12 +187,12 @@
 
         
           <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+            <em>上一篇: </em><a href="/2012/06/27/ssh-sshd/">ssh,sshd命令配置和用法</a>
           </div>
         
         
           <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+            <em>下一篇: </em><a href="/2012/06/19/switch-hosts/">分享一个切换hosts的python脚本</a>
           </div>
           <div class="clearfix"></div>
         
@@ -149,8 +205,8 @@
             
               <span class="from-link">
                 <em>本文链接地址:</em>
-                <a href="/2015/04/01/reverse-o2o/">
-                  http://lawrence-zxc.github.io/2015/04/01/reverse-o2o/
+                <a href="/2012/06/20/centos-init-apps/">
+                  http://lawrence-zxc.github.io/2012/06/20/centos-init-apps/
                 </a>
               </span>
             
@@ -165,7 +221,7 @@
         
   
   <div class="tags">
-    <a href="/tags/随感/">随感</a>
+    <a href="/tags/Linux/">Linux</a>
   </div>
 
         
@@ -199,10 +255,10 @@
 
 <nav id="pagination" >
     
-    <a href="/2015/04/04/jishu-hehuoren/" class="alignleft prev" >上一页</a>
+    <a href="/2012/06/27/ssh-sshd/" class="alignleft prev" >上一页</a>
     
     
-    <a href="/2015/03/08/shujiawang/" class="alignright next" >下一页</a>
+    <a href="/2012/06/19/switch-hosts/" class="alignright next" >下一页</a>
     
     <div class="clearfix"></div>
 </nav>
@@ -213,7 +269,7 @@
     	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     </div>
 <!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2015/04/01/reverse-o2o/" data-title="分享一个用户自发需求的反向O2O设想" data-url="http://lawrence-zxc.github.io/2015/04/01/reverse-o2o/"></div>
+	<div class="ds-thread" data-thread-key="2012/06/20/centos-init-apps/" data-title="Linux服务器环境部署,安装Nginx,JDK,Tomcat,Memcached" data-url="http://lawrence-zxc.github.io/2012/06/20/centos-init-apps/"></div>
 <!-- 多说评论框 end -->
 <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 <script type="text/javascript">
