@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2015-04-22T09:47:32.975Z</updated>
+  <updated>2015-04-23T07:45:15.516Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -606,7 +606,7 @@
     <link href="http://lawrence-zxc.github.io/2014/10/14/blog2/"/>
     <id>http://lawrence-zxc.github.io/2014/10/14/blog2/</id>
     <published>2014-10-14T09:40:04.000Z</published>
-    <updated>2014-11-10T06:37:13.000Z</updated>
+    <updated>2015-04-23T05:47:34.000Z</updated>
     <content type="html"><![CDATA[<p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
 <p>关于API的设计原则，我所知道的大部分来自书本、网上的资料以及参考各个开放平台的API规范。</p>
 <pre><code><span class="title">RESTful</span> Web Services Cookbook
@@ -655,8 +655,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     <![CDATA[<p>RESTful既然作为一种软件架构风格，那就自然就会有它本身的设计原则，就像iOS、android以及metroUI都有自己的设计规范一样。遵守基本的设计规则可以帮助我们设计出更加简洁易懂、优雅的软件系统。在这个过程中，程序员们都是艺术家，设计着另外一种美。</p>
 <p>]]>
     </summary>
-    
-      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
     
       <category term="架构" scheme="http://lawrence-zxc.github.io/tags/%E6%9E%B6%E6%9E%84/"/>
     

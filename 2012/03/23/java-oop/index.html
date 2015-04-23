@@ -1,0 +1,415 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>面向对象的SOLID原则与Java类库框架设计哲学 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="面向对象的SOLID原则与Java类库框架设计哲学"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2012-03-23T05:12:38.000Z"><a href="/2012/03/23/java-oop/">3月 23 2012</a></time>
+      
+      
+  
+    <h1 class="title">面向对象的SOLID原则与Java类库框架设计哲学</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>面向对象编程注重的是：</p>
+<ul>
+<li>1）数据和其行为的打包封装</li>
+<li>2）程序的接口和实现的解耦</li>
+</ul>
+<p>一般来说以下是面向对象的五大设计原则，但是，我觉得这些原则可适用于所有的软件开发。</p>
+<h3 id="Single_Responsibility_Principle_(SRP)_–_职责单一原则">Single Responsibility Principle (SRP) – 职责单一原则</h3>
+<p>关于单一职责原则，其核心的思想是：<strong>一个类，只做一件事，并把这件事做好，其只有一个引起它变化的原因</strong>。单一职责原则可以看作是低耦合、高内聚在面向对象原则上的引申，将职责定义为引起变化的原因，以提高内聚性来减少引起变化的原因。职责过多，可能引起它变化的原因就越多，这将导致职责依赖，相互之间就产生影响，从而极大的损伤其内聚性和耦合度。单一职责，通常意味着单一的功能，因此不要为一个模块实现过多的功能点，以保证实体只有一个引起它变化的原因。</p>
+<p>换一种理解思路：职责单一是<strong>模块化思想</strong>的最好体现,所有的对象小而美,只关注一件事并做好它,</p>
+<ul>
+<li>Unix/Linux是这一原则的完美体现者。各个程序都独立负责一个单一的事。</li>
+<li>Windows是这一原则的反面示例。几乎所有的程序都交织耦合在一起。</li>
+</ul>
+<h3 id="Open/Closed_Principle_(OCP)_–_开闭原则">Open/Closed Principle (OCP) – 开闭原则</h3>
+<p>关于开发封闭原则，其核心的思想是：模块是可扩展的，而不可修改的。也就是说，<strong>对扩展是开放的，而对修改是封闭的</strong>。</p>
+<p>对扩展开放，意味着有新的需求或变化时，可以对现有代码进行扩展，以适应新的情况。<br>对修改封闭，意味着类一旦设计完成，就可以独立完成其工作，而不要对类进行任何修改。<br>对于面向对象来说，需要你依赖抽象，而不是实现，23个经典设计模式中的“策略模式”就是这个实现。对于非面向对象编程，一些API需要你传入一个你可以扩展的函数，比如我们的C 语言的qsort()允许你提供一个“比较器”，STL中的容器类的内存分配，ACE中的多线程的各种锁。对于软件方面，浏览器的各种插件属于这个原则的实践。</p>
+<h3 id="Liskov_substitution_principle_(LSP)_–_里氏代换原则">Liskov substitution principle (LSP) – 里氏代换原则</h3>
+<p>软件工程大师Robert C. Martin把里氏代换原则最终简化为一句话：<em>“Subtypes must be substitutable for their base types”</em>。也就是，子类必须能够替换成它们的基类。即：子类应该可以替换任何基类能够出现的地方，并且经过替换以后，代码还能正常工作。另外，不应该在代码中出现if/else之类对子类类型进行判断的条件。里氏替换原则LSP是使代码符合开闭原则的一个重要保证。正是由于子类型的可替换性才使得父类型的模块在无需修改的情况下就可以扩展。</p>
+<p>这么说来，似乎有点教条化，我非常建议大家看看这个原则个两个最经典的案例——“正方形不是长方形”和“鸵鸟不是鸟”。通过这两个案例，你会明白《墨子 小取》中说的 ——“娣，美人也，爱娣，非爱美人也….盗，人也；恶盗，非恶人也。”——妹妹虽然是美人，但喜欢妹妹并不代表喜欢美人。盗贼是人，但讨厌盗贼也并不代表就讨厌人类。<strong>这个原则让你考虑的不是语义上对象的间的关系，而是实际需求的环境</strong>。</p>
+<p>在很多情况下，在设计初期我们类之间的关系不是很明确，LSP则给了我们一个判断和设计类之间关系的基准：需不需要继承，以及怎样设计继承关系。</p>
+<h3 id="Interface_Segregation_Principle_(ISP)_–_接口隔离原则">Interface Segregation Principle (ISP) – 接口隔离原则</h3>
+<p>接口隔离原则意思是把功能实现在接口中，而不是类中，使用多个专门的接口比使用单一的总接口要好。</p>
+<p>举个例子，我们对电脑有不同的使用方式，比如：写作，通讯，看电影，打游戏，上网，编程，计算，数据等，如果我们把这些功能都声明在电脑的抽类里面，那么，我们的上网本，PC机，服务器，笔记本的实现类都要实现所有的这些接口，这就显得太复杂了。所以，我们可以把其这些功能接口隔离开来，比如：工作学习接口，编程开发接口，上网娱乐接口，计算和数据服务接口，这样，我们的不同功能的电脑就可以有所选择地继承这些接口。</p>
+<p>这个原则可以提升我们“搭积木式”的软件开发。对于设计来说，Java中的各种Event Listener和Adapter，对于软件开发来说，不同的用户权限有不同的功能，不同的版本有不同的功能，都是这个原则的应用。</p>
+<h3 id="Dependency_Inversion_Principle_(DIP)_–_依赖倒置原则">Dependency Inversion Principle (DIP) – 依赖倒置原则</h3>
+<p>高层模块不应该依赖于低层模块的实现，而是依赖于高层抽象。</p>
+<p>举个例子，墙面的开关不应该依赖于电灯的开关实现，而是应该依赖于一个抽象的开关的标准接口，这样，当我们扩展程序的时候，我们的开关同样可以控制其它不同的灯，甚至不同的电器。也就是说，电灯和其它电器继承并实现我们的标准开关接口，而我们的开关产商就可不需要关于其要控制什么样的设备，只需要关心那个标准的开关标准。这就是依赖倒置原则。</p>
+<p>这就好像浏览器并不依赖于后面的web服务器，其只依赖于HTTP协议。这个原则实在是太重要了，社会的分工化，标准化都是这个设计原则的体现。</p>
+<p><br></p>
+<p>J2EE开发主流的应用框架Spring很好地践行了以上这些设计思想,下面来聊聊Spring的设计哲学;</p>
+<h3 id="Spring_IOC">Spring IOC</h3>
+<p>控制反转依赖注入并不是我们嘴上说说的，它是一个非常实用的理念，是一种设计思想，很好地诠释了依赖倒置原则和中介者思想(缓存思想)。</p>
+<p>前SUN公司首席科学家 <em>Bill Joy</em> 说过:<strong><em>在计算机系结构领域中，<code>缓存</code>是唯一能称得上伟大的思想，其他的一切发明和技术不过是在不同场景下运用这一思想而已</em></strong>。其实这句话我觉得可以适用用任何一个计算机以及编程领域。里面的<code>缓存</code>可以理解为<code>中间件</code>，<code>代理</code>或者<code>映射</code>。Java 因为有了<code>JVM</code> 能够模拟机器，所示使它能够跨平台。这里的JVM也是一个缓存。其实<code>缓存的思想</code>在现实中也是如此，你做不了的事情，你可以通过别人帮你做，此时别人就成了缓存。有时候面对复杂的框架的时候，我们第一直觉就可以把它当做一个缓存，因为这些框架做的事我们都可以做，只是我们现在把我们原本应该做的事让框架帮我们做了，我们试着去想这个框架可以代替我做那些事，我用这个框架可以节省我那些操作，去用它而不是一开始就去研究它。</p>
+<p>有些人即使在使用了IOC之后还没有意识到为什么要用IOC，经常面临这些问题:</p>
+<ul>
+<li>不知道为什么要用IOC容器来创建对象，自己手动new对象出来有什么不好？</li>
+<li>自己写一个单例的对象也可以实现需求，为什么一定要用容器创建？</li>
+</ul>
+<p>IOC容器的意义在于：</p>
+<ul>
+<li>管理了对象之间的关系</li>
+</ul>
+<p>在面向对象编程中我们过多的使用组合思想，对象与对象相互依赖，关系非常复杂，在没有使用Ioc容器的时候，通常的做法是在new对象的时候来构建并管理这种对象的依赖关系，最普遍的手段是写死在代码里面，甚至把需要调用的实际对象类型也写死，这种做法几乎失去了面向接口编程的意义，代码错综复杂，有时为了理清楚对象间的依赖关系而花费过多不必要时间，这完全背离了 <strong><em>职责单一原则</em></strong> 思想，事实上对象不仅需要管理对象内部逻辑，还需要管理与其他对象间的依赖关系，对象会直接控制其他对象及其生命周期等。</p>
+<p>那么这时候我们会想到把依赖关系托付给第三方，比如Spring Ioc配置文件，Spring注解等，由Ioc容器动态创建对象和对象间的依赖关系，其实就是把原先由对象自己管理的依赖关系，从对象内部剥离了出来，让对象的职责更单一，在对象需要的时候再由Ioc容器注入进去。这里集中体现了中介思想和缓存思想，Ioc容器此时相对于一个中介，管理着众多大大小小的Bean对象。</p>
+<p>使用Ioc容器后具体对象不再依赖于另一个具体对象实现类，而只是依赖于它的接口。创建和控制具体对象都转到了Ioc容器本身来负责。至此，对象的创建和生命周期的控制，得到了反转。这里控制了什么呢？又反转了什么呢？其实就是把对对象的管理权交给了Ioc容器，对象之间好像不再有依赖关系了，对象只依赖于接口协议。这样一来，对象就只有选择接口实现类的权利而没有设计管理接口实现类的权利。好像整个编程过程中，控制反转到了接口(协议)这一边。</p>
+<p>在一个分层架构的应用程序中，我们不仅仅注入平行层级的对象，还可以注入下级对象，实现从上到下的自动注入，整个系统就非常灵活。使用Ioc容器带来的好处是，使用户代码和具体对象的创建相分离，解决了耦合度，使具体对象可以在用户代码外部注入，以类似组件plugin的方式灵活注入。用户的业务代码以及要注入的依赖对象都是相对独立的模块，可以在其它地方使用。</p>
+<ul>
+<li>管理了对象的生命周期</li>
+</ul>
+<p>有时候写出了单例或者是new出来的对象，还会有根据线程、根据请求来的特殊生命周期的对象，如果手写代码来管理生命周期一来很麻烦，二来也不方便调整，通过容器来管理对象的生命周期简单高效，并且我们很容易对Ioc容器进行扩展提供不同的生命周期的Bean，也就是可扩展生命周期的类型。</p>
+<p>当我们引入了Ioc容器后，它也会根据自身需要去独立发展，形成很多新的需求点出来，比如AOP，SpringMVC等等一些即插即用的组件。</p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+          <div class="alignleft post-nav">
+            <em>上一篇: </em><a href="/2012/04/16/java-object-init/">java对象初始化顺序问题</a>
+          </div>
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2012/03/11/leetcode/">LeetCode题目解答,Java实现(Hard部分)</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2012/03/23/java-oop/">
+                  http://lawrence-zxc.github.io/2012/03/23/java-oop/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>, <a href="/tags/架构/">架构</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    <a href="/2012/04/16/java-object-init/" class="alignleft prev" >上一页</a>
+    
+    
+    <a href="/2012/03/11/leetcode/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2012/03/23/java-oop/" data-title="面向对象的SOLID原则与Java类库框架设计哲学" data-url="http://lawrence-zxc.github.io/2012/03/23/java-oop/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>23</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>1</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>3</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>
