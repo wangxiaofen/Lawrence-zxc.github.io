@@ -89,6 +89,121 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2011-03-14T13:45:57.000Z"><a href="/2011/03/14/thread-blocking/">3月 14 2011</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/03/14/thread-blocking/">Java并发阻塞队列(put和take、offer和poll、drainTo)的使用</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>阻塞队列,是一种常用的并发数据结构,常用于生产者-消费者模式。 </p>
+<h3 id="阻塞队列基础概念">阻塞队列基础概念</h3>
+<p>在Java中,有很多种阻塞队列:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ArrayBlockingQueue  	<span class="comment">//最常用</span></div><div class="line">LinkedBlockingQueue  	<span class="comment">//不会满的</span></div><div class="line">SynchronousQueue    	<span class="comment">//size为0</span></div><div class="line">PriorityBlockingQueue</div><div class="line">CompletionService 		<span class="comment">//BlockingQueue + Executor</span></div><div class="line">TransferQueue 			<span class="comment">//JDK 7中更快的SynchronousQueue</span></div></pre></td></tr></table></figure>
+
+<p>生产者消费者模型</p>
+<pre><code>        producer    <span class="comment">------------------------&gt;    consumer</span>
+                    +<span class="comment">----+----+----+----+----+</span>
+                    +    +      +    +    +    +
+                    +<span class="comment">----+----+----+----+----+</span>
+                  /                            \ <span class="keyword">for</span> (;;) {
+   <span class="comment"> // 如果队列满则阻塞                                blockingQ.take(); // 如果队列空则阻塞</span>
+    blockingQ.<span class="built_in">put</span>(object);                        }
+</code></pre><h3 id="使用阻塞队列">使用阻塞队列</h3>
+<pre><code><span class="code">        +--------------+-------------+</span>
+<span class="code">        |          Queue&lt;T&gt;          |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">        | add(E) : boolean           |</span>
+<span class="code">        | remove() : E               |</span>
+<span class="code">        | offer() : boolean          |</span>
+<span class="code">        | poll() : E                 | </span>
+<span class="code">        | element() : E              |</span>
+<span class="code">        | peek() : E                 |</span>
+<span class="code">        +--------------+-------------+</span>
+<span class="code">                       ^</span>
+<span class="code">                      /|\</span>
+<span class="code">                继承自  |     </span>
+<span class="header">                       |
++----------------------+---------------------+</span>
+<span class="header">|             BlockingQueue&lt;T&gt;               |
++----------------------+---------------------+</span>
+<span class="code">+----------------------+</span>---------------------+
+| put(E)                                     |
+| take() : E                                 |
+| offer(E, long, TimeUnit) : boolean         |
+| poll(long, TimeUnit) : E                   |
+| remainingCapacity()                        |
+| drainTo(Collection&lt;? super E&gt;) : int       |
+<span class="header">| drainTo(Collection&lt;? super E&gt;, int ) : int |
++----------------------+---------------------+</span>
+</code></pre><p>BlockingQueue使用注意:</p>
+<ul>
+<li>使用BlockingQueue的时候,尽量不要使用从Queue继承下来的方法,否则就失去了Blocking的特性了。</li>
+<li>在BlockingQueue中,要使用put和take,而非offer和poll。如果 要使用offer和poll,也是要使用带等待时间参数的offer和poll。</li>
+<li>使用drainTo批量获得其中的内容,能够减少锁的次数。</li>
+</ul>
+<p>代码片段一(错误)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			Object object = blockingQ.poll();<span class="comment">//错误,不等待就会直接返回</span></div><div class="line">			handle(object);</div><div class="line">		} </div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段二</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.take(); <span class="comment">// 等到有数据才继续 </span></div><div class="line">				handle(object);</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<p>代码片段三</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.poll(<span class="number">1</span>, TimeUnit.SECONDS); <span class="comment">//防止死等 </span></div><div class="line">				<span class="keyword">if</span> (object == <span class="keyword">null</span>) {</div><div class="line">					<span class="keyword">continue</span>; <span class="comment">//或者做其他处理 </span></div><div class="line">				}</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
+
+<h3 id="实现一个简单的阻塞队列">实现一个简单的阻塞队列</h3>
+<p>未取得锁就直接执行wait、notfiy、notifyAll会抛异常</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行wait操作,必须先取得该对象的锁</span></div><div class="line">				<span class="comment">//执行wait操作之后,锁会释放</span></div><div class="line">				<span class="comment">//被唤醒之前,需要先获得锁</span></div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行notify和notifyAll操作,都必须先取得该对象的锁</span></div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Object notFull = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.notifyAll();</div><div class="line">				}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.wait();</div><div class="line">				}</div><div class="line">				linkedList.add(object); </div><div class="line">			}</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</div><div class="line">	<span class="comment">// 一个锁可以创建多个Condition</span></div><div class="line">	<span class="keyword">private</span> Condition notEmpty = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Condition notFull = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">// 要执行await操作,必须先取得该Condition的锁。 </span></div><div class="line">				<span class="comment">// 执行await操作之后,锁会释放。 </span></div><div class="line">				<span class="comment">// 被唤醒之前,需要先获得锁。</span></div><div class="line">				notEmpty.await();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.signalAll(); </div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//￼要执行signal和signalAll操作,都必须先取 得该对象</span></div><div class="line">				notEmpty.signalAll();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.await(); </div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>注意:未锁就直接执行await、signal、siganlAll会抛异常</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2011-02-12T07:49:30.000Z"><a href="/2011/02/12/git-pro/">2月 12 2011</a></time>
       
       
@@ -1091,7 +1206,7 @@
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>19</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   

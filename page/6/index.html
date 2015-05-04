@@ -1829,6 +1829,132 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   <div class="post-content">
     <header>
       
+        <time datetime="2011-11-28T15:32:16.000Z"><a href="/2011/11/28/linux-expect/">11月 28 2011</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2011/11/28/linux-expect/">关于expect命令使用详解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><code>expect</code>是一个编程工具语言,他的作者描述其为: <strong><em>Expect [is a] software suite for automating interactive tools。</em></strong>类似于<code>自动应答</code>,它能实现自动和<code>交互式</code>的执行。 </p>
+<h2 id="安装及基础">安装及基础</h2>
+<h4 id="因为Expect需要Tcl编程语言的支持，首先安装tcl">因为Expect需要Tcl编程语言的支持，首先安装tcl</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp ~]<span class="comment"># yum install -y tcl tclx tcl-devel –y</span></div></pre></td></tr></table></figure>
+
+<h4 id="安装最新版expect：_http://sourceforge-net/projects/expect/_目前最新版expect5-45">安装最新版expect： <a href="http://sourceforge.net/projects/expect/" target="_blank" rel="external">http://sourceforge.net/projects/expect/</a> 目前最新版<code>expect5.45</code></h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp expect5.<span class="number">45</span>]<span class="comment"># ./configure --with-tcl=/usr/lib --with-tclinclude=/usr/include/tcl-private/generic && make && make install</span></div></pre></td></tr></table></figure>
+
+<h4 id="基础知识:(基础命令:_send,_expect,_spwan)">基础知识:(基础命令: send, expect, spwan)</h4>
+<p>send表示接受一个字符串作为参数发送给指定进程，expect 命令则等待一个响应</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># cat test1.exp</span></div><div class="line"><span class="comment">#!expect -f</span></div><div class="line">expect test //等待 我输入 test</div><div class="line">send test <span class="keyword">for</span> send //表示当我输入test后 会发送test <span class="keyword">for</span> send 否则一直等待</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># expect test1.exp hi //我输入了其他字符 没反应</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># expect test1.exp test </span></div><div class="line">test <span class="keyword">for</span> send //输入设定字符 条件满足</div></pre></td></tr></table></figure>
+
+<p>也可以使用-c选项在命令行执行： </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># expect -c ‘expect test {send test for send}’ hi test test for send</span></div></pre></td></tr></table></figure>
+
+<p>spawn后面需要加上要执行的shell命令，只有spawn执行的命令结果才能被expect理解和收集，下面是一个小例子：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># cat test3.exp</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight expect"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/usr/bin/expect</span></div><div class="line">set timeout <span class="number">30</span>  <span class="comment">//表示超市时间30秒</span></div><div class="line">spawn ssh <span class="number">192.168</span>.9.102 -p <span class="number">9922</span>  <span class="comment">//表示执行ssh到对端主机的命令</span></div><div class="line">expect password: <span class="comment">//表示等待出现“password”（无括号）时</span></div><div class="line">send qwe123\!\@\#\n <span class="comment">//输入这里设定的密码，\N表示让他自动回车</span></div><div class="line">interact <span class="comment">//表示到远端终端后 可以执行交互命令，如同手动执行“ssh 192.168.9.102 -p 9922”后效果一样</span></div><div class="line">expect *$ <span class="comment">//着2句在没有interact 时候有最用，因为spawn后一直是在执行SSH进程，当超时后 会输出一些东西，也就符合了这个等待。而当包含interact后 除非手动exit 否则不会符合这里的等待</span></div><div class="line">send mkdir test\n <span class="comment">//当符合上句 在对端根目录创建一个test目录</span></div></pre></td></tr></table></figure>
+
+<h2 id="使用技巧之控制结构">使用技巧之控制结构</h2>
+<p>介绍expect,也就是tcl语言的控制结构</p>
+<h4 id="if…else结构,首先展示一个脚本,这个脚本用来根据argv0的输入选择不同的expect语句SSH远程登录到相对应的服务器,并设置一些错误输出"><code>if…else</code>结构,首先展示一个脚本,这个脚本用来根据<code>argv0</code>的输入选择不同的expect语句<code>SSH远程登录</code>到相对应的服务器,并设置一些错误输出</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># cat bin/test</span></div><div class="line"><span class="comment">#!/usr/bin/expect</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment">#注:这个脚本里面有SSH信任 有根据iptables转发</span></div><div class="line"><span class="keyword">set</span> timeout <span class="number">10</span></div><div class="line"><span class="keyword">set</span> passwordops01 cpuqPFtkt{<span class="number">20</span></div><div class="line"><span class="keyword">set</span> passwordops02 O^v44qftahbN</div><div class="line"><span class="keyword">set</span> passwordops03 <span class="number">9</span>uujz)UUf7yr</div><div class="line"><span class="keyword">set</span> file1 [lindex <span class="variable">$argv</span> <span class="number">0</span>]</div><div class="line"><span class="keyword">if</span> {<span class="variable">$argc</span>!=<span class="number">1</span>} {</div><div class="line">	puts stderr <span class="string">"参数错误,请使用以下格式: <span class="variable">$argv0</span> {想去的服务器简称,比如ops01} "</span></div><div class="line">	<span class="keyword">exit</span> <span class="number">1</span></div><div class="line">}</div><div class="line"><span class="keyword">if</span> {<span class="variable">$file1</span>==<span class="string">"ops01"</span>} {</div><div class="line">	spawn luit -encoding gbk ssh zxc@<span class="number">59.194</span>.<span class="number">82</span>.XX -p <span class="number">9924</span></div><div class="line">	expect <span class="number">194.168</span>.<span class="number">45</span>.XX</div><div class="line">	send <span class="string">"su -\n"</span>   <span class="comment">#设置了不容许root组直接登录</span></div><div class="line">	expect <span class="string">"口令："</span></div><div class="line">	send <span class="string">"<span class="variable">$passwordops01</span>\n"</span></div><div class="line">	interact</div><div class="line">} elseif {<span class="variable">$file1</span>==<span class="string">"ops02"</span>} {</div><div class="line">	spawn luit -encoding gbk ssh zxc@<span class="number">59.194</span>.<span class="number">82</span>.XX -p <span class="number">9924</span></div><div class="line">	expect <span class="number">194.168</span>.<span class="number">45</span>.XX</div><div class="line">	send <span class="string">"ssh ops@ops04\n"</span></div><div class="line">	expect <span class="string">"192.168.9.24"</span></div><div class="line">	send <span class="string">"su -\n"</span></div><div class="line">	expect <span class="string">"口令："</span></div><div class="line">	send <span class="string">"<span class="variable">$passwordops02</span>\n"</span></div><div class="line">	interact</div><div class="line">} elseif {<span class="variable">$file1</span>==<span class="string">"ops03"</span>} {</div><div class="line">	spawn luit -encoding gbk ssh zxc@<span class="number">59.194</span>.<span class="number">82</span>.XX -p <span class="number">9960</span></div><div class="line">	expect <span class="number">194.168</span>.<span class="number">45</span>.XX</div><div class="line">	send <span class="string">"su -\n"</span></div><div class="line">	expect <span class="string">"口令："</span></div><div class="line">	send <span class="string">"<span class="variable">$passwordops03</span>\n"</span></div><div class="line">	interact</div><div class="line">}  <span class="keyword">else</span> {</div><div class="line">	send <span class="string">"参数错误,请输入以下名称:ops01 ops02 ops03\n"</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h4 id="switch结构_还是上面的判断,我这里只留下2个表达语法:">switch结构 还是上面的判断,我这里只留下2个表达语法:</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">switch -glob -- <span class="variable">$file1</span> {</div><div class="line">ops01 {</div><div class="line">	spawn luit -encoding gbk ssh zxc@<span class="number">59.194</span>.<span class="number">82</span>.XX -p <span class="number">9924</span>expect <span class="number">194.168</span>.<span class="number">45</span>.XX</div><div class="line">	send <span class="string">"su -\n"</span>   <span class="comment">#设置了不容许root组直接登录</span></div><div class="line">	expect <span class="string">"口令："</span></div><div class="line">	send <span class="string">"<span class="variable">$passwordops01</span>\n"</span></div><div class="line">	interact</div><div class="line">}</div><div class="line">ops02 {</div><div class="line">	spawn luit -encoding gbk ssh zxc@<span class="number">59.194</span>.<span class="number">82</span>.XX -p <span class="number">9924</span></div><div class="line">	expect <span class="number">194.168</span>.<span class="number">45</span>.XX</div><div class="line">	send <span class="string">"ssh ops@ops04\n"</span></div><div class="line">	expect <span class="string">"192.168.9.24"</span></div><div class="line">	send <span class="string">"su -\n"</span></div><div class="line">	expect <span class="string">"口令："</span></div><div class="line">	send <span class="string">"<span class="variable">$passwordops02</span>\n"</span></div><div class="line">	interact</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h4 id="while结构_(顺便break和continue)">while结构 (顺便break和continue)</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># cat !$</span></div><div class="line">cat bin/test</div><div class="line"><span class="comment">#!/usr/bin/expect</span></div><div class="line"><span class="keyword">set</span> test <span class="number">0</span></div><div class="line"><span class="keyword">while</span> {<span class="variable">$test</span>&lt;<span class="number">10</span>} {</div><div class="line">	<span class="keyword">set</span> test [expr {<span class="variable">$test</span> + <span class="number">1</span>}]</div><div class="line">	<span class="keyword">if</span> {<span class="variable">$test</span> &gt; <span class="number">7</span>} <span class="keyword">break</span></div><div class="line">	<span class="keyword">if</span> <span class="string">"<span class="variable">$test</span> &lt; 3"</span> <span class="keyword">continue</span></div><div class="line">	puts <span class="string">"test is <span class="variable">$test</span>"</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>本来此例去掉break和continue会输出1..9 因为break存在只能输出到7 ,因为continue存在,当test=1,2的时候 不符合要求,直接略过了</p>
+<h4 id="catch用于捕捉让脚本停止执行的错误的输出:">catch用于捕捉让脚本停止执行的错误的输出:</h4>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># cat !$</span></div><div class="line">cat bin/test1</div><div class="line"><span class="comment">#!/usr/bin/expect</span></div><div class="line">proc Error {} {</div><div class="line">	error <span class="string">"This is a error for test"</span></div><div class="line">}</div><div class="line">catch Error test</div><div class="line">puts <span class="variable">$test</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[root@zxc-mbp test]<span class="comment"># !$</span></div><div class="line">bin/test1</div><div class="line">This is a error <span class="keyword">for</span> test</div></pre></td></tr></table></figure>
+
+<h2 id="使用技巧之正则表达式">使用技巧之正则表达式</h2>
+<p>介绍expect的正则表达式和参数匹配的一个例子</p>
+<p>需求: ssh常用的端口是22,但是有些端口可能不是,所以设计了一个如果有参数就表示端口指定了其它,没有参数表示使用默认的22;我本机设置了一些hosts,假如以’mta’开头的就匹配第二条</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="comment">#!/usr/bin/expect</span></div><div class="line"><span class="keyword">set</span> timeout <span class="number">10</span></div><div class="line"><span class="keyword">set</span> file1 [lindex <span class="variable">$argv</span> <span class="number">0</span>]</div><div class="line"><span class="keyword">set</span> port [lindex <span class="variable">$argv</span> <span class="number">1</span>]</div><div class="line"><span class="keyword">if</span> {<span class="variable">$port</span>==<span class="string">""</span>} {</div><div class="line">	<span class="keyword">set</span> port <span class="number">22</span></div><div class="line">}</div><div class="line"><span class="keyword">if</span> {<span class="variable">$argc</span>&gt;<span class="number">2</span>} {</div><div class="line">	puts stderr <span class="string">"参数错误,请使用以下格式: <span class="variable">$argv0</span> {想去的服务器简称,比如89} "</span></div><div class="line">	<span class="keyword">exit</span> <span class="number">1</span></div><div class="line">}</div><div class="line"><span class="keyword">if</span> {<span class="variable">$file1</span>==<span class="string">"26"</span>} {</div><div class="line">	spawn sshfs -p <span class="number">62100</span> root@<span class="number">192.168</span>.<span class="number">0.105</span>:/home/zxc <span class="number">26</span></div><div class="line">	expect <span class="string">"password:"</span></div><div class="line">	send <span class="string">"<span class="variable">$password1089</span>\n"</span></div><div class="line">	interact</div><div class="line">} elseif {[regexp {^mta} <span class="variable">$file1</span> found]} {</div><div class="line">	spawn sshfs -p <span class="number">61012</span> root@<span class="variable">$file1</span>:/home/zxc <span class="variable">$file1</span></div><div class="line">	interact</div><div class="line">} <span class="keyword">else</span> {</div><div class="line">	spawn luit -encoding gbk ssh -p <span class="variable">$port</span> root@<span class="variable">$file1</span></div><div class="line">	interact</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h2 id="expect进阶已经字典">expect进阶已经字典</h2>
+<h4 id="expect没有严格意义的字典，但是确实可以使用">expect没有严格意义的字典，但是确实可以使用</h4>
+<p>创建字典:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">set</span> mydict [dict create tbj tbjpass server serverpass]</div></pre></td></tr></table></figure>
+
+<p>它表示创建一个字典叫做mydict，包含2个kv对：tbj &amp; tbjpass 和server &amp; serverpass</p>
+<p>你也可以这样添加数据:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">set</span> mydict .dongwm dongwmpass </div><div class="line"><span class="comment"># 表示添加一个键为.dongwm 值为dongwmpass的新数据到mydict</span></div></pre></td></tr></table></figure>
+
+<p>根据key获取值可以这样:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[dict get <span class="variable">$mydict</span> server]</div><div class="line"><span class="comment"># 表示从mydict获取server的值</span></div></pre></td></tr></table></figure>
+
+<p>NB的是可以直接这样写，看我的片段:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">expect <span class="string">"password:"</span></div><div class="line"><span class="keyword">send</span> <span class="string">"[dict get <span class="variable">$mydict</span> s70]\n"</span></div><div class="line"><span class="comment"># 也就是直接把这个看起来像列表的东东直接写到字符串里面</span></div></pre></td></tr></table></figure>
+
+<h4 id="判断变量是否存在">判断变量是否存在</h4>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">if {[info exists serverpass]!=<span class="number">1</span>} {</div><div class="line">    puts <span class="string">'sd'</span></div><div class="line">}</div><div class="line"><span class="preprocessor"># 表示如果serverpass这个变量要是不存在，就puts，但是注意的是，</span></div><div class="line"><span class="preprocessor"># 假如上面你已经set 这个变量，不管有没有值，这个变量都已经被*定义*了</span></div></pre></td></tr></table></figure>
+
+<h4 id="判断列表包含">判断列表包含</h4>
+<p>一种使用switch结构，还有一种是if方式，将属于一类的放在一个列表， 看它是不是’in’:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">set</span> listserver <span class="string">"1 2 3 4 "</span></div><div class="line"><span class="keyword">if</span> {<span class="number">1</span> <span class="keyword">in</span> <span class="variable">$listserver</span>} {puts <span class="number">11</span>}</div><div class="line"><span class="comment"># 当1在列表$listserver里面puts</span></div></pre></td></tr></table></figure>
+
+<h4 id="switch多条件">switch多条件</h4>
+<p>假如有一些switch的结果，但是他们有一些需要做一样的操作， 那么就可以吧他们放在一起</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">switch</span> $port {</div><div class="line">    <span class="number">100</span>  -</div><div class="line">    <span class="number">200</span>  { <span class="built_in">puts</span> <span class="number">1</span>}</div><div class="line">    <span class="number">300</span>  -</div><div class="line">    <span class="number">400</span> {<span class="built_in">puts</span> <span class="number">2</span>}</div><div class="line">}</div><div class="line"><span class="preprocessor"># 这里表示当port是100,或者200会puts1,当port是300或者400，会puts2</span></div></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2011-11-10T08:50:10.000Z"><a href="/2011/11/10/my-java-dev-tools/">11月 10 2011</a></time>
       
       
@@ -2103,121 +2229,6 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2011-03-14T13:45:57.000Z"><a href="/2011/03/14/thread-blocking/">3月 14 2011</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2011/03/14/thread-blocking/">Java并发阻塞队列(put和take、offer和poll、drainTo)的使用</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>阻塞队列,是一种常用的并发数据结构,常用于生产者-消费者模式。 </p>
-<h3 id="阻塞队列基础概念">阻塞队列基础概念</h3>
-<p>在Java中,有很多种阻塞队列:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ArrayBlockingQueue  	<span class="comment">//最常用</span></div><div class="line">LinkedBlockingQueue  	<span class="comment">//不会满的</span></div><div class="line">SynchronousQueue    	<span class="comment">//size为0</span></div><div class="line">PriorityBlockingQueue</div><div class="line">CompletionService 		<span class="comment">//BlockingQueue + Executor</span></div><div class="line">TransferQueue 			<span class="comment">//JDK 7中更快的SynchronousQueue</span></div></pre></td></tr></table></figure>
-
-<p>生产者消费者模型</p>
-<pre><code>        producer    <span class="comment">------------------------&gt;    consumer</span>
-                    +<span class="comment">----+----+----+----+----+</span>
-                    +    +      +    +    +    +
-                    +<span class="comment">----+----+----+----+----+</span>
-                  /                            \ <span class="keyword">for</span> (;;) {
-   <span class="comment"> // 如果队列满则阻塞                                blockingQ.take(); // 如果队列空则阻塞</span>
-    blockingQ.<span class="built_in">put</span>(object);                        }
-</code></pre><h3 id="使用阻塞队列">使用阻塞队列</h3>
-<pre><code><span class="code">        +--------------+-------------+</span>
-<span class="code">        |          Queue&lt;T&gt;          |</span>
-<span class="code">        +--------------+-------------+</span>
-<span class="code">        +--------------+-------------+</span>
-<span class="code">        | add(E) : boolean           |</span>
-<span class="code">        | remove() : E               |</span>
-<span class="code">        | offer() : boolean          |</span>
-<span class="code">        | poll() : E                 | </span>
-<span class="code">        | element() : E              |</span>
-<span class="code">        | peek() : E                 |</span>
-<span class="code">        +--------------+-------------+</span>
-<span class="code">                       ^</span>
-<span class="code">                      /|\</span>
-<span class="code">                继承自  |     </span>
-<span class="header">                       |
-+----------------------+---------------------+</span>
-<span class="header">|             BlockingQueue&lt;T&gt;               |
-+----------------------+---------------------+</span>
-<span class="code">+----------------------+</span>---------------------+
-| put(E)                                     |
-| take() : E                                 |
-| offer(E, long, TimeUnit) : boolean         |
-| poll(long, TimeUnit) : E                   |
-| remainingCapacity()                        |
-| drainTo(Collection&lt;? super E&gt;) : int       |
-<span class="header">| drainTo(Collection&lt;? super E&gt;, int ) : int |
-+----------------------+---------------------+</span>
-</code></pre><p>BlockingQueue使用注意:</p>
-<ul>
-<li>使用BlockingQueue的时候,尽量不要使用从Queue继承下来的方法,否则就失去了Blocking的特性了。</li>
-<li>在BlockingQueue中,要使用put和take,而非offer和poll。如果 要使用offer和poll,也是要使用带等待时间参数的offer和poll。</li>
-<li>使用drainTo批量获得其中的内容,能够减少锁的次数。</li>
-</ul>
-<p>代码片段一(错误)</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			Object object = blockingQ.poll();<span class="comment">//错误,不等待就会直接返回</span></div><div class="line">			handle(object);</div><div class="line">		} </div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
-
-<p>代码片段二</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.take(); <span class="comment">// 等到有数据才继续 </span></div><div class="line">				handle(object);</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
-
-<p>代码片段三</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">final</span> BlockingQueue&lt;Object&gt; blockingQ = <span class="keyword">new</span> ArrayBlockingQueue&lt;Object&gt;(<span class="number">10</span>); </div><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"consumer thread"</span>) {</div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="keyword">for</span> (;;) {</div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				<span class="comment">//注意此处</span></div><div class="line">				Object object = blockingQ.poll(<span class="number">1</span>, TimeUnit.SECONDS); <span class="comment">//防止死等 </span></div><div class="line">				<span class="keyword">if</span> (object == <span class="keyword">null</span>) {</div><div class="line">					<span class="keyword">continue</span>; <span class="comment">//或者做其他处理 </span></div><div class="line">				}</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div></pre></td></tr></table></figure>
-
-<h3 id="实现一个简单的阻塞队列">实现一个简单的阻塞队列</h3>
-<p>未取得锁就直接执行wait、notfiy、notifyAll会抛异常</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;();</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行wait操作,必须先取得该对象的锁</span></div><div class="line">				<span class="comment">//执行wait操作之后,锁会释放</span></div><div class="line">				<span class="comment">//被唤醒之前,需要先获得锁</span></div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) { </div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//要执行notify和notifyAll操作,都必须先取得该对象的锁</span></div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Object notEmpty = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Object notFull = <span class="keyword">new</span> Object();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.wait();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.notifyAll();</div><div class="line">				}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException { </div><div class="line">		<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">		<span class="keyword">synchronized</span> (notEmpty) {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				notEmpty.notifyAll();</div><div class="line">			}</div><div class="line">			<span class="comment">//分别需要对notEmpty和notFull加锁</span></div><div class="line">			<span class="keyword">synchronized</span> (notFull) {</div><div class="line">				<span class="keyword">if</span> (linkedList.size() == maxLength) { </div><div class="line">					notFull.wait();</div><div class="line">				}</div><div class="line">				linkedList.add(object); </div><div class="line">			}</div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div></pre></td><td class="code"><pre><div class="line">class BlockingQ {</div><div class="line">	<span class="keyword">private</span> Lock lock = <span class="keyword">new</span> ReentrantLock();</div><div class="line">	<span class="comment">// 一个锁可以创建多个Condition</span></div><div class="line">	<span class="keyword">private</span> Condition notEmpty = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Condition notFull = lock.newCondition();</div><div class="line">	<span class="keyword">private</span> Queue&lt;Object&gt; linkedList = <span class="keyword">new</span> LinkedList&lt;Object&gt;(); </div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> maxLength = <span class="number">10</span>;</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> Object <span class="title">take</span>() <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">// 要执行await操作,必须先取得该Condition的锁。 </span></div><div class="line">				<span class="comment">// 执行await操作之后,锁会释放。 </span></div><div class="line">				<span class="comment">// 被唤醒之前,需要先获得锁。</span></div><div class="line">				notEmpty.await();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.signalAll(); </div><div class="line">			}</div><div class="line">			<span class="keyword">return</span> linkedList.poll(); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">	<span class="comment">//</span></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">offer</span>(Object object) <span class="keyword">throws</span> InterruptedException {</div><div class="line">		lock.lock(); </div><div class="line">		<span class="keyword">try</span> {</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == <span class="number">0</span>) { </div><div class="line">				<span class="comment">//￼要执行signal和signalAll操作,都必须先取 得该对象</span></div><div class="line">				notEmpty.signalAll();</div><div class="line">			}</div><div class="line">			<span class="keyword">if</span> (linkedList.size() == maxLength) {</div><div class="line">				notFull.await(); </div><div class="line">			}</div><div class="line">			linkedList.add(object); </div><div class="line">		} <span class="keyword">finally</span> {</div><div class="line">			lock.unlock(); </div><div class="line">		}</div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>注意:未锁就直接执行await、signal、siganlAll会抛异常</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -2257,7 +2268,7 @@ isMatch(<span class="string">"aab"</span>, <span class="string">"c*a*b"</span>) 
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>18</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>19</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
