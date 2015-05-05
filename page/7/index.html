@@ -913,6 +913,231 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-07-16T07:45:02.000Z"><a href="/2010/07/16/shell-style/">7月 16 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/07/16/shell-style/">Shell编码风格和脚本配置文件格式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><a href="http://wiki.bash-hackers.org/scripting/style" target="_blank" rel="external">Scripting with style</a> 是少见的一篇介绍 Shell 编码风格 的文章，相信对大多数运维人员和linux爱好者都有用，现在将译文奉上。</p>
+<h2 id="Shell编码风格">Shell编码风格</h2>
+<h3 id="缩进准则">缩进准则</h3>
+<p>我一般使用2个空格来缩进（尽管大多人使用4个空格），原因是：</p>
+<ul>
+<li>输入简单快速；</li>
+<li>没有输入一个Tab键，避免不同环境下显示的差异问题；</li>
+<li>缩进的效果已经足够，并且没有浪费太多的空间；</li>
+</ul>
+<p><strong><em>译者注：本人也是使用4个空格，如果你也与本文作者的风格不一样，下面说到2个空格的地方请自觉替换成你实际使用的空格数。个人认为，缩进只是一个个人的风格，只要不影响可读性即可。</em></strong></p>
+<p>顺便说一句，尽量不要使用Tab键，它们容易带来麻烦，我只能想到一种情况下它是有用的：here document中的缩进。</p>
+<h3 id="分隔长行">分隔长行</h3>
+<p>如果需要分隔过长的代码，你可以使用下面的任意一种方法：</p>
+<p>1） 使用与命令宽度相同的缩进</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">activate some_very_long_option <span class="command">\</span></div><div class="line">         some_other_option</div></pre></td></tr></table></figure>
+
+<p>2） 使用2个空格缩进</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">activate some_very_long_option <span class="command">\</span></div><div class="line">  some_other_option</div></pre></td></tr></table></figure>
+
+<p>从个人的角度来说，除非有特别的需要，我更倾向于第一种形式，因为它突出“上下两行的内容是一起的”这一联系。</p>
+<h3 id="分离复合命令">分离复合命令</h3>
+<p><strong><em>译者注：其实这里的复合命令就是指块语句，例如for/while循环, if分支结构等等。</em></strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="title">HEAD_KEYWORD</span> parameters; <span class="title">BODY_BEGIN</span></div><div class="line">  BODY_COMMANDS</div><div class="line">BODY_END</div></pre></td></tr></table></figure>
+
+<p>我习惯于：</p>
+<ul>
+<li>将HEAD_KEYWORD和初始化命令或者参数放在第一行；</li>
+<li>将BODY_BEGIN同样放在第一行；</li>
+<li>复合命令中的BODY部分以2个空格缩进；</li>
+<li>BODY_END部分独立一行放在最后；</li>
+</ul>
+<p>1）if/then/elif/else分支语句</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> <span class="keyword">...</span>; then</div><div class="line">  <span class="keyword">...</span></div><div class="line">elif <span class="keyword">...</span>; then</div><div class="line">  <span class="keyword">...</span></div><div class="line"><span class="keyword">else</span></div><div class="line">  <span class="keyword">...</span></div><div class="line">fi</div></pre></td></tr></table></figure>
+
+<p>2）for循环</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> f <span class="keyword">in</span> /etc/*; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<p>3） while/until循环</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">while</span> [[ $answer != [YyNn] ]]; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<p>4） case分支语句</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">case</span> <span class="variable">$input</span> <span class="keyword">in</span></div><div class="line">  hello)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said hello"</span></div><div class="line">  ;;</div><div class="line">  bye)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said bye"</span></div><div class="line">    <span class="keyword">if</span> foo; <span class="keyword">then</span></div><div class="line">      bar</div><div class="line">    <span class="keyword">fi</span></div><div class="line">  ;;</div><div class="line">  *)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said something weird..."</span></div><div class="line">  ;;</div><div class="line"><span class="keyword">esac</span></div></pre></td></tr></table></figure>
+
+<p>几点注意的地方：</p>
+<ul>
+<li>如果不是100%需要，匹配部分左右的括号不需要写（译者注：例如写成hello)而不是(hello)）；</li>
+<li>匹配模式与分支的终止符号;;位于同一缩进级别</li>
+<li>分支内部的命令多缩进一层；</li>
+<li>尽管是可选的，这里还是把最后一个分支的终止符号也写上了；</li>
+</ul>
+<h3 id="语法和编码指引">语法和编码指引</h3>
+<p>晦涩的语法结构</p>
+<p>我们都喜欢一些晦涩的语法结构，因为它们很简洁。但是如果不是100%需要用到，尽量不要使用它们，否则大多数人无法理解你的代码。</p>
+<p>所以有有时候，我们需要在代码的智能，效率与可读性之间找到一个平衡点。</p>
+<p>如果你一定要使用这种语法结构，记得在用的地方写上一小段注释。</p>
+<p><strong><em>译者注：Shell提供的一些语法糖很难理解，但是有非常简洁实用，本人也很喜欢用，这样可以省下一大堆精力，而且用熟了也没有什么难以理解的，但是作者说的也有道理，这一点就仁者见仁，智者见智了</em></strong></p>
+<h3 id="变量名">变量名</h3>
+<p>因为所有保留的变量名都是大写的，最安全的方法是仅使用小写字母作为变量名，例如读入用户的输入、循环变量等等……：</p>
+<ul>
+<li>变量名尽量选择小写字母；</li>
+<li>如果你使用大写的变量名，不要使用保留的变量名（一份不完全的列表参见SUS）；</li>
+<li>如果你使用大写的变量名，最后在变量名前面加一个独特的前缀（例如下面例子中的MY_）；</li>
+</ul>
+<p>下面是一个例子：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># the prefix 'MY_'</span></div><div class="line">MY_LOG_DIRECTORY=/var/adm/</div><div class="line"></div><div class="line"><span class="keyword">for</span> file <span class="keyword">in</span> <span class="string">"<span class="variable">$MY_LOG_DIRECTORY</span>"</span>/*; <span class="keyword">do</span></div><div class="line">  <span class="built_in">echo</span> <span class="string">"Found Logfile: <span class="variable">$file</span>"</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+
+<h3 id="变量初始化">变量初始化</h3>
+<p>正如C语言一样，最好的处理是在变量声明的时候初始化。</p>
+<p>用户可以将一个变量以环境变量的形式传递到脚本中。如果你盲目地假定你使用的所有变量都是未初始化的，其它人可以以环境变量的形式劫持一个变量。</p>
+<p><strong><em>译者注：一个例子说明这一点：</em></strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> <span class="keyword">b</span>.<span class="keyword">sh</span> </div><div class="line"></div><div class="line"><span class="keyword">if</span> [ -<span class="keyword">z</span> <span class="string">"$var"</span> ]; then</div><div class="line">    <span class="keyword">echo</span> <span class="string">"$var is not set"</span></div><div class="line">    var=<span class="number">1</span></div><div class="line">fi</div><div class="line"></div><div class="line"><span class="keyword">echo</span> <span class="string">"Now, var is equals to $var"</span></div><div class="line">var=<span class="number">2</span> <span class="keyword">sh</span> <span class="keyword">b</span>.<span class="keyword">sh</span></div><div class="line">Now, var <span class="keyword">is</span> equals <span class="keyword">to</span> <span class="number">2</span></div></pre></td></tr></table></figure>
+
+<p>解决这个问题的方法很简单，将变量初始化：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="variable">my_input=</span><span class="string">""</span></div><div class="line"><span class="variable">my_array=</span>()</div><div class="line"><span class="variable">my_number=</span><span class="number">0</span></div></pre></td></tr></table></figure>
+
+<h3 id="参数展开">参数展开</h3>
+<p>除非你知道自己做的事情，请在参数展开的地方使用双引号</p>
+<p>当然，也有一些地方并不需要使用双引号，例如：</p>
+<ul>
+<li>[[ ]]测试表达式内部是不会展开的；</li>
+<li>在case $WORD in语法中WORD也不会展开的；</li>
+<li>在变量赋值var=$WORD的地方也是不会展开的</li>
+</ul>
+<p>但是在这些地方使用引号并不会出错，如果你习惯于在每个可能展开参数的地方使用引号，你写得代码会很安全。</p>
+<p>如果你要传递一个参数作为一个单词列表，你可以不使用引号，例如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">list=<span class="string">"one two three"</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># you MUST NOT quote $list here</span></div><div class="line"><span class="keyword">for</span> word <span class="keyword">in</span> $list; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<h3 id="函数名称">函数名称</h3>
+<p>函数名称应该采用小写的形式，并且有一个很好的意义。函数名称应该容易让人理解，比如f1这个名称虽然容易输入但是对调试和其它人阅读代码造成了很大的困难，它说明不了任何东西。好的函数名称可以帮助说明代码，而不需要额外的注释。</p>
+<p>一个或多或少有趣的是：如果你无意这样做，不要把函数名称命名为常见的命令名，新手往往比较容易将脚本或者函数名命名成test，这样就和UNIX的test命令冲突了。</p>
+<p>除非绝对必要，仅使用字母、数字和下划线作为函数名称。/bin/ls也是一个合法的Bash函数名称。</p>
+<p><strong><em>译者注：/bin/ls不是一个合法的函数名称。</em></strong></p>
+<h3 id="命令替换">命令替换</h3>
+<p>正如文章<a href="http://wiki.bash-hackers.org/syntax/expansion/cmdsubst" target="_blank" rel="external">the article about command substitution [Bash Hackers Wiki]</a>中提及的，你应该使用$( .. )形式。</p>
+<p>不过，如果可移植性是一个问题，你可能必须使用反引号的形式<code>...</code>。</p>
+<p>在任何情况，如果其它展开或者单词分隔并不是你期望的，你应该将命令替换用双引号引起来。</p>
+<h3 id="Eval命令">Eval命令</h3>
+<p>正如Greg据说的：<strong><em>“If eval is the answer, surely you are asking the wrong question.”</em></strong>。</p>
+<p>避免它，除非绝对必要：</p>
+<ul>
+<li>eval can be your neckshot（可能是你的麻烦？）</li>
+<li>很有可能有其它的方法来实现你需要的；</li>
+<li>如果可能，重新思考下脚本的工作过程，当eval的使用不可避免的时候；</li>
+<li>如果你实在需要使用，小心慎用；</li>
+</ul>
+<h3 id="脚本的基本结构">脚本的基本结构</h3>
+<p>一个脚本的基本结构是这样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!SHEBANG</span></div><div class="line"></div><div class="line">CONFIGURATION_VARIABLES</div><div class="line"></div><div class="line">FUNCTION_DEFINITIONS</div><div class="line"></div><div class="line">MAIN_CODE</div></pre></td></tr></table></figure>
+
+<h3 id="Shebang">Shebang</h3>
+<p>如果可能，请不要忘记shebang。</p>
+<p>请小心使用/bin/sh作为shebang，在Linux系统中，/bin/sh就是Bash这是一个错误的观点。</p>
+<p>于我而言，shebang有两个目的：</p>
+<ul>
+<li>说明直接执行时以哪个解释器来执行；</li>
+<li>明确该脚本应该以哪个解释器来执行；</li>
+</ul>
+<h3 id="配置变量">配置变量</h3>
+<p>在这里，我将这一类变量——可以被用户更改的——叫做配置变量。</p>
+<p>让这类变量容易找到，一般放在脚本的头部，给它们有意义的名称并且加上注释说明。正如上面说的，仅当你知道你为什么这么做的时候，才用大写的变量名形式，否则小写形式更加安全。</p>
+<p>函数定义</p>
+<p>所有函数定义应该在脚本主要代码执行之前，这样可以给人全局的印象，并且确保所有函数在使用之前它是已知的。</p>
+<p>你应该使用可移植性高的函数定义形式，即不带function关键字的形式。</p>
+<h3 id="脚本行为和健壮性">脚本行为和健壮性</h3>
+<p>当脚本检测到问题时尽早退出，以免执行潜在的问题；<br>如果你需要用到的命令可能并没有安装在系统上，在脚本执行的时候最好检查命令是否存在并且提醒用户缺少什么；<br>采用有意义的脚本返回值，例如0代码成功，1代码错误或者失败；</p>
+<h3 id="其它">其它</h3>
+<p>输出内容</p>
+<ul>
+<li>if the script is interactive, if it works for you and if you think this is a nice feature, you can try to save the terminal content and restore it after execution；（译者注：不理解这一点是什么意思）</li>
+<li>在屏幕中输出简单易理解的消息；</li>
+<li>使用颜色或者特别的前缀区分错误和警告信息；</li>
+<li>输出正常的内容到STDOUT，而输出错误、警告或者诊断的信息到STDERR；</li>
+<li>在日志文件中输出所有详细的信息；</li>
+</ul>
+<p>输入</p>
+<p>不要盲目地假设任何事情，如果你希望用户输入一个数字，请在脚本中主动检查它是否真得是一个数字，检查头部是否包含0，等等。我们都应该知道这一点，用户仅仅是用户而不是程序员，他们会做他们想要的，而不是程序想要的。</p>
+<h2 id="Sehll脚本配置文件格式">Sehll脚本配置文件格式</h2>
+<p>开发过程中为了减少 hardcode，不可避免的需要提供配置文件给用户定制。对于高级编程语言来说，因为有丰富的第三方库，可供选择的配置文件格式有很多，比如 xml、jsno、ini、yaml 等等。</p>
+<h3 id="key=value_文本格式配置">key=value 文本格式配置</h3>
+<p>而对于 linux shell，基本上很难使用前面提到的各种格式。所以在 unix 系统上，很多 shell 脚本的配置文件都是纯粹的 key=value 文本格式，例如绝大多数的开机服务启动脚本、网络配置文件等。</p>
+<p>例子 1：ntp 配置文件</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/sysconfig/ntpd</div><div class="line"># <span class="operator"><span class="keyword">Drop</span> root <span class="keyword">to</span> id <span class="string">'ntp:ntp'</span> <span class="keyword">by</span> <span class="keyword">default</span>.</span></div><div class="line">OPTIONS=<span class="string">"-u ntp:ntp -p /var/run/ntpd.pid"</span></div><div class="line">#</div><div class="line"># <span class="keyword">Set</span> <span class="keyword">to</span> <span class="string">'yes'</span> <span class="keyword">to</span> sync hw clock <span class="keyword">after</span> successful ntpdate</div><div class="line">SYNC_HWCLOCK=<span class="keyword">no</span></div><div class="line">#</div><div class="line"># Additional options <span class="keyword">for</span> ntpdate</div><div class="line">NTPDATE_OPTIONS=<span class="string">""</span></div></pre></td></tr></table></figure>
+
+<p>例子 2：网络配置文件</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/sysconfig/network</div><div class="line"><span class="constant">NETWORKING</span>=<span class="string">"yes"</span></div><div class="line"><span class="constant">HOSTNAME</span>=<span class="string">"xx.com"</span></div></pre></td></tr></table></figure>
+
+<p>而且，要注意得是，一般<code>key=value</code>的等号两边不应该有空格，因为大多数脚本都是直接 source 配置文件的（当然，也有部分脚本是会自己处理配置文件格式），使用起来很简单，基本上没有解析的操作：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/init.d/network</div><div class="line"><span class="keyword">if</span> [ ! <span class="operator">-f</span> /etc/sysconfig/network ]; <span class="keyword">then</span></div><div class="line">    <span class="keyword">exit</span> <span class="number">0</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"><span class="comment">#</span></div><div class="line">. /etc/sysconfig/network</div></pre></td></tr></table></figure>
+
+<p>理所当然，这种格式无法满足更复杂的配置文件需求，比如 ini 格式的 section。那么，在 shell 中除了满世界去找一个解析库之外，能有什么方法可以实现呢？</p>
+<h3 id="扩展_key=value_文本格式配置">扩展 key=value 文本格式配置</h3>
+<p>假设，我们管理着 n 个集群，每个集群配置项都是一样的，我们需要在 shell 脚本中，可以根据集群的名称来导入对应的配置。</p>
+<p>下面我们介绍一种最简单的方法，只需要针对第一种格式扩展下即可。我们创建一个配置文件目录<code>conf.d</code>，在这个目录下存放各个集群的配置文件。每个集群对应一个配置文件，文件名为集群名称，例如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> <span class="keyword">conf</span>.<span class="keyword">d</span>/CLUSTER_A</div><div class="line">c_cluster_name=<span class="string">"CLUSTER_A"</span></div><div class="line">c_cluster_type=<span class="number">1</span></div></pre></td></tr></table></figure>
+
+<p>在脚本中，我们可以这样来导入相应集群的配置：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"conf.d/<span class="variable">$cluster_name</span>"</span> ]; <span class="keyword">then</span></div><div class="line">        . conf.d/<span class="variable">$cluster_name</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line">}</div><div class="line"><span class="comment">#</span></div><div class="line">load_config CLUSTER_A</div></pre></td></tr></table></figure>
+
+<p>因为各个集群的配置文件相互独立，所以如果包含一些全局范围的配置项，需要在每个配置文件中都增加。或者，再增加一个入口的配置文件：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat global.conf</span></div><div class="line"><span class="variable">g_conf_dir=</span>conf.d   <span class="comment"># 配置文件目录</span></div><div class="line"><span class="variable">g_version=</span><span class="string">"0.1"</span>  <span class="comment"># 全局配置</span></div></pre></td></tr></table></figure>
+
+<p>脚本相应调整下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">GLOBAL_CONF=/etc/xxx/global.conf</div><div class="line"></div><div class="line"><span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"<span class="variable">$GLOBAL_CONF</span>"</span> ]; <span class="keyword">then</span></div><div class="line">    . <span class="variable">$GLOBAL_CONF</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> [[ <span class="string">"<span class="variable">$g_conf_dir</span>"</span> != /* ]]; <span class="keyword">then</span>  <span class="comment"># 如果是相对路径</span></div><div class="line">    g_conf_dir=<span class="string">"<span class="variable">$(dirname $GLOBAL_CONF)</span>/<span class="variable">$g_conf_dir</span>"</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"<span class="variable">$g_conf_dir</span>/<span class="variable">$cluster_name</span>"</span> ]; <span class="keyword">then</span></div><div class="line">        . <span class="variable">$g_conf_dir</span>/<span class="variable">$cluster_name</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line">}</div><div class="line"></div><div class="line">load_config CLUSTER_A</div></pre></td></tr></table></figure>
+
+<h3 id="类_ini_配置格式">类 ini 配置格式</h3>
+<p>第二种方法，基本上已经可以解决我们之前假设中提出的需求，简单而且实现方便，不足的是配置文件比较零散，管理上可能不是很方便。如果，你仍然倾向于一种类似 ini 格式的配置，可以试试下面这种方法。</p>
+<p>在这种场景下，每个集群应该是一个独立的 section，所以转换成 ini 格式，配置文件应该是这样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">[DEFAULT]</span></div><div class="line"><span class="setting">g_version=<span class="value"><span class="string">"0.1"</span>     ; 全局配置</span></span></div><div class="line"></div><div class="line"><span class="title">[CLUSTER_A]</span></div><div class="line"><span class="setting">c_cluster_name=<span class="value"><span class="string">"CLUSTER_A"</span></span></span></div><div class="line"><span class="setting">c_cluster_type=<span class="value"><span class="number">1</span></span></span></div></pre></td></tr></table></figure>
+
+<p>但是，我们前面提到过，原生的 shell 是很难去解析 ini 格式的配置文件的，所以上面的形式还得变化下，我们用 shell 中的函数来模拟 section：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">$ cat cluster.conf</div><div class="line"><span class="preprocessor"># global config</span></div><div class="line">g_version=<span class="string">"0.1"</span>  <span class="preprocessor"># 全局配置</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">section_cluster_a</span><span class="params">()</span></span></div><div class="line">{</div><div class="line">    c_cluster_name=<span class="string">"CLUSTER_A"</span></div><div class="line">    c_cluster_type=<span class="number">1</span></div><div class="line">}</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">section_cluster_b</span><span class="params">()</span></span></div><div class="line">{</div><div class="line">    c_cluster_name=<span class="string">"CLUSTER_B"</span></div><div class="line">    c_cluster_type=<span class="number">1</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>配套的配置文件解析库：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">$ cat config.sh</div><div class="line"><span class="comment">#!/bin/echo Warnning, this library must only be sourced!</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> [ ! <span class="operator">-f</span> <span class="string">"cluster.conf"</span> ]; <span class="keyword">then</span></div><div class="line">    <span class="keyword">exit</span> <span class="number">0</span>  <span class="comment"># or print error before exit</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line">. cluster.conf</div><div class="line"></div><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=$(<span class="built_in">echo</span> <span class="string">"<span class="variable">$1</span>"</span> | tr A-Z.- a-z__)  <span class="comment"># 特殊符号转换</span></div><div class="line">    section_<span class="variable">$cluster_name</span> &&gt;/dev/null  <span class="comment"># 执行函数，将集群的配置赋值给对应的全局变量</span></div><div class="line">}</div><div class="line"></div><div class="line">function <span class="function"><span class="title">option</span></span>()</div><div class="line">{</div><div class="line">    local opt_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [[ <span class="string">"<span class="variable">$opt_name</span>"</span> != c_* ]]; <span class="keyword">then</span>   <span class="comment"># no "c_" prefix</span></div><div class="line">        opt_name=<span class="string">"c_<span class="variable">$opt_name</span>"</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line"></div><div class="line">    <span class="built_in">echo</span> <span class="string">"<span class="variable">${!opt_name}</span>"</span>  <span class="comment"># indirect reference by variable name</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>测试脚本：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> test.<span class="keyword">sh</span></div><div class="line">. config.<span class="keyword">sh</span></div><div class="line"></div><div class="line">load_config CLUSTER_B</div><div class="line">option cluster_name  # puts CLUSTER_B</div></pre></td></tr></table></figure>
+
+<p>在<code>PET</code>运维工具中，我是采取了第三种方式来维护集群的配置文件，基本上可以满足绝大多数需求。大家也可以贴出你们是怎么设计shell的配置文件的？我们探讨下!</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2010-05-11T08:53:37.000Z"><a href="/2010/05/11/transient-volatile-strictfp/">5月 11 2010</a></time>
       
       
@@ -995,192 +1220,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2009-11-07T09:08:52.000Z"><a href="/2009/11/07/thinking-in-java/">11月 7 2009</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2009/11/07/thinking-in-java/">Thinking In java读书笔记(java编程思想)</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>寒假在家正好一直没事情,就一直看书,看了不下五本左右的编程专业书籍,是该花时间整理下写写读书笔记否则读了忘没有用,读书的时候是把书读厚,写笔记目的是把书写薄,下面是 <strong>Think in java</strong> 这本书的读书笔记,估算了下大概花了三个月左右时间去看它,内容很多很全,很符合入门级程序员和中级但偶尔有些迷茫的程序员的口味.</p>
-<h3 id="第一章：对象简介">第一章：对象简介</h3>
-<p>1、Java的五大特征,也是面向对象的五大特征:</p>
-<ul>
-<li>Everything is an object: 万物皆对象</li>
-<li>A program is a bunch of objects telling each other what to do by sending messages: 程序就是一组相互之间传递信息,告诉对方该干些什么的对象</li>
-<li>Each object has its own memory made up of other objects: 每个对象都利用别的对象来组建它自己的记忆</li>
-<li>Every object has a type: 对象都有类型</li>
-<li>All objects of a particular type can receive the same messages: 所有属于同一类型的对象能接收同样的信息</li>
-</ul>
-<p>2、作者在第一章讲的是一些OOP概念上的东西,在我看来也有许多哲学上的东西,多看几遍或许会顿悟.</p>
-<h3 id="第二章：万物皆对象">第二章：万物皆对象</h3>
-<p>1、在Java中，我们直接操控的不是类本身，而是类的一个实例，或者说是Reference。Java没有地址传递之说。</p>
-<p>2、Java把对象，也就是类存放在“堆”里，而把其他数据和对象的reference存放在“栈”里，对操作来收，栈比堆要快。</p>
-<p>3、因为栈比堆要快，所以作为特例，Java的primitive类型的变量也存放在栈里，这样可以提高效率，另外一方面来说，primitive类型的数据不是类，所以，它们也没有reference。</p>
-<p>4、Java不允许在同一个方法中定义同样名称的变量,如:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">{</div><div class="line">	<span class="keyword">int</span> x = <span class="number">12</span>;</div><div class="line"> 	{</div><div class="line">	   	<span class="keyword">int</span> x = <span class="number">16</span>;</div><div class="line"> 	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>这在C++中是允许的,在Java中却会出现编译错误.</p>
-<p>5、无需关心清理不再被使用的reference,Java的Gabage Collector会帮你做这一切的.</p>
-<p>6、对于primitive类型的变量，如果这个变量是类的成员，则类会对其进行初始化，如果不是类的成员，则不会对其初始化，它可能是一个任意的值。</p>
-<p>7、javadoc非常强大，但要求我们写程序的时候要有丰富的注释和良好的习惯。</p>
-<h3 id="第三章：流程控制">第三章：流程控制</h3>
-<p>1、几乎所有的运算符都只能作用于primitive。但”=”、”==”、”!=”是例外，它们可以运用于所有对象，此外，String类也支持”+”和”+=”。</p>
-<p>2、Reference变量的赋值，会使表达式左边的reference丢失原来的对象，原来的对象成了没有reference的内存垃圾。</p>
-<p>3、Java的书籍总是强调Java没有地址传递，但我觉得reference传递就是地址传递。</p>
-<p>4、equals比较的是reference</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">Integer</span> n1 <span class="subst">=</span> <span class="literal">new</span> <span class="built_in">Integer</span>(<span class="number">47</span>);</div><div class="line"><span class="built_in">Integer</span> n2 <span class="subst">=</span> <span class="literal">new</span> <span class="built_in">Integer</span>(<span class="number">47</span>);</div><div class="line">System<span class="built_in">.</span>out<span class="built_in">.</span>println(n1<span class="built_in">.</span><span class="keyword">equals</span>(n2)); <span class="comment">//println true</span></div></pre></td></tr></table></figure>
-
-<p>打印的结果是true，不要认为理所当然就是这样，其实，equals比较的是reference，这里是两个reference，显然不会相等，之所以输出true，是因为Integer类中已经对equals函数做了处理，如果是自己写的类，而没有重载equals，那么打印的肯定是false。</p>
-<p>5、Java提供了位操作符，但我觉得没有必要使用它。</p>
-<p>6、在Java中，逗号运算符只能用在for循环中。</p>
-<p>7、switch只能用char、byte、short、int。</p>
-<h3 id="第四章:初始化与清理">第四章:初始化与清理</h3>
-<p>1、primitive类型的重载慎用。</p>
-<p>2、返回值不能重载，因为存在虽然方法有返回值，但程序中并不关注返回值的情况，如：<br>定义：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> f(){}; </div><div class="line">String f(){};</div></pre></td></tr></table></figure>
-
-<p>调用 f()，此时虚拟机就不知道该调用哪个f了。</p>
-<p>3、类中的普通方法不能调用构造函数，构造函数能相互调用，但只能用this关键字。</p>
-<p>4、一般来说，类中无需使用finalize()，因为虚拟机会自动进行垃圾清理，但有种特殊情况，声明了一个对象，但并没有refrence，比如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">class Aclass(){....};</div><div class="line">   ...</div><div class="line"><span class="keyword">new</span> Aclass();</div></pre></td></tr></table></figure>
-
-<p>因为没有refrence，那么虚拟机会认为它已经没有用了，就可以回收了，但此时如果你不希望它回收，那么可以在finalize函数中实现，具体可参考书本的例子。</p>
-<p>5、内部变量在使用之前必须初始化；所谓“使用”是指出现在表达式右边、方法的参数等，而不是表达式的左边，例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">String s = <span class="string">"i love java"</span>;</div><div class="line"><span class="keyword">int</span> i;</div><div class="line">i = s.length();</div></pre></td></tr></table></figure>
-
-<p>是正确的；而</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> i;</div><div class="line">i++;</div></pre></td></tr></table></figure>
-
-<p>是错误的。因为i++相对于i = i + 1<br>但是，如果不是内部变量而是类的的成员数据，则不需要初始化，因为编译器不知道会在哪个方法中被初始化。对于primitive的成员数据，Java会自动赋予初始值，如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">boolean</span> = <span class="keyword">false</span></div><div class="line"><span class="keyword">char</span>  = (<span class="keyword">char</span>)<span class="number">0</span>  <span class="comment">//----空格</span></div><div class="line"><span class="keyword">byte</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">int</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">long</span>  = <span class="number">0</span></div><div class="line"><span class="keyword">float</span> = <span class="number">0</span></div><div class="line"><span class="keyword">double</span> = <span class="number">0</span></div></pre></td></tr></table></figure>
-
-<p>对于对象的成员数据，没有初始化之前等于null，所以，primitive的成员数据没有初始化之前被使用并不会发生错误，但对象数据在运行时就会发生exception。<br>有一种特殊情况，如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> [] a = <span class="keyword">new</span> <span class="keyword">int</span>[<span class="number">4</span>];</div></pre></td></tr></table></figure>
-
-<p>此时，看上去只初始化了数组的大小而没有初始化数组的成员，但在java中，这也是没有问题的，java给每个数组成员自动进行了初始化。</p>
-<p>6、类实例化的时候总是先执行成员数据的定义（如果在定义的时候进行初始化的话此时就初始化了），然后再执行构造函数，而不管在代码顺序上成员数据在前还是构造函数在前。</p>
-<p>7、对于static类型的成员变量，static类型的成员变量总是比其他成员变量先初始化，static类型的成员变量只初始化一次，只有被用到的static成员变量才会被初始化。<br>   此处，“被用到”在我来理解，是从main函数开始检查的，如果main函数中定义了静态变量或者被main函数调用的其他类中定义了静态变量，这些静态变量就“被用到”了。</p>
-<p>8、primitive类型的数组可以用new来初始化，如</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span>[] a = <span class="keyword">new</span> <span class="keyword">int</span>[]{<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</div></pre></td></tr></table></figure>
-
-<p>也可以直接用形如</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span>[] a = {<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>}</div></pre></td></tr></table></figure>
-
-
-<p>的方式来初始化，但如果不是primitive的变量就只能用new来初始化。</p>
-<p>9、数组初始化的时候，int[] a = {1,2,3,4,}; 4后面有逗号，对不对？答：对，最后的逗号有与没有都可以。</p>
-<h3 id="第五章：隐藏实现">第五章：隐藏实现</h3>
-<p>1、并非每一个java文件都需要一个public类，但一个java文件只能有一个public类。如果没有public类，那么文件名可以随便取。</p>
-<p>2、使用import的时候，引用的类库要么能在CLASSPAHT中找到，要么在当前路径在加上import的相对路径中能找到，如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> com.spring.util,</div></pre></td></tr></table></figure>
-
-<p>如果当前路径是D:\JavaWork，那么这些被import的类库可以在D:\workspace\com\spring\util目录下。</p>
-<p>3、关于Java的package，如果打包成jar文件，必须把这个文件放到CLASSPATH能找到的路径中去。</p>
-<p>4、Java的访问符包括，public、protected、private和没有访问符（package），此处的访问符是指类的成员的访问符。其访问权限分别是：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span>&gt;<span class="keyword">package</span>&gt;<span class="keyword">protected</span>&gt;<span class="keyword">private</span></div></pre></td></tr></table></figure>
-
-<p>package的访问权限不仅仅是使同一个package中其他类能访问这个类的public、protected、package成员，也能访问private成员。</p>
-<p>5、相对于成员的访问权限，类没有private的访问权限，因为private的类没有任何价值；同时也没有protected的访问权限。</p>
-<h3 id="第六章：复用类">第六章：复用类</h3>
-<p>1、toString是一个特殊的方法，当编译器需要一个String而你的类是一个对象的时候，编译器会自动调用toString方法，当然，你得保证你的类里面有这个方法。</p>
-<p>2、往每个类中都写一个main函数，会使调试方便得多。</p>
-<p>3、如果基类中没有默认的（即没有参数的）构造函数而有有参数的构造函数，则在子类的构造函数中必须调用基类的构造函数，否则编译会出错。也就是说，当子类实例化的时候虚拟机自动去调用基类的默认的构造函数，除非在子类的构造函数中显式地调用了基类的非默认的构造函数。</p>
-<p>4、编译器会强制将你基类的构造函数的调用放在派生类的构造函数的最前面。也就是说，在它之前不能有任何东西。</p>
-<p>5、虽然编译器会强制你对基类进行初始化，并且会要求你在构造函数的开始部分完成初始化，但它不会检查你是不是进行了成员对象的初始化。</p>
-<p>6、合成还是继承？一般来说，合成用于新类要使用旧类的功能，而不是其接口的场合。也就是说，把对象嵌进去，用它实现新类的功能，但是用户看到的是新累的接口，而不是嵌进去的对象的接口。</p>
-<p>7、一般情况下，应该将类的成员数据定义成private。</p>
-<p>8、上传（upcasting）总是安全的。</p>
-<p>9、private方法都隐含有final的意思。由于你不能访问private的方法，因此你也不能复写它。你可以给一个private方法加final修饰符，但这样做什么意义也没有。</p>
-<p>10、9中提到的不能复写private函数，是指，该函数在基类中是private的，并且在派生类中也是private的。如果在派生类中不是private的，则可以复写。</p>
-<h3 id="第七章：多态性">第七章：多态性</h3>
-<p>1、”封装”通过将数据的特征与行为结合在一起，创建了一种新的数据类型。“隐藏实现”通过将细节设置成private，完成了接口与实现的分离。而多态性是站在“类”的角度来处理这种逻辑上的分离的。</p>
-<p>2、”上传”使得类的动态性得以实现，但需要注意的是，只有基类是public的情况下，扩展类的复写才可以实现，比如下面的例子：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span> </span>{</div><div class="line"> 	<span class="keyword">private</span> <span class="keyword">void</span> <span class="title">f</span>() {</div><div class="line">  		System.out.println(<span class="string">"private f()"</span>);</div><div class="line"> 	}</div><div class="line"> 	#</div><div class="line">	<span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span>(String[] args) {</div><div class="line">  		Test po = <span class="keyword">new</span> Derived();</div><div class="line">  		po.f();</div><div class="line"> 	}</div><div class="line">}</div><div class="line">#</div><div class="line">class Derived extends Test {</div><div class="line"> 	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">f</span>() {</div><div class="line">  		System.out.println(<span class="string">"public f()"</span>);</div><div class="line"> 	}</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>例子中，Test.f是private的，所以Derived.f其实不是Test.f的复写，Derived.f是一个全新的方法，它连重载都算不上，因为Derived根本看不到基类的f()。<br>所以，输出的应该是private f()，而不是public f()。</p>
-<p>3、如果类包含一个或多个抽象方法，那么这个类必须定义为abstract，但如果类没有abstract方法，也可以将类定义为abstract。</p>
-<p>4、构造函数的调用顺序：</p>
-<ul>
-<li>调用基类的构造函数。这是一个递归过程，因此会先创建继承体系的根，然后是下一级派生类，依此类推，直到最后一个继承类的构造函数</li>
-<li>成员对象按照其声明的顺序进行初始化</li>
-<li>执行继承类的构造函数的正文。</li>
-</ul>
-<p>其实，还不如这样表述表决方便：在一个类的初始化过程中，先按成员对象的声明顺序初始化这些成员变量，然后执行其构造函数；如果有基类，则先初始化基类。</p>
-<p>5、如果要内存清理，则可以从基类开始写一个函数，函数名可以自己定，但调用的时候，必须从顶层开始执行，这刚好与构造函数的调用顺序相反。</p>
-<p>6、开始做Java的时候，不要想着把整个程序做成一个类系，比较好的办法是合成。</p>
-<h3 id="第八章：接口与内部类">第八章：接口与内部类</h3>
-<p>1、接口中的方法是自动public的，即，如果你没有对其进行设置，它不会象类一样认为它是package，而是认为是public，另外，接口中的方法是不允许为private和protected的。</p>
-<p>2、在继承和实现同时进行的时候，在声明一个类的时候，应该先继承后实现。</p>
-<p>3、使用接口还是抽象类？如果没有成员数据和方法的实现，则应该优先考虑使用接口。</p>
-<p>4、接口中的成员变量自动就是public和final的，所以不必特别声明，这样可以实现与C语言的enum相似的功能。如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Months</span> </span>{</div><div class="line">	<span class="keyword">int</span> JANUARY = <span class="number">1</span>, FEBRUARY = <span class="number">2</span>, MARCH = <span class="number">3</span>, APRIL = <span class="number">4</span>, MAY = <span class="number">5</span>, JUNE = <span class="number">6</span>, JULY = <span class="number">7</span>, AUGUST = <span class="number">8</span>, SEPTEMBER = <span class="number">9</span>, OCTOBER = <span class="number">10</span>,NOVEMBER = <span class="number">11</span>, DECEMBER = <span class="number">12</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>5、内部类是一种非常有价值的特性，它能让你在逻辑上将相互从属的类组织起来，并且在类的内部访问控制权限。但是切记，内部类和合成是截然不同的。</p>
-<p>6、内部类可以被创建在方法里，甚至是任意一个作用域里。</p>
-<p>7、内部类能访问宿主类的任何成员。</p>
-<p>8、嵌套类就是static的内部类。</p>
-<p>9、每个内部类都可以独立地继承某个“实现（implementation）。因此，内部类不会受“宿主类是否已经继承了别的实现”的约束。</p>
-<p>10、虽然作者说了很多内部类的好处，但我觉得我还是看不太懂，留待以后慢慢琢磨吧。</p>
-<h3 id="第九章：异常带来处理错误">第九章：异常带来处理错误</h3>
-<p>1、如果一个方法在声明的时候抛出一个异常，比如public void f() throws SimpleException，那么在调用的时候必须进行异常捕捉。</p>
-<p>2、打印错误信息是时候，System.err比System.out好，因为后者可能不重定向。</p>
-<p>3、自己创建的异常类可以有带参数的构造函数，也可以有其他的成员。</p>
-<p>4、Throwable类的printStackTrace方法返回“被调用的方法是经过怎样一个顺序到达异常发生地点”的信息。</p>
-<p>5、异常说明（即在方法后面跟上throws关键字和要抛出的异常的类名称）可以让程序员很明确的知道这个方法可能会抛出什么样的异常。</p>
-<p>6、异常NullPointerReference虚拟机会自动抛出，不必处处调用。</p>
-<p>7、无论是否抛出异常，finally块总是会被执行。</p>
-<p>8、异常运用原则：</p>
-<ul>
-<li>在合适的地方处理问题。（避免在自己还不知道该如何处理的情况下去捕捉异常）</li>
-<li>把问题解决掉，然后重新调用那个引起问题的方法</li>
-<li>修正一下问题，然后染过那个方法在继续下去</li>
-<li>用一些别的，不准备让这个方法返回的数字来进行计算</li>
-<li>把当前允许环境下能做的事情全部做完，然后把相同的异常抛到更高层</li>
-<li>把当前允许环境下能做的事情全部做完，然后把抛一个不同的异常到更高层</li>
-<li>中止程序</li>
-<li>简化（如果异常结构把事情搞得太复杂了，那用起来会非常痛苦也很烦人）</li>
-<li>把类库和程序做得更安全（这既是在为调试作短期投资，也是在为程序的健壮性作长期投资）</li>
-</ul>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1220,7 +1259,7 @@
   
     <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
   
-    <li><a href="/tags/Linux/">Linux</a><small>20</small></li>
+    <li><a href="/tags/Linux/">Linux</a><small>21</small></li>
   
     <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
   
