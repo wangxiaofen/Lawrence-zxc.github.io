@@ -2750,7 +2750,67 @@
 
 <p>这样便能对所有默认的maven项目指定jdk为1.6</p>
 <p>参考资料：<br>Maven官方文档：<a href="http://maven.apache.org/guides/index.html" target="_blank" rel="external">http://maven.apache.org/guides/index.html</a><br>maven安装：<a href="http://maven.apache.org/download.html" target="_blank" rel="external">http://maven.apache.org/download.html</a></p>
+<h3 id="5、maven使用的一些技巧">5、maven使用的一些技巧</h3>
+<p>收集一些 Maven 的使用技巧，包括 Maven 常见命令、创建多模块项目、上传本地 jar 到插件以及常用的插件等等，本篇文章会保持不停的更新。</p>
+<p>命令行创建 maven 项目：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ mvn archetype:generate <span class="variable">-DgroupId=</span>com.javachen.spark <span class="variable">-DartifactId=</span>spark-examples <span class="variable">-DarchetypeArtifactId=</span>maven-archetype-quickstart <span class="variable">-DinteractiveMode=</span><span class="constant">false</span></div></pre></td></tr></table></figure>
 
+<p>Maven安装本地jar到本地仓库，举例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ mvn install:install-file <span class="variable">-DgroupId=</span>com.gemstone.gemfire <span class="variable">-DartifactId=</span>gfsh <span class="variable">-Dversion=</span><span class="number">6.6</span> <span class="variable">-Dpackaging=</span>jar <span class="variable">-Dfile=</span>/backup/gfsh-<span class="number">6.6</span>.jar</div></pre></td></tr></table></figure>
+
+<p>解决m2e插件maven-dependency-plugin问题：</p>
+<pre><code><span class="tag">&lt;<span class="title">build</span>&gt;</span>
+    <span class="tag">&lt;<span class="title">pluginManagement</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">plugins</span>&gt;</span>
+            <span class="tag">&lt;<span class="title">plugin</span>&gt;</span>
+                <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.eclipse.m2e<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+                <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>lifecycle-mapping<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+                <span class="tag">&lt;<span class="title">version</span>&gt;</span>1.0.0<span class="tag">&lt;/<span class="title">version</span>&gt;</span>
+                <span class="tag">&lt;<span class="title">configuration</span>&gt;</span>
+                    <span class="tag">&lt;<span class="title">lifecycleMappingMetadata</span>&gt;</span>
+                        <span class="tag">&lt;<span class="title">pluginExecutions</span>&gt;</span>
+                            <span class="tag">&lt;<span class="title">pluginExecution</span>&gt;</span>
+                                <span class="tag">&lt;<span class="title">pluginExecutionFilter</span>&gt;</span>
+                                    <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+                                    <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>maven-dependency-plugin<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+                                    <span class="tag">&lt;<span class="title">versionRange</span>&gt;</span>[2.0,)<span class="tag">&lt;/<span class="title">versionRange</span>&gt;</span>
+                                    <span class="tag">&lt;<span class="title">goals</span>&gt;</span>
+                                        <span class="tag">&lt;<span class="title">goal</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="title">goal</span>&gt;</span>
+                                    <span class="tag">&lt;/<span class="title">goals</span>&gt;</span>
+                                <span class="tag">&lt;/<span class="title">pluginExecutionFilter</span>&gt;</span>
+                                <span class="tag">&lt;<span class="title">action</span>&gt;</span>
+                                    <span class="tag">&lt;<span class="title">ignore</span> /&gt;</span>
+                                <span class="tag">&lt;/<span class="title">action</span>&gt;</span>
+                            <span class="tag">&lt;/<span class="title">pluginExecution</span>&gt;</span>
+                        <span class="tag">&lt;/<span class="title">pluginExecutions</span>&gt;</span>
+                    <span class="tag">&lt;/<span class="title">lifecycleMappingMetadata</span>&gt;</span>
+                <span class="tag">&lt;/<span class="title">configuration</span>&gt;</span>
+            <span class="tag">&lt;/<span class="title">plugin</span>&gt;</span>
+        <span class="tag">&lt;/<span class="title">plugins</span>&gt;</span>
+    <span class="tag">&lt;/<span class="title">pluginManagement</span>&gt;</span>
+
+    <span class="tag">&lt;<span class="title">plugins</span>&gt;</span>
+        <span class="tag">&lt;<span class="title">plugin</span>&gt;</span>
+            <span class="tag">&lt;<span class="title">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="title">groupId</span>&gt;</span>
+            <span class="tag">&lt;<span class="title">artifactId</span>&gt;</span>maven-dependency-plugin<span class="tag">&lt;/<span class="title">artifactId</span>&gt;</span>
+            <span class="tag">&lt;<span class="title">executions</span>&gt;</span>
+                <span class="tag">&lt;<span class="title">execution</span>&gt;</span>
+                    <span class="tag">&lt;<span class="title">id</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="title">id</span>&gt;</span>
+                    <span class="tag">&lt;<span class="title">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="title">phase</span>&gt;</span>
+                    <span class="tag">&lt;<span class="title">goals</span>&gt;</span>
+                        <span class="tag">&lt;<span class="title">goal</span>&gt;</span>copy-dependencies<span class="tag">&lt;/<span class="title">goal</span>&gt;</span>
+                    <span class="tag">&lt;/<span class="title">goals</span>&gt;</span>
+                    <span class="tag">&lt;<span class="title">configuration</span>&gt;</span>
+                        <span class="tag">&lt;<span class="title">outputDirectory</span>&gt;</span>${project.build.directory}/lib<span class="tag">&lt;/<span class="title">outputDirectory</span>&gt;</span>
+                        <span class="tag">&lt;<span class="title">excludeTransitive</span>&gt;</span>false<span class="tag">&lt;/<span class="title">excludeTransitive</span>&gt;</span>
+                        <span class="tag">&lt;<span class="title">stripVersion</span>&gt;</span>true<span class="tag">&lt;/<span class="title">stripVersion</span>&gt;</span>
+                    <span class="tag">&lt;/<span class="title">configuration</span>&gt;</span>
+                <span class="tag">&lt;/<span class="title">execution</span>&gt;</span>
+            <span class="tag">&lt;/<span class="title">executions</span>&gt;</span>
+        <span class="tag">&lt;/<span class="title">plugin</span>&gt;</span>
+    <span class="tag">&lt;/<span class="title">plugins</span>&gt;</span>
+<span class="tag">&lt;/<span class="title">build</span>&gt;</span>
+</code></pre>
       
     </div>
     <footer>
@@ -2802,7 +2862,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>26</small></li>
+    <li><a href="/tags/Java/">Java</a><small>27</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   

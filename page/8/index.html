@@ -297,6 +297,530 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2009-11-08T10:11:28.000Z"><a href="/2009/11/08/effective-java/">11月 8 2009</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2009/11/08/effective-java/">Effective Java读书笔记</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="创建和销毁对象">创建和销毁对象</h2>
+<h3 id="第1条：考虑用静态工厂方法代替构造函数">第1条：考虑用静态工厂方法代替构造函数</h3>
+<p>好处</p>
+<ul>
+<li>静态工厂方法有名字，表达更清楚。</li>
+<li>不需创建新的对象。</li>
+<li>可以返回原返回类型的子类型对象。应用：<br>  a) 返回类型定义为接口，则返回的所有实例对象的细节都可以被隐藏，如Collections。<br>  b) 返回对象所属的类在写该静态方法时可以不存在。</li>
+</ul>
+<p>缺点</p>
+<ul>
+<li>类如果不含public或者protected构造函数，就不能被子类化，如不能实例化Collections的任一实现类。</li>
+<li>与其他静态方法没有区别，不像构造函数一样明显。但使用标准的命名习惯：valueOf和getInstance，可以客服一定的缺点。 </li>
+</ul>
+<h3 id="第2条：使用私有构造函数强化singleton属性">第2条：使用私有构造函数强化singleton属性</h3>
+<p>将构造函数设为private是为了避免其他类调用已确保唯一性（不写显示构造函数则系统提供默认构造函数且为public）。</p>
+<p>两种实现singleton的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton INSTANCE = <span class="keyword">new</span> Singleton();</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">private</span> <span class="title">Singleton</span>(){}</div></pre></td></tr></table></figure>
+
+<p>构造方法只在初始化INSTANCE时被调用一次。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton INSTANCE = <span class="keyword">new</span> Singleton();</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">private</span> <span class="title">Singleton</span>(){}</div><div class="line"><span class="comment">//</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="title">getInstance</span>(){ <span class="keyword">return</span> INSTANCE};</div></pre></td></tr></table></figure>
+
+<p>第一个好处在于类成员明确表明了类是一个singleton；而第二个则提供了灵活性，允许在不改变API的情况下改变类是否为singleton。<br>singleton类在序列化的时候需要提供readResolve()确保singleton性，否则一个序列化的实例在每次反序列化的时候，都会导致创建一个新的实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> Object <span class="title">readResolve</span>() <span class="keyword">throws</span> ObjectStreamException { </div><div class="line">	<span class="keyword">return</span> INSTANCE;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<h3 id="第3条：通过私有构造函数强化不可实例化的能力">第3条：通过私有构造函数强化不可实例化的能力</h3>
+<p>缺点：类不能被子类化，因为子类的构造函数需要调用超类的构造函数。</p>
+<h3 id="第4条：避免创建重复的对象">第4条：避免创建重复的对象</h3>
+<p>String s = “s”;优于String s = new String(“s”);因为后者每次都创建新的对象而前者不是。</p>
+<p>同时提供静态工厂函数和构造函数的非可变类，使用静态工厂函数可以避免每次创建新的对象，如Boolean.valueOf(String)优于Boolean(String)。</p>
+<p>不会被修改的可变类</p>
+<p>只有重量级的对象才需要尽可能的避免创建对象工作，应该重用则重用。</p>
+<h3 id="第5条：消除过期的对象引用">第5条：消除过期的对象引用</h3>
+<p>“清空对象引用”这样的操作应该是一种例外，而不是一种规范行为。类自己管理它的内存，就应该警惕内存泄漏问题。一旦一个元素被释放掉，则该元素中包含的任何对象引用应该要被清空。</p>
+<p>内存泄漏的另一个常见来源是缓存。</p>
+<h3 id="第6条：避免使用终结函数">第6条：避免使用终结函数</h3>
+<p>一般用try-finally块来回收其他的非内存资源。</p>
+<p>JLS不仅不保证终结函数会被及时地执行，而且根本就不保证它们会被执行。</p>
+<p>如果一个类封装的资源（例如文件或者线程）确实需要回收，只需提供一个显式的终止方法，并要求该类的客户在每个实例不再有用的时候调用这个方法。该实例必须记录下自己是否已经被终止了：显式的终止方法必须在一个私有域中记录下“该对象已经不再有效了”，其他的方法必须检查这个域，如果在对象已经被终止之后，这些方法被调用的话，那么它们应该抛出IllegalStateException异常。</p>
+<p>显式的终止方法通常与try-finally结构结合起来使用，以确保及时终止。在finally子句内部调用显式的终止方法可以保证：即使在对象被使用的时候有异常被抛出来，该终止方法也会被执行。</p>
+<p>finalize()的合理用途：</p>
+<ul>
+<li>充当释放资源最后的安全网（虽然效果不确定，但比完全没有好）。</li>
+<li>终止非关键的本地资源。</li>
+</ul>
+<p>使用了终结函数，就要调用super.finalize。如果要把一个终结函数与一个公有的非final类关联起来，考虑使用终结函数守卫者，以确保即使子类的终结函数未能调用super.finalize，该终结函数也会被执行。</p>
+<h2 id="对于所有对象都通用的方法">对于所有对象都通用的方法</h2>
+<p>尽管Object是一个具体类，但是设计它主要是为了扩展。它的所有非final方法（equals、</p>
+<p>hashCode、toString、clone和finalize）都有明确的通用约定（general contract），它们都是为了要被改写（override）而设计的。任何一个类在改写这些方法的时候，有责任遵守这些通用约定；如果不能做到这一点，则其他一些依赖于这些约定的类就无法与这些类结合在一起正常运作。 </p>
+<h3 id="第7条：在改写equals的时候请遵守通用约定">第7条：在改写equals的时候请遵守通用约定</h3>
+<p>不需改写equals的情况</p>
+<ul>
+<li>一个类的每个实例本质上都是惟一的。</li>
+<li>不关心一个类是否提供了“逻辑相等（logical equality）”的测试功能。</li>
+<li>超类已经改写了equals，从超类继承过来的行为对于子类也是合适的。</li>
+<li>一个类是私有的，或者是包级私有的，并且可以确定它的equals方法永远也不会被调用。</li>
+</ul>
+<p>但最好改写，以免万一有一天它会被调用到，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">equals</span>(Object o){ <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException();}</div></pre></td></tr></table></figure>
+
+<p>equals()约定：等价关系</p>
+<ul>
+<li>自反性。x==x。</li>
+<li>对称性。x==y，则y==x。</li>
+<li>传递性。x==y，y==z，则x==z。</li>
+<li>一致性。相等的永远相等，不等的永远不等。</li>
+<li>非零性。x!=null，x==null=false。</li>
+</ul>
+<p>标准equals()写法</p>
+<ul>
+<li>if (this == obj) return true; //优化比较</li>
+<li>if (obj == null) return false; //优化比较</li>
+<li>if (getClass() != obj.getClass()) return false;<br>  转换obj类型为比较类型</li>
+<li>对象的关键域比较<br>  float域：使用Float.floatToIntBits转换成int类型的值，然后使用==操作符比较int类型的值。（float存在特殊常量，double类似）<br>  double域：使用Double.doubleToLongBits转换成long类型的值，然后使用==操作符比较long类型的值。<br>  引用域：null合法使用field == null ? obj.field == null : field.equals(obj.field)<br>  优先比较最可能不一致的域或开销最低的域，两者皆满足最好。</li>
+</ul>
+<p>equals()建议</p>
+<ul>
+<li>写完后验证对称、传递、一致性，特别是前两个。</li>
+<li>改写equals()同时改写hashCode()。</li>
+<li>让equals()简单而不是过于聪明地适应更多的等级关系。</li>
+<li>不要使equals()依赖于不可靠的资源。</li>
+<li>不要将equals()声明中的Object对象替换为其他的类型，这样是overload而不是override。</li>
+</ul>
+<h3 id="第8条：改写equals时总是要改写hashCode">第8条：改写equals时总是要改写hashCode</h3>
+<p>hashCode()约定</p>
+<ul>
+<li>程序运行期，equals()信息不变则hashCode()值不变；程序两次运行中的hashCode()值可以不一致。</li>
+<li>x.equals(y)，则x.hashCode() == y.hashCode()。<br>  如果x，y的类不改写hashCode()，则默认调用Object.hashCode()，x，y为两个对象，Object.hashCode()每个对象的值都不一样，即x.hashCode() != y.hashCode()。</li>
+<li>x，y不equals，则它们的hashCode()不必不等，但最好不等以提高性能。</li>
+</ul>
+<p>hahsCode()标准写法</p>
+<ul>
+<li>把某个非零常数值，例如17，保存在一个叫result的int类型的变量中。</li>
+<li>对于对象中每一个关键域f（指equals方法中考虑的每一个域），完成以下步骤：<br>  a) 为该域计算int类型的散列码c<ol>
+<li>boolean，计算(f ? 0 : 1)。</li>
+<li>byte、char、short或者int，计算(int)f。</li>
+<li>long，计算(int)(f ^ (f &gt;&gt;&gt; 32))。</li>
+<li>float，则计算Float.floatToIntBits(f)。</li>
+<li>double，计算Double.doubleToLongBits(f)得到一个long类型的值，再按iv.对该long型值计算散列值。</li>
+<li>对象引用，且该类的equals方法通过递归调用equals的方式来比较这个域，则同样对这个域递归调用hashCode()。如果要求一个更为复杂的比较，则为这个域计算一个“规范表示（canonicalrepresentation）”，然后针对这个范式表示调用hashCode()。如果这个域的值为null,则返回0（或者其他某个常数，但习惯上使用0）。</li>
+<li>数组，把每一个元素当做单独的域来处理。<br>b) result == 37 * result + c（eclipse自动生成hashCode()时是用的31）。</li>
+</ol>
+</li>
+<li>返回result。</li>
+<li>检查“是否相等的实例具有相等的散列码”。</li>
+</ul>
+<h3 id="第9条：总是要改写toString">第9条：总是要改写toString</h3>
+<p>主要就是要用toString()将一个对象进行间接而又尽量清楚的说明，其他没什么好说的，具体内容看书吧。</p>
+<h3 id="第10条：谨慎地改写clone">第10条：谨慎地改写clone</h3>
+<p>clone()注意</p>
+<ul>
+<li>新的SDK中已没有不能在clone()中调用构造器的规定。</li>
+<li>对于复杂对象（包含对象域的对象），需要递归地调用clone()，但需要注意递归层次过多时容易造成栈溢出。</li>
+<li>clone结构与指向可变对象的final域的正常用法是不兼容的，因为无法使用除初始化以外的方法给final域赋值。需要找到方案在原始对象和克隆对象之间可以安全地共享此可变对象。</li>
+<li>复制复制对象的一个优雅方法：先调用super.clone()，然后把结果对象中的所有域都设置到它们的空白状态，然后调用高层的方法来重新产生对象的状态，但运行起来没有“直接操作对象和其克隆的内部状态的clone方法”快。</li>
+<li>clone方法不应该在构造过程中，调用新对象中任何非final方法（private方法可以看做final）。</li>
+<li>Cloneable接口不应该不被其他接口继承，为继承而设计的类也不应实现该接口。</li>
+</ul>
+<p>clone()好的替代方法</p>
+<ul>
+<li>拷贝构造函数，以本身对象为唯一参数的构造函数。</li>
+<li>静态工厂方法，同样以要拷贝的对象为唯一参数。</li>
+</ul>
+<h3 id="第11条：考虑实现Comparable接口">第11条：考虑实现Comparable接口</h3>
+<p>一个类实现了Comparable接口，就表明它的实例具有内在的排序关系。</p>
+<p>约定</p>
+<ul>
+<li>x.compareTo(y) == - y.compareTo(x)（这也暗示着，当且仅当y.compareTo(x)抛出一个异常的时候，x.compareTo(y)也必须抛出一个异常）。</li>
+<li>可传递性。</li>
+<li>若x.compareTo(y) == 0则x.compareTo(z) == y.compareTo(z)。</li>
+<li>强烈建议(x.compareTo(y) == 0) == (x.equals(y))，任何实现了Comparable接口的类，若违反了这个条件，应该明确予以说明：“注意：该类具有内在的排序功能，但是与equals不一致。”</li>
+</ul>
+<p>注意</p>
+<ul>
+<li>没有一种简单的方法可以做到，在扩展一个新的可实例化的类的时候，既增加了新的特征，同时又保持了compareTo约定。<br>  如果你想为一个实现了Comparable接口的类增加一个关键特征，请不要扩展这个类；而是编写一个不相关的类，其中包含一个域，其类型是第一个类。然后提供一个“视图（view）”方法返回这个域。这样做，你既可以自由地在第二个类上实现compareTo()，同时也允许客户在必要的时候，把第二个类的实例当做第一个类的实例来看待。</li>
+<li>在对实参进行类型转换之前，不需要检查实参的类型。<br>  如果实参的类型不合适，则compareTo()应该抛出ClassCastException异常。如果实参为null，则compareTo()应该抛出NullPointerException异常。</li>
+<li>比较对象引用域可以通过递归地调用compareTo()来实现。<br>  如果一个域并没有实现Comparable接口，或者需要使用一个非标准的排序关系，可以使用一个显式的Comparator。或者编写专门的Comparator，或者使用已有的Comparator。</li>
+<li>比较原语类型的域，可以使用关系操作符&lt;和&gt;；比较数组域时，可以把这些指导原则应用到每一个元素上。<br>  如果一个类有多个关键域，必须从最关键的域开始，逐步进行到所有的重要域。如果有一个域的比较产生了非零的结果，则整个比较操作结束，并返回该结果。如果最关键的域是相等的，则进一步比较次最关键的域，以此类推。如果所有的域都是相等的，则对象是相等的，返回零。</li>
+</ul>
+<h2 id="类和接口">类和接口</h2>
+<h3 id="第12条：使类和成员可访问能力最小化">第12条：使类和成员可访问能力最小化</h3>
+<p>尽可能是每一个类或成员不被外界访问</p>
+<ul>
+<li>设计了公有API后，将其他所有成员都变成private，确实有必要的情况下才给予默认或protected。</li>
+<li>公有类的protected成员是类导出API的一部分，必须永远被支持，每一个protected成员都代表了该类对一个实现细节的公开承诺，应尽量少用。</li>
+<li>共有类不应包含公有域，静态final常量除外，这些final域指向的对象应是非可变对象。<br>  非零长度的数组是可变的（数组长度不变但数组中对象可变），所以具有公有的静态final域数组几乎总是错误的。</li>
+</ul>
+<h3 id="第13条：支持非可变性">第13条：支持非可变性</h3>
+<p>非可变类实例不能被修改，实例中包含的所有信息必须在该实例被创建的时候就提供出来，即所有域都应该被初始化。</p>
+<p>约定</p>
+<ul>
+<li>不提供任何会修改对象的方法。</li>
+<li>保证没有可被子类改写的方法。<br>  常有做法是设置类为final，更好的替代方案是将类的构造方法设为private或package，添加公有的静态工厂方法代替公有的构造方法。这种方案最灵活，允许在包内对类进行扩展，而对包外的用户来说类又相当于是final的；同时，静态工厂相对构造函数也有优势。</li>
+<li>所有的域都是final。<br>  真正的要求是没有方法能对对象状态产生外部可见的变化。可以有若干冗余非final域来对一些计算结果进行缓存处理。</li>
+<li>所有的域都是private。</li>
+<li>保证对于任何可变组件的互斥访问。<br>  如果类具有指向可变对象的域，必须确保该类客户无法获得指向这些对象的引用；不使用客户提供的引用来初始化这样的域；不在任何一个访问方法中返回该对象的引用；在构造函数、访问方法和readObject()中使用保护性拷贝技术。</li>
+</ul>
+<p>注意</p>
+<ul>
+<li>非可变类线程安全，不需同步，可以被自由地共享，所以不需要也不应该为其提供clone()或构造拷贝函数。</li>
+<li>非可变类对象的内部信息业可以共享。</li>
+<li>真正唯一的缺点：对不同值都要有一个单独的对象，某些时候可能对性能影响较大，解决方法是对其添加可变配套类进行优化，如String和StringBuffer。</li>
+<li>如果非可变类包含若干指向可变对象的域而又实现了Serializable接口，必须提供一个显示的readObject()或readResolve()，默认的readObject()可以使一个攻击者用非可变类创建可变的实例。</li>
+<li>坚决不要为get()编写相应的set()，除非确有必要使一个非可变类成为可变的。总是应该让一些小的值对象成为非可变类。可以考虑将一些大的值对象成为非可变类，在确实有性能优化的必要时才为非可变类提供公有的可变配套类。</li>
+<li>如果一个类不能成为非可变类，也仍然要尽量限制其可变性。构造函数应该完全初始化对象并建立所有的约束关系，除非有绝对的理由，否则不要在构造函数之外再提供一个公有的初始化方法或一个“重新初始化”的方法。</li>
+</ul>
+<h3 id="第14条：复合(组合)优先于继承">第14条：复合(组合)优先于继承</h3>
+<p>这里的继承仅指类之间的继承（extends）而不包括实现接口（implements）。</p>
+<p>包内使用继承安全，包外使用继承危险，因为其打破了包的封装性。除非被继承的超类是专门为继承而设计并有很好的说明文档。</p>
+<p>包外的子类改写包内的超类方法时，由于超类没有暴露方法的细节，所以其实现方式很可能和你想象中的准备用在改写子类方法中的方式不一样，从而造成各种问题；同时，在向子类中添加超类没有的新方法时，你也不能确定超类以后会不会添加和该方法冲突的方法。使用复合（组合），将超类作为新类的一个私有域可以解决以上问题。</p>
+<p>只有A和B是is a关系时才使用继承，即每一个B都是A。使用复合，说明B本质上和A不完全相同。</p>
+<h3 id="第15条：要么专门为继承而设计，并给出说明文档，要么禁止继承">第15条：要么专门为继承而设计，并给出说明文档，要么禁止继承</h3>
+<p>对于专门为继承而设计的类注意</p>
+<ul>
+<li>文档必须精确地描述了改写每一个方法所带来的影响：对于每一个public或protected的方法或构造函数，必须指明它调用了哪些可改写的方法，调用的顺序，每个调用结果又是如何处理后续的处理过程的等等。</li>
+<li>必须通过某种形式提供适当的钩子（hook），以便能够进入它的内部工作流程中，形式可以是精心选择的protected方法或保护域。</li>
+<li>构造函数、clone()和readObject()都不能调用一个可改写的方法，无论是直接或间接地调用。超类的构造函数在子类构造函数之前运行，所以子类中被改写的方法会在子类构造函数运行之前被调用从而造成错误结果。</li>
+<li>若实现Serializable并有readResolve()或writeReplace()，则必须使这两个方法称为protected而不是private。 </li>
+</ul>
+<p>禁止继承</p>
+<p>对于那些并非为了安全地进行子类化而设计和编写文档的类，禁止子类化。如果因为某些原因必须要扩展一个类，那么确保这个类不会在方法和构造函数中直接或间接地调用其可被改写的方法（public和protected），即有自用特性（会被本类的其他方法调用）的方法应该是private的。</p>
+<h3 id="第16条：接口优于抽象类">第16条：接口优于抽象类</h3>
+<p>接口定义一种服务/功能，实现该接口的类可以提供这种服务/功能。</p>
+<p>对于希望导出的重要接口，提供一个抽象的骨架实现类来负责接口实现的相关工作（提供基本的骨架代码）。骨架类是为继承而设计的，当然要遵循设计继承类的要求，中文版这里翻译错了，多了一个“不”，英文原版是 <strong><em>“Because skeletal implementationsare designed for inheritance, you should follow all of the design and documentation guidelines in Item 15.”</em></strong></p>
+<h3 id="第17条：接口只是被用于定义类型">第17条：接口只是被用于定义类型</h3>
+<p>常量接口是对接口的不良使用。定义在接口中的常量或方法应该是永远不变的。导出常量应该采用类型安全枚举类或不可被实例化的工具类来实现。</p>
+<h3 id="第18条：优先考虑静态成员类">第18条：优先考虑静态成员类</h3>
+<p>静态成员类</p>
+<ul>
+<li>可以看做普通类，其实例化的时候不需要外围类的实例。</li>
+<li>访问规则上可以看做外围类的一个静态成员。</li>
+<li>通常的用法是做公有的辅助类与其外部类一起使用，表示类与类之间的关系；私有静态成员类通常用法是代表外围类对象的组件。</li>
+<li>如果声明的成员类不需要访问外围类实例，则使用静态成员类，这样效率更好。</li>
+</ul>
+<p>非静态成员类</p>
+<ul>
+<li>实例化的时候需要一个外围类的实例，实例化后和创建其的外围类实例形成一个一对一的关系，表示实例与实例间的关系。</li>
+<li>通常用在适配器模式中，成员类适配为一个和外围类不相关的类，外围类的实例通过成员类取得这个不相关类的功能。和组合中将不相关类作为类的一个私有域类似，但组合中如果没有成员类的话，就只能直接使用已有不相关的类的实例（如果声明私有域的时候用的是接口，那么就必须有其他类实现了这个接口，从而才能使用），而成员类则可以用来对类进行扩展（实现接口或继承类），可以看做能进行扩展的私有域。</li>
+<li>如果成员类是导出类的public或protected域，则不能为静态成员类。</li>
+</ul>
+<p>匿名类</p>
+<ul>
+<li>同时被声明和实例化，只能被用作被实例化的那个点上，被实例化之后不能再被引用，即只能用一次。</li>
+<li>不会声明新方法，因为新增方法无法在“一次性”后被访问。</li>
+<li>简短不影响代码可读性。</li>
+<li>常见用法：创建函数对象（实现接口，或者说实现接口中的方法）；创建过程对象（如Thread）；用在静态工厂方法内部；在复杂的类型安全枚举类型中（要求为每个实例提供单独的子类）用于公有的静态final域的初始化器中。</li>
+</ul>
+<h2 id="C语言结构的替代">C语言结构的替代</h2>
+<p>虽说这章主要面向熟悉C语言的读者，但对C不是太熟悉的读者来说看一下了解一下思想还是非常有好处的。</p>
+<h3 id="第19条：用类代替结构">第19条：用类代替结构</h3>
+<p>公有类不应该直接暴露数据域，包级私有或私有嵌套类可以暴露数据域。 </p>
+<h3 id="第20条：用类层次来代替联合">第20条：用类层次来代替联合</h3>
+<h3 id="第21条：用类来代替enum结构">第21条：用类来代替enum结构</h3>
+<p>将常量定义在类中的问题：</p>
+<ul>
+<li>性能；</li>
+<li>常量名和常量值都要暴露给客户；</li>
+<li>书写错误在编译时无法知道。</li>
+</ul>
+<p>类型安全枚举</p>
+<ul>
+<li>方法：定义一个类代表枚举类型，构造函数私有，提供公有的静态final域，使枚举类型中的每一个常量都对应一个该类定义的域。即用预定义的实例来对应枚举类型中的常量。</li>
+<li>提供编译时的类型安全性。</li>
+<li>常量值没有被编译到客户代码中，可以方便地添加新的常量而无需编译客户代码。</li>
+<li>可以改写toString()打印常量名或常量值。</li>
+<li>类可以添加方法或实现任何接口提供很多功能。</li>
+<li>运算性能同int型常量，但装载类和构造对象时间、空间开销大。</li>
+</ul>
+<h3 id="第22条：用类和接口来代替函数指针">第22条：用类和接口来代替函数指针</h3>
+<p>函数指针主要是为了实现Strategy模式，Java中用接口来表示策略，为每一个具体策略声明一个实现该接口的类。如果具体策略只用一次，通常使用匿名类来声明和实例化这个策略；如果具体策略需要被导出以重复使用，则一个私有静态成员类来声明和实例化，再通过一个公有final域导出，其类型为策略接口。</p>
+<h2 id="方法">方法</h2>
+<h3 id="第23条：检查参数的有效性">第23条：检查参数的有效性</h3>
+<p>在方法执行计算任务之前检查其参数，除非有效性检查工作代价非常昂贵、不切实际或计算本身隐含检查。</p>
+<h3 id="第24条：需要时使用保护性拷贝">第24条：需要时使用保护性拷贝</h3>
+<p>防止客户可以对方法或构造函数中提供的对象的内部状态进行修改。在对象作为参数的构造函数中，如果该对象内部状态能被客户修改，则使用对象的副本进行构造（副本不暴露给客户）；在方法返回对象时返回给要保护的对象的副本。</p>
+<p>对象内部的组件尽量使用非可变对象。</p>
+<p>保护性拷贝动作在检查参数的有效性之前进行，且有效性检查拷贝后的对象而不是原始对象。防止其他线程在检查参数有效性后改变参数对象，使之后进行拷贝的对象不正确。</p>
+<p>第25条：谨慎设计方法的原型</p>
+<ul>
+<li>谨慎选择方法的名字。规范、易懂。</li>
+<li>不要过于追求提供便利的方法。对于一个类型支持的每一个动作提供一个功能完全的方法。只有当某操作被频繁使用的时候才考虑提供快捷方法。</li>
+<li>避免长长的参数列表。三个参数一般为最大值。减少参数数目的方法：<br>  a)将方法分解为多个方法，某个方法的结果可以由若干子方法一起使用来得到。<br>  b)创建辅助类，将一些频繁出现的参数序列封装到一个辅助类中。</li>
+<li>对应参数类型，优先使用接口。</li>
+<li>谨慎地使用函数对象。</li>
+</ul>
+<h3 id="第26条：谨慎地使用重载">第26条：谨慎地使用重载</h3>
+<p>对于重载（Overload）的选择是静态的，即执行编译时确定的实例类型中的方法；对于改写（Override）的选择是动态的，即运行时确定执行具体实例中被改写的方法版本，而不管编译时这个实例的类型。</p>
+<p>保守但安全的策略是永远不要导出两个具有相同参数数目的方法。（对，是数目，这就意味着使用重载的时候每个重载的方法参数都必须和其他完全不一致，相当的保守……）如果数目必须相同，那就不使用重载，而是换个名字。</p>
+<p>对于构造函数来说，你没有改名字机会，所以你会碰到需要导出相同参数数目的构造函数。但由于构造函数不能被改写，所以不用担心重载和改写的相互影响，只需单纯考虑参数数目相同时怎么办。如果两个重载方法的参数序列中对应位置的参数不能相互转换，那么这两个方法就没有问题。所以应该避免同一组参数经过类型转换就可以被传递给不同的重载方法。如果不能避免的话，就让接受同一组参数所有重载的方法行为一致。 </p>
+<h3 id="第27条：返回零长度的数组而不是null">第27条：返回零长度的数组而不是null</h3>
+<p>这样做客户端代码更简单，不用专门来处理null，性能也不差。书上提高性能的例子是实用中可以经常使用的一个技巧。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> List cheesesInStock =……;</div><div class="line"></div><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Cheese[] NULL_CHEESE_ARRAY = <span class="keyword">new</span> Cheese[<span class="number">0</span>];</div><div class="line"></div><div class="line"><span class="keyword">public</span> Cheese[] <span class="title">getCheeses</span>(){</div><div class="line"></div><div class="line">      <span class="keyword">return</span> (Cheese[])cheesesInStock.toArray(NULL_CHEESE_ARRAY);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+<h3 id="第28条：为所有导出的API元素编写文档注释">第28条：为所有导出的API元素编写文档注释</h3>
+<ul>
+<li>每个方法的注释应简洁地描述出它和客户之间的约定，说明这个方法做了什么（除了专门为继承而设计的类中的方法）。</li>
+<li>列出方法的前置条件（由@throws标签和某些受影响的参数@param描述）和后置条件（由@return标签描述）。</li>
+<li>描述方法的副作用（系统状态中一个可观察到的变化，它不是为了获得后置条件而要求的变化）和类的线程安全性。</li>
+<li>每一个文档注释的第一句话是该注释所属元素的概要描述。</li>
+</ul>
+<h2 id="通用程序设计">通用程序设计</h2>
+<h3 id="第29条：将局部变量的作用域最小化">第29条：将局部变量的作用域最小化</h3>
+<ul>
+<li>在第一次使用局部变量的地方声明它，声明的时候几乎都应该包含一个初始化表达式。</li>
+<li>一般情况下for循环优先于while。</li>
+<li>让方法小而集中。</li>
+</ul>
+<h3 id="第30条：了解和使用库">第30条：了解和使用库</h3>
+<h3 id="第31条：如果要求精确的答案，请避免使用float和double">第31条：如果要求精确的答案，请避免使用float和double</h3>
+<p>float和double执行二进制浮点运算，能快速取得较为精确的结果，但不完全精确。需要精确结果时使用BigDecimal，或者用int或long加上相应的自定义操作。</p>
+<h3 id="第32条：如果其他类型更适合，则尽量避免使用字符串">第32条：如果其他类型更适合，则尽量避免使用字符串</h3>
+<ul>
+<li>不适合代替其他的值类型。虽然某些数据在进入程序中时是以字符串的形式存在，但如果数据的本质不是字符串而是如int等，那就应该转换为相适应的类型。</li>
+<li>不适合代替枚举类型。应使用类型安全枚举类型或int值。</li>
+<li>不适合代替聚集类型。应使用静态嵌套类。</li>
+<li>不适合代替能力表。</li>
+</ul>
+<h3 id="第33条：了解字符串连接的性能">第33条：了解字符串连接的性能</h3>
+<p>大规模字符连接用StringBuffer，因为String为非可变对象，n个String进行连接，性能影响为n的平方。</p>
+<h3 id="第34条：通过接口引用对象">第34条：通过接口引用对象</h3>
+<p>用接口来引用对象会使程序更灵活，如果没有合适的接口，则使用类层次结构中提供了所需功能的最高类。</p>
+<h3 id="第35条：接口优先于映像机制">第35条：接口优先于映像机制</h3>
+<p>映像就是“反射”。通常，普通应用在运行时刻不应该以反射方式访问对象。如果需要处理编译时未知的类，尽量使用反射方式实例化对象，访问对象则使用编译时已知的接口或超类。</p>
+<p>反射的缺点</p>
+<ul>
+<li>损失了编译时类型检查的好处。</li>
+<li>代码冗长。</li>
+<li>性能比普通访问慢2倍左右。</li>
+</ul>
+<h3 id="第36条：谨慎地使用本地方法">第36条：谨慎地使用本地方法</h3>
+<p>使用本地语言提高性能的做法不值得提倡，JVM已经足够快。本地语言不安全、平台相关、进入和退出时有较高的固定开销。</p>
+<h3 id="第37条：谨慎地进行优化">第37条：谨慎地进行优化</h3>
+<p>不要因为性能而牺牲合理的结构，性能问题应该在设计（API等）的时候考虑，API设计好了性能自然就好了。</p>
+<p>即使使用性能剖析工具，结果也会随着JVM的不同而不同。</p>
+<h3 id="第38条：遵守普遍接受的命名惯例">第38条：遵守普遍接受的命名惯例</h3>
+<p>java的命名惯例分为两大类：字面的和语法的，字面的基本上可以视为强制性的，一般必须遵守；语法的稍灵活，但也有一般应该遵守的若干建议规则。</p>
+<p>语法命名惯例</p>
+<ul>
+<li>类：名词/名词短语；接口或者与类相同，或者以”-able”或”-ible”结尾的形容词。</li>
+<li>方法：动词/动词短语。<br>  a)返回boolean，以“is”开头后加一个名词或形容词或短语。<br>  b)返回其他类型，用一个名词短语，或以”get”开头的动词短语。如方法所在的类是一个Bean，则强制要求以get开头。<br>  c)类包含对属性操作，用setAttribute或getAttribute格式命名。</li>
+<li>转换对象类型的方法：<br>  a)toType：返回不同类型的独立的对象，如Object.toString()。<br>  b)asType：返回视图，如Arrays.asList()。<br>  c)typeValue：返回与被调用对象同值的原语类型，如Integer.intValue()。</li>
+<li>静态工厂方法，用valueOf或getInstance。</li>
+</ul>
+<h2 id="异常">异常</h2>
+<h3 id="第39条：只针对不正常的条件才使用异常">第39条：只针对不正常的条件才使用异常</h3>
+<p>创建、抛出和捕获异常的开销昂贵，其初衷是用于不正常的情形，少有JVM会对它进行优化。正常的控制类里不应为了某种原因去使用异常。一个东西应该只用于被设计的用途，只做它该做的事情。</p>
+<h3 id="第40条：对应可恢复的条件使用被检查的异常，对于程序错误使用运行时异常">第40条：对应可恢复的条件使用被检查的异常，对于程序错误使用运行时异常</h3>
+<p>如果希望调用者能够恢复，应使用被检查的异常，并让调用者处理这个异常；如果程序抛出未检查的异常（运行时异常或错误），则说明这是不可恢复的情况，继续执行有害无益。</p>
+<p>用运行时异常指明程序错误，实现的所有未检查的抛出结构应该是RuntimeException的子类，不要再实现Error，Error应只由JVM保留。</p>
+<p>不清楚是否可恢复的时候使用未检查异常。（我个人觉得在开发的时候尽量不用被检查的异常，后期再根据情况添加）。</p>
+<h3 id="第41条：避免不必要地使用被检查的异常">第41条：避免不必要地使用被检查的异常</h3>
+<p>使用被检查异常的两个条件</p>
+<ul>
+<li>正确使用API不能阻止异常条件的产生。</li>
+<li>用户可以对产生的异常采取有效的动作。一般在catch中写e.printStackTrace();<br>  System.exit(1);这样的处理不能算得上是有效的。</li>
+</ul>
+<p>如果一个方法只抛出一个被检查的异常，可以使用其他方式来避免使用被检查的异常。</p>
+<p>方式例子：将抛出异常的方法分为两个方法，第一个方法返回boolean，表明是否应该抛出异常。具体如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">try</span>{</div><div class="line"></div><div class="line">	obj.action(args);</div><div class="line">}<span class="keyword">catch</span>(TheCheckedException e){</div><div class="line"></div><div class="line">	<span class="comment">//Handle exception condition</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>转换为：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span>(obj.actionPermitted(args)){</div><div class="line"></div><div class="line">	obj.action(args));</div><div class="line">}<span class="keyword">else</span>{</div><div class="line"></div><div class="line">	<span class="comment">//handle exception condition</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>方式不适用的情况：</p>
+<ul>
+<li>同步：对象在缺少外部同步的情况下被并发访问或可被外界改变状态。</li>
+<li>性能：actionPermitted()里需要重复action()的工作。</li>
+</ul>
+<h3 id="第42条：尽量使用标准的异常">第42条：尽量使用标准的异常</h3>
+<p>常用异常</p>
+<table>
+<thead>
+<tr>
+<th>异常</th>
+<th style="text-align:center">使用场合</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IllegalArgumentException</td>
+<td style="text-align:center">参数值不合适</td>
+</tr>
+<tr>
+<td>IllegalStateException</td>
+<td style="text-align:center">对于这个方法调用而言，对象的状态不合适(如初始化不恰当)</td>
+</tr>
+<tr>
+<td>NullPointerException</td>
+<td style="text-align:center">在null被禁止的情况下参数值为null</td>
+</tr>
+<tr>
+<td>IndexOutOfBoundsException</td>
+<td style="text-align:center">下标越界</td>
+</tr>
+<tr>
+<td>ConcurrentModificationException</td>
+<td style="text-align:center">在禁止并发修改的情况下，对象检测到并发修改</td>
+</tr>
+<tr>
+<td>UnsupportedOperationException</td>
+<td style="text-align:center">对象不支持客户请求的方法</td>
+</tr>
+</tbody>
+</table>
+<p>重用异常时要确保抛出异常的条件与该异常文档中描述的条件一致，而不是从名字上看可以使用。</p>
+<h3 id="第43条：抛出的异常要适合于相应的抽象">第43条：抛出的异常要适合于相应的抽象</h3>
+<p>异常转移：高层的实现应该捕获低层的异常，同时抛出一个可以按照高层抽象进行解释的异常。</p>
+<p>处理低层异常</p>
+<ul>
+<li>应尽量使低层的方法得到成功执行，不抛出异常。如检查传递给低层方法的参数。</li>
+<li>如果无法阻止低层的异常，则可以让高层来处理这些异常，将高层方法的用户与低层方法的问题隔离。如用日志记录低层的异常。</li>
+<li>1、2都不行，则使用异常转移。只有在低层方法的规范可以保证其抛出的异常对高层也适用的情况下才可以将异常从低层传播到高层。</li>
+</ul>
+<h3 id="第44条：每个方法抛出的异常都要有文档">第44条：每个方法抛出的异常都要有文档</h3>
+<h3 id="第45条：在细节消息中包含失败-捕获信息">第45条：在细节消息中包含失败-捕获信息</h3>
+<p>一个异常的toString()中应该包含所有对异常有贡献的参数和域的值。可以在异常的构造器中以参数的形式引入以上信息。</p>
+<h3 id="第46条：努力使失败保存原子性">第46条：努力使失败保存原子性</h3>
+<p>失败原子性：一个失败的方法调用应该是对象保持“它在被调用之前的状态”。对被检查的异常这尤为重要。</p>
+<p>方式</p>
+<ul>
+<li>方法中使用非可变对象。</li>
+<li>对于使用可变对象的方法，在执行前检查参数的有效性。即在处理过程中调整顺序，是可能失败的部分发生在对象状态被修改前。</li>
+<li>编写恢复代码，解释发生的失败，并使对象状态回滚到操作开始之前。</li>
+<li>在对象的临时拷贝上进行操作，操作完成后将临时拷贝上的结果复制给原对象。</li>
+</ul>
+<h3 id="第47条：不要忽略异常">第47条：不要忽略异常</h3>
+<h2 id="线程">线程</h2>
+<h3 id="第48条：对于共享可变数据的同步访问">第48条：对于共享可变数据的同步访问</h3>
+<p>同步可以保证线程不会看到对象处于不一致的状态（互斥），还可以让线程看到前一线程对对象状态进行的改变（对象的实时改变，通信）。</p>
+<p>Java保证读写一个非long或double的变量是原子的（读写引用也是原子的）。</p>
+<p>Java的原子性只保证互斥而不能保证通信，即只能保证线程读原子数据不会看到随机值，但不能保证线程写入的值对其他线程可见，所以在读写原子数据时同步不是可以省略的（除非对一个原子数据只读不写，这样的话就是常量了）。</p>
+<p>volatile关键字可以保证线程在读一个域的时候会看到最近被写入的值。</p>
+<h3 id="第49条：避免过多的同步">第49条：避免过多的同步</h3>
+<p>在同步区域中，要控制客户的行为，即不要调用可被改写的public或protected方法。</p>
+<p>在同步区域中应该做尽可能少的工作：获得锁，检查共享数据，根据需要转换共享数据，释放锁。</p>
+<h3 id="第50条：永远不要在循环的外面调用wait">第50条：永远不要在循环的外面调用wait</h3>
+<p>wait()使用的标准模式@唯一模式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">synchronized</span>(obj){</div><div class="line"></div><div class="line">      <span class="keyword">while</span>(&lt;condition does not hold&gt;)</div><div class="line"></div><div class="line">             obj.wait();</div><div class="line"></div><div class="line">      <span class="comment">//Perform action appropriate condition</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>一般情况下优先使用nofifyAll()，其更安全，可以避免不相关线程意外或恶意的等待。但nofifyAll()在处理信号量、有界缓冲区、读写锁时性能将退化到平方级。如果处于等待状态的所有线程都在等待同一个条件且每次只有一个线程可以从这个条件中被唤醒（如只有一个线程在特定的对象上等待），可以（不是一定要）使用notify()。</p>
+<p>第51条：不要依赖于线程调度器</p>
+<p>不同JVM线程调度器实现策略不同，依赖于线程调度器而达到正确性或性能要求的程序很可能是不可移植的。</p>
+<p>编写健壮的、响应良好的、可移植的多线程应用程序的最好办法：尽可能确保在任何给定时刻只有少量的可运行线程。</p>
+<p>保存可运行线程数量尽可能少的主要技术：让每个线程做少量的工作，使用Object.wait()等待某个条件的发生，或者使用Thread.sleep()睡眠一段时间。线程不应该忙等，即反复地检查一个数据结构以等待某些事件的发生。</p>
+<p>不要通过Thread.yield()来修正程序。同一个yield()在不同JVM上性能不同，可能变好，也可能变差。一般情况下，yield()的唯一用途是在测试期间人为地增加一个程序的并发性。</p>
+<p>不推荐调整线程优先级。线程优先级是Java平台上最不可移植的特征，也会因为JVM的不同存在差异，通过调整线程优先级来解决严重的活性问题是不合理的。</p>
+<p>yield()和线程优先级都是影响调度器的设施，可以用来提高一个正常工作的系统的服务质量，但不应用来修正一个不能工作的程序。</p>
+<h3 id="第52条：线程安全性的文档化">第52条：线程安全性的文档化</h3>
+<p>方法声明中出现synchronized只说明这是一个实现细节，而不是导出API的一部分。有了synchronized并不能确定方法是线程安全的。</p>
+<p>线程安全级别</p>
+<ul>
+<li>非可变的（immutable）：非可变对象，不需要外部同步。</li>
+<li>线程安全的（thread-safe）：可变对象，有足够的内部同步手段，可以并发使用无需外部同步。并发调用表现为按照某种全局一致的顺序依次执行，如Random和java.util.Timer。</li>
+<li>有条件的线程安全（conditionally thread-safe）：类（或关联类）中某些方法必须被顺序调用且不能受到其他线程的干扰，即执行这些方法序列时需要获得适当的锁。除此之外，该线程安全级别与thread-safe相同。如HashTable和Vector中的itretor需要外部同步。</li>
+<li>线程兼容的（thread-compatible）：每个方法调用都需要外部同步才能被安全地并发使用，如HashMap和ArrayList。</li>
+<li>线程对立的（thread-hostlie）：不能安全地被并发使用。根源在于类中方法会修改静态数据，这些静态数据可能会影响其他线程。Java平台中这样的类或方法很罕见。</li>
+</ul>
+<h4 id="对象锁">对象锁</h4>
+<p>获得锁一般只实例自身的锁，但如果一个对象代表另一个对象的视图，那需要获得后台对象上的锁。</p>
+<p>使用公有可访问的锁对象存在安全隐患。使用内部私有锁对象作为特别适合于专门为继承而设计的类。否则如果超类以它的实例作为锁对象，则子类可能会其造成妨碍。</p>
+<h3 id="第53条：避免使用线程组">第53条：避免使用线程组</h3>
+<h2 id="序列化">序列化</h2>
+<h3 id="第54条：谨慎地实现Serializable">第54条：谨慎地实现Serializable</h3>
+<p>实现Serializable的代价</p>
+<ul>
+<li>改变类的实现的灵活性将大大降低。需要仔细设计一个高质量的序列化形式并长期使用。</li>
+<li>增加了bug和安全漏洞的可能性。反序列化过程中需要保证由构造函数建立的约束关系且不允许用户访问正在构造的对象的内部信息。</li>
+<li>类的新版本发型会增加测试负担。需要测试在不同版本之间相互序列化和反序列化。</li>
+</ul>
+<p>判断是否实现Serializable</p>
+<ul>
+<li>为继承而设计的类应很少实现Serializable，接口也应很少扩展它。</li>
+<li>为继承而设计的不可序列化的类，应该考虑提供一个无参数构造器供子类需要实现Serializable时使用。</li>
+<li>内部类应该很少实现Serializable，静态成员类可以实现Serializable。</li>
+</ul>
+<h3 id="第55条：考虑使用自定义的序列化形式">第55条：考虑使用自定义的序列化形式</h3>
+<p>理想的序列化形式应该只包含该对象所表示的逻辑数据，而逻辑数据与物理表示应该是独立的。</p>
+<p>使用默认序列化的情况</p>
+<ul>
+<li>对象的物理表示等同于它的逻辑内容，可考虑默认的序列化方式。</li>
+<li>若默认序列化合适，还需要提供一个readObject()以保证约束关系和安全性。</li>
+</ul>
+<p>对象物理表示与逻辑内容有实质区别，使用默认的序列化的缺点</p>
+<ul>
+<li>类的导出API被永久束缚在类的内部表示上。</li>
+<li>消耗过多的空间。将不必要的实现细节也序列化了。</li>
+<li>消耗过多的时间。需要进行昂贵的图遍历。</li>
+<li>引起栈溢出。需要进行对象图的递归遍历。</li>
+</ul>
+<p>Transient域</p>
+<ul>
+<li>对象所有域都是transient，最好也不要省略defaultReadObject()和defaultWriteObject()，这样可以在以后增加非transient域时仍能够保持兼容性。</li>
+<li>非transient域要保证它的值是该对象逻辑状态的一部分。</li>
+<li>自定义序列化中，大多数甚至全部域都应该被标记为transient，在自定义序列化中手动的将这些域设为正确的值。</li>
+</ul>
+<p>序列化时，要为自己编写的可序列化类声明一个显示的UID（serial version UID），可以提高兼容性和性能，格式如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = randomLongValue；</div></pre></td></tr></table></figure>
+
+<p>randomLongValue可用工具生成，也可以自己随意生成。 </p>
+<h3 id="第56条：保护性地编写readObject方法">第56条：保护性地编写readObject方法</h3>
+<p>对象被反序列化的时候，对于包含了客户不该拥有的引用的域必须要进行保护性拷贝。</p>
+<p>健壮readObject()应遵循的原则</p>
+<ul>
+<li>将链接到私有引用域的对象进行保护性拷贝。</li>
+<li>检查类的约束条件是否满足，不满足则抛出InvalidObjectException。检查动作在所有保护性拷贝之后。</li>
+<li>对象图在反序列化之后整个对象图要保证有效，应使用ObjectInputValidation接口。</li>
+<li>不要直接或间接地调用类中被改写的方法。</li>
+</ul>
+<p>第57条：必要时提供一个readResolve方法</p>
+<p>readResolve()中返回的对象引用将替代反序列化中创建的对象，后者将立即成为gc的回收对象。</p>
+<p>用法</p>
+<ul>
+<li>用于实例受控的类（如singleton和类型安全枚举类型）。</li>
+<li>作为保护性readObject()的一种保守的替代选择。（个人觉得readResolve()比保护性readObject()更好，相比而言代码少，也无需考虑更多细节，性能降低可以忽略）</li>
+</ul>
+<p>缺点</p>
+<p>不适合允许包外继承的类（有域是protected或public）。如果超类readResolve()为final或者子类没有改写readResolve()，则对子类进行反序列化时会得到一个超类实例从而造成结果不正确；如果子类恶意改写，则会造成安全性问题。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2009-11-07T09:08:52.000Z"><a href="/2009/11/07/thinking-in-java/">11月 7 2009</a></time>
       
       
@@ -604,7 +1128,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>26</small></li>
+    <li><a href="/tags/Java/">Java</a><small>27</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
