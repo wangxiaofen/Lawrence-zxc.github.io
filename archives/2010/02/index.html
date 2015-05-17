@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>oracle 临时表空间扩容 | Jeck_Zhang</title>
+  <title>归档：2010/2 | Jeck_Zhang</title>
   <meta name="author" content="Jeck Zhang">
   
   <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
@@ -11,7 +11,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-  <meta property="og:title" content="oracle 临时表空间扩容"/>
+  
   <meta property="og:site_name" content="Jeck_Zhang"/>
 
   
@@ -71,151 +71,24 @@
 </nav>
 <div class="clearfix"></div></header>
   <div id="content" class="inner">
-    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+<h2 class="archive-title">2010/2</h2>
+
+
+  <div class="archive">
     
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2013-12-12T02:50:46.000Z"><a href="/2013/12/12/oracle-tmp-tablespace/">12月 12 2013</a></time>
-      
-      
-  
-    <h1 class="title">oracle 临时表空间扩容</h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>临时表空间主要用途是在数据库进行排序运算、管理索引、访问视图等操作时提供临时的运算空间，当运算完成之后系统会自动清理。临时表空间不足时会影响系统性能。</p>
-<h3 id="查询临时表空间">查询临时表空间</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">sql&gt;select file_name,tablespace_name,bytes/1024/1024 as "total temp space(M)" from dba_temp_files;</div><div class="line">FILE_NAME                                          TABLESPACE_NAME              total temp space(M)</div><div class="line">--------------------------------------             ---------------------        -------------------</div><div class="line">/home/database/oracle/oradata/zuobian/temp01.dbf   TEMP                         512</div></pre></td></tr></table></figure>
-
-<h3 id="查看临时表空间剩余容量">查看临时表空间剩余容量</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">SQL&gt; select tablespace_name,bytes_free/1024/1024 "free temp space(M)" from v$temp_space_header;</div><div class="line">TABLESPACE_NAME                free temp space(M)</div><div class="line">--------------------------     ------------------</div><div class="line">TEMP                           256</div></pre></td></tr></table></figure>
-
-<h3 id="重新设定临时表空间容量">重新设定临时表空间容量</h3>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">SQL&gt; alter database tempfile '/home/database/oracle/oradata/zuobian/temp01.dbf' resize 1024M;</div><div class="line">Database altered</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-
-        
-          <div class="alignleft post-nav">
-            <em>上一篇: </em><a href="/2014/04/11/create-enum-instances-dynamically/">java在运行时动态增加枚举类型</a>
-          </div>
-        
-        
-          <div class="alignright post-nav">
-            <em>下一篇: </em><a href="/2013/06/18/hello/">tomcat关闭时dubbo consumer导致jvm进程无法退出的问题</a>
-          </div>
-          <div class="clearfix"></div>
-        
-
-        
-          <div class="copyright">
+      <article class="post">
+        <div class="post-content">
+          <header>
+            <time datetime="2010-02-17T09:13:39.000Z"><a href="/2010/02/17/threadLocal/">2月 17 2010</a></time>
             
-              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+              <h1 class="title"><a href="/2010/02/17/threadLocal/">对Java中ThreadLocal的理解</a></h1>
             
-            
-              <span class="from-link">
-                <em>本文链接地址:</em>
-                <a href="/2013/12/12/oracle-tmp-tablespace/">
-                  http://lawrence-zxc.github.io/2013/12/12/oracle-tmp-tablespace/
-                </a>
-              </span>
-            
-          </div>
-        
-        
-  
-  <div class="categories">
-    <a href="/categories/日志/">日志</a>
+          </header>
+        </div>
+      </article>
+    
   </div>
-
-        
-  
-  <div class="tags">
-    <a href="/tags/Oracle/">Oracle</a>
-  </div>
-
-        
-  <div class="addthis addthis_toolbox addthis_default_style">
-    
-      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
-    
-    
-      <a class="addthis_button_tweet"></a>
-    
-    
-      <a class="addthis_button_sinaweibo_like"></a>
-    
-    
-      <a class="addthis_button_linkedin"></a>
-    
-    
-    
-    <a class="addthis_counter addthis_pill_style"></a>
-  </div>
-  <!--<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>-->
-
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-<nav id="pagination" >
-    
-    <a href="/2014/04/11/create-enum-instances-dynamically/" class="alignleft prev" >上一页</a>
-    
-    
-    <a href="/2013/06/18/hello/" class="alignright next" >下一页</a>
-    
-    <div class="clearfix"></div>
-</nav>
-
-<section id="comment">
-    <h1 class="title">留言</h1>
-    <div id="disqus_thread">
-    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    </div>
-<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2013/12/12/oracle-tmp-tablespace/" data-title="oracle 临时表空间扩容" data-url="http://lawrence-zxc.github.io/2013/12/12/oracle-tmp-tablespace/"></div>
-<!-- 多说评论框 end -->
-<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-<script type="text/javascript">
-var duoshuoQuery = {short_name:"zxc337"};
-	(function() {
-		var ds = document.createElement('script');
-		ds.type = 'text/javascript';ds.async = true;
-		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-		ds.charset = 'UTF-8';
-		(document.getElementsByTagName('head')[0] 
-		 || document.getElementsByTagName('body')[0]).appendChild(ds);
-	})();
-	</script>
-<!-- 多说公共JS代码 end -->
-</section>
-
-
 </div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">

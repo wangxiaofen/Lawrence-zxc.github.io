@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://lawrence-zxc.github.io/2010/02/17/threadLocal/</loc>
+    <lastmod>2015-05-17T09:28:09.000Z</lastmod>
+  </url>
+  
+  <url>
     <loc>http://lawrence-zxc.github.io/2012/05/16/maven-xml/</loc>
     <lastmod>2015-05-15T14:19:12.000Z</lastmod>
   </url>
@@ -332,7 +337,7 @@
   </url>
   
   <url>
-    <loc>http://lawrence-zxc.github.io/2014/05/19/python1/</loc>
+    <loc>http://lawrence-zxc.github.io/2014/10/28/load-balancing/</loc>
     <lastmod>2014-11-10T06:37:13.000Z</lastmod>
   </url>
   
@@ -342,7 +347,7 @@
   </url>
   
   <url>
-    <loc>http://lawrence-zxc.github.io/2014/10/28/load-balancing/</loc>
+    <loc>http://lawrence-zxc.github.io/2014/05/19/python1/</loc>
     <lastmod>2014-11-10T06:37:13.000Z</lastmod>
   </url>
   

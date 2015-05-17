@@ -188,6 +188,115 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-02-17T09:13:39.000Z"><a href="/2010/02/17/threadLocal/">2月 17 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/02/17/threadLocal/">对Java中ThreadLocal的理解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="常见线程安全策略">常见线程安全策略</h2>
+<p>synchronized这类线程同步的机制可以解决多线程并发问题，在这种解决方案下，多个线程访问到的，都是同一份变量的内容。为了防止在多线程访问的过程中，可能会出现的并发错误。不得不对多个线程的访问进行同步，这样也就意味着，多个线程必须先后对变量的值进行访问或者修改，这是一种<code>以延长访问时间来换取线程安全性的策略</code>。</p>
+<p>而ThreadLocal类为每一个线程都维护了自己独有的变量拷贝。每个线程都拥有了自己独立的一个变量，竞争条件被彻底消除了，那就没有任何必要对这些线程进行同步，它们也能最大限度的由CPU调度，并发执行。并且由于每个线程在访问该变量时，读取和修改的，都是自己独有的那一份变量拷贝，变量被彻底封闭在每个访问的线程中，并发错误出现的可能也完全消除了。对比前一种方案，这是一种<code>以空间来换取线程安全性的策略</code>。</p>
+<h2 id="java-lang-ThreadLocal类的API说明">java.lang.ThreadLocal类的API说明</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">ThreadLocal()</div><div class="line"><span class="comment">//创建一个线程本地变量。</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">T get()</div><div class="line"><span class="comment">//返回此线程局部变量的当前线程副本中的值，如果这是线程第一次调用该方法，则创建并初始化此副本。</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span>  T <span class="title">initialValue</span>()</div><div class="line">//返回此线程局部变量的当前线程的初始值。最多在每次访问线程来获得每个线程局部变量时调用此方法一次，即线程第一次使用 <span class="title">get</span>() 方法访问变量的时候。如果线程先于 get 方法调用 <span class="title">set</span>(T) 方法，则不会在线程中再调用 initialValue 方法。 </div><div class="line"></div><div class="line">//若该实现只返回 <span class="keyword">null</span>；如果程序员希望将线程局部变量初始化为 <span class="keyword">null</span> 以外的某个值，则必须为 ThreadLocal 创建子类，并重写此方法。通常，将使用匿名内部类。initialValue 的典型实现将调用一个适当的构造方法，并返回新构造的对象。</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> remove()</div><div class="line"><span class="comment">//移除此线程局部变量的值。这可能有助于减少线程局部变量的存储需求。如果再次访问此线程局部变量，那么在默认情况下它将拥有其 initialValue。</span></div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> set(T value)</div><div class="line"><span class="comment">//将此线程局部变量的当前线程副本中的值设置为指定值。许多应用程序不需要这项功能，它们只依赖于 initialValue() 方法来设置线程局部变量的值。</span></div></pre></td></tr></table></figure>
+
+
+<p>在程序中一般都重写initialValue方法，以给定一个特定的初始值。</p>
+<h2 id="应用场景">应用场景</h2>
+<p>1.来看一个运用ThreadLocal来实现数据库连接Connection对象线程隔离的例子。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> java.sql.Connection;</div><div class="line"><span class="keyword">import</span> java.sql.DriverManager;</div><div class="line"><span class="keyword">import</span> java.sql.SQLException;</div><div class="line"> </div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConnectionManager</span> </span>{</div><div class="line"> </div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ThreadLocal&lt;Connection&gt; connectionHolder = <span class="keyword">new</span> ThreadLocal&lt;Connection&gt;() {</div><div class="line">        <span class="annotation">@Override</span></div><div class="line">        <span class="keyword">protected</span> Connection <span class="title">initialValue</span>() {</div><div class="line">            Connection conn = <span class="keyword">null</span>;</div><div class="line">            <span class="keyword">try</span> {</div><div class="line">                conn = DriverManager.getConnection(</div><div class="line">                        <span class="string">"jdbc:mysql://localhost:3306/test"</span>, <span class="string">"username"</span>,</div><div class="line">                        <span class="string">"password"</span>);</div><div class="line">            } <span class="keyword">catch</span> (SQLException e) {</div><div class="line">                e.printStackTrace();</div><div class="line">            }</div><div class="line">            <span class="keyword">return</span> conn;</div><div class="line">        }</div><div class="line">    };</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Connection <span class="title">getConnection</span>() {</div><div class="line">        <span class="keyword">return</span> connectionHolder.get();</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setConnection</span>(Connection conn) {</div><div class="line">        connectionHolder.set(conn);</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>通过调用ConnectionManager.getConnection()方法，每个线程获取到的，都是和当前线程绑定的那个Connection对象，第一次获取时，是通过initialValue()方法的返回值来设置值的。通过ConnectionManager.setConnection(Connection conn)方法设置的Connection对象，也只会和当前线程绑定。这样就实现了Connection对象在多个线程中的完全隔离。在Spring容器中管理多线程环境下的Connection对象时，采用的思路和以上代码非常相似。</p>
+<p>2.Hiberante的Session 工具类HibernateUtil<br>这个类是Hibernate官方文档中HibernateUtil类，用于session管理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HibernateUtil</span> </span>{</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Log log = LogFactory.getLog(HibernateUtil.class);</div><div class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> SessionFactory sessionFactory;     <span class="comment">//定义SessionFactory</span></div><div class="line"> </div><div class="line">    <span class="keyword">static</span> {</div><div class="line">        <span class="keyword">try</span> {</div><div class="line">            <span class="comment">// 通过默认配置文件hibernate.cfg.xml创建SessionFactory</span></div><div class="line">            sessionFactory = <span class="keyword">new</span> Configuration().configure().buildSessionFactory();</div><div class="line">        } <span class="keyword">catch</span> (Throwable ex) {</div><div class="line">            log.error(<span class="string">"初始化SessionFactory失败！"</span>, ex);</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ExceptionInInitializerError(ex);</div><div class="line">        }</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="comment">//创建线程局部变量session，用来保存Hibernate的Session</span></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> ThreadLocal session = <span class="keyword">new</span> ThreadLocal();</div><div class="line"> </div><div class="line">    <span class="javadoc">/**</span></div><div class="line">     * 获取当前线程中的Session</div><div class="line">     *<span class="javadoctag"> @return</span> Session</div><div class="line">     *<span class="javadoctag"> @throws</span> HibernateException</div><div class="line">     */</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Session <span class="title">currentSession</span>() <span class="keyword">throws</span> HibernateException {</div><div class="line">        Session s = (Session) session.get();</div><div class="line">        <span class="comment">// 如果Session还没有打开，则新开一个Session</span></div><div class="line">        <span class="keyword">if</span> (s == <span class="keyword">null</span>) {</div><div class="line">            s = sessionFactory.openSession();</div><div class="line">            session.set(s);         <span class="comment">//将新开的Session保存到线程局部变量中</span></div><div class="line">        }</div><div class="line">        <span class="keyword">return</span> s;</div><div class="line">    }</div><div class="line"> </div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">closeSession</span>() <span class="keyword">throws</span> HibernateException {</div><div class="line">        <span class="comment">//获取线程局部变量，并强制转换为Session类型</span></div><div class="line">        Session s = (Session) session.get();</div><div class="line">        session.set(<span class="keyword">null</span>);</div><div class="line">        <span class="keyword">if</span> (s != <span class="keyword">null</span>)</div><div class="line">            s.close();</div><div class="line">    }</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>在这个类中，由于没有重写ThreadLocal的initialValue()方法，则首次创建线程局部变量session其初始值为null，第一次调用currentSession()的时候，线程局部变量的get()方法也为null。因此，对session做了判断，如果为null，则新开一个Session，并保存到线程局部变量session中，这一步非常的关键，这也是“public static final ThreadLocal session = new ThreadLocal()”所创建对象session能强制转换为Hibernate Session对象的原因。</p>
+<h2 id="ThreadLocal实现机制">ThreadLocal实现机制</h2>
+<p>那么到底ThreadLocal类是如何实现这种“为每个线程提供不同的变量拷贝”的呢？先来看一下ThreadLocal的set()方法的源码是如何实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="javadoc">/**</span></div><div class="line"> * Sets the current thread's copy of this thread-local variable</div><div class="line"> * to the specified value.  Most subclasses will have no need to </div><div class="line"> * override this method, relying solely on the {@link #initialValue}</div><div class="line"> * method to set the values of thread-locals.</div><div class="line"> *</div><div class="line"> *<span class="javadoctag"> @param</span> value the value to be stored in the current thread's copy of</div><div class="line"> *        this thread-local.</div><div class="line"> */</div><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">set</span>(T value) {</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">        map.set(<span class="keyword">this</span>, value);</div><div class="line">    <span class="keyword">else</span></div><div class="line">        createMap(t, value);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>没有什么魔法，在这个方法内部我们看到，首先通过getMap(Thread t)方法获取一个和当前线程相关的ThreadLocalMap，然后将变量的值设置到这个ThreadLocalMap对象中，当然如果获取到的ThreadLocalMap对象为空，就通过createMap方法创建。</p>
+<p>线程隔离的秘密，就在于ThreadLocalMap这个类。ThreadLocalMap是ThreadLocal类的一个静态内部类，它实现了键值对的设置和获取（对比Map对象来理解），每个线程中都有一个独立的ThreadLocalMap副本，它所存储的值，只能被当前线程读取和修改。ThreadLocal类通过操作每一个线程特有的ThreadLocalMap副本，从而实现了变量访问在不同线程中的隔离。因为每个线程的变量都是自己特有的，完全不会有并发错误。还有一点就是，ThreadLocalMap存储的键值对中的键是this对象指向的ThreadLocal对象，而值就是你所设置的对象了。</p>
+<p>为了加深理解，我们接着看上面代码中出现的getMap和createMap方法的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">ThreadLocalMap getMap(Thread t) {</div><div class="line">    <span class="keyword">return</span> t.threadLocals;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> createMap(Thread t, T firstValue) {</div><div class="line">    t.threadLocals = <span class="keyword">new</span> ThreadLocalMap(<span class="keyword">this</span>, firstValue);</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>代码已经说的非常直白，就是获取和设置Thread内的一个叫threadLocals的变量，而这个变量的类型就是ThreadLocalMap，这样进一步验证了上文中的观点：每个线程都有自己独立的ThreadLocalMap对象。打开java.lang.Thread类的源代码，我们能得到更直观的证明：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/* ThreadLocal values pertaining to this thread. This map is maintained</span></div><div class="line">     * by the ThreadLocal class. */</div><div class="line">    ThreadLocal.ThreadLocalMap threadLocals = <span class="keyword">null</span>;</div></pre></td></tr></table></figure>
+
+<p>那么接下来再看一下ThreadLocal类中的get()方法，代码是这么说的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="javadoc">/**</span></div><div class="line"> * Returns the value in the current thread's copy of this</div><div class="line"> * thread-local variable.  If the variable has no value for the</div><div class="line"> * current thread, it is first initialized to the value returned</div><div class="line"> * by an invocation of the {@link #initialValue} method.</div><div class="line"> *</div><div class="line"> *<span class="javadoctag"> @return</span> the current thread's value of this thread-local</div><div class="line"> */</div><div class="line"><span class="keyword">public</span> T <span class="title">get</span>() {</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>) {</div><div class="line">        ThreadLocalMap.Entry e = map.getEntry(<span class="keyword">this</span>);</div><div class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>)</div><div class="line">            <span class="keyword">return</span> (T)e.value;</div><div class="line">    }</div><div class="line">    <span class="keyword">return</span> setInitialValue();</div><div class="line">}</div><div class="line"></div><div class="line"><span class="javadoc">/**</span></div><div class="line"> * Variant of set() to establish initialValue. Used instead</div><div class="line"> * of set() in case user has overridden the set() method.</div><div class="line"> *</div><div class="line"> *<span class="javadoctag"> @return</span> the initial value</div><div class="line"> */</div><div class="line"><span class="keyword">private</span> T <span class="title">setInitialValue</span>() {</div><div class="line">    T value = initialValue();</div><div class="line">    Thread t = Thread.currentThread();</div><div class="line">    ThreadLocalMap map = getMap(t);</div><div class="line">    <span class="keyword">if</span> (map != <span class="keyword">null</span>)</div><div class="line">        map.set(<span class="keyword">this</span>, value);</div><div class="line">    <span class="keyword">else</span></div><div class="line">        createMap(t, value);</div><div class="line">    <span class="keyword">return</span> value;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>这两个方法的代码告诉我们，在获取和当前线程绑定的值时，ThreadLocalMap对象是以this指向的ThreadLocal对象为键进行查找的，这当然和前面set()方法的代码是相呼应的。</p>
+<p>进一步地，我们可以创建不同的ThreadLocal实例来实现多个变量在不同线程间的访问隔离，为什么可以这么做？因为不同的ThreadLocal对象作为不同键，当然也可以在线程的ThreadLocalMap对象中设置不同的值了。通过ThreadLocal对象，在多线程中共享一个值和多个值的区别，就像你在一个HashMap对象中存储一个键值对和多个键值对一样，仅此而已。</p>
+<p>设置到这些线程中的隔离变量，会不会导致内存泄漏呢？ThreadLocalMap对象保存在Thread对象中，当某个线程终止后，存储在其中的线程隔离的变量，也将作为Thread实例的垃圾被回收掉，所以完全不用担心内存泄漏的问题。在多个线程中隔离的变量，光荣的生，合理的死，真是圆满，不是么？</p>
+<h2 id="ThreadLocal使用的一般步骤">ThreadLocal使用的一般步骤</h2>
+<ul>
+<li>在多线程的类（如ThreadDemo类）中，创建一个ThreadLocal对象threadXxx，用来保存线程间需要隔离处理的对象xxx。</li>
+<li>在ThreadDemo类中，创建一个获取要隔离访问的数据的方法getXxx()，在方法中判断，若ThreadLocal对象为null时候，应该new()一个隔离访问类型的对象，并强制转换为要应用的类型。</li>
+<li>在ThreadDemo类的run()方法中，通过getXxx()方法获取要操作的数据，这样可以保证每个线程对应一个数据对象，在任何时刻都操作的是这个对象。</li>
+</ul>
+<h2 id="不适用场景">不适用场景</h2>
+<p>ThreadLocal变量的这种隔离策略，也不是任何情况下都能使用的。如果多个线程并发访问的对象实例只允许，也只能创建那么一个，那就没有别的办法了，老老实实的使用同步机制来访问吧。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2009-11-07T09:08:52.000Z"><a href="/2009/11/07/thinking-in-java/">11月 7 2009</a></time>
       
       
@@ -495,7 +604,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>25</small></li>
+    <li><a href="/tags/Java/">Java</a><small>26</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
