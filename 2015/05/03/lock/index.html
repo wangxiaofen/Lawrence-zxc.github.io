@@ -1,0 +1,509 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Java自旋锁、排队自旋锁、MCS锁、CLH锁 | Jeck_Zhang</title>
+  <meta name="author" content="Jeck Zhang">
+  
+  <meta name="description" content="zxc&#39;s blog | java | ruby | perl | linux">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Java自旋锁、排队自旋锁、MCS锁、CLH锁"/>
+  <meta property="og:site_name" content="Jeck_Zhang"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link type="image/x-icon" href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="Jeck_Zhang" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  <script src="/js/jquery.min.js"></script>
+  
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45019001-1', 'topdna.org');
+  ga('send', 'pageview');
+
+</script>
+
+
+</head>
+
+
+<body>
+  <!--[if lte IE 8]> <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'> <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode"><img src="http://storage.ie6countdown.com/assets/100/images/banners/warning_bar_0027_Simplified Chinese.jpg" border="0" height="42" width="820" alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today." style='margin-left:auto;margin-right:auto;display: block;'/></a></div> <![endif]-->
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Jeck_Zhang</a></h1>
+  <h2><a href="/">Write the Code. Change the World.</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="http://weibo.com/zxc337">weibo</a></li>
+    
+      <li><a href="/2014/10/01/aboutMe/">关于</a></li>
+    
+      <li><a href="/tags/随感/">随感</a></li>
+    
+      <li><a href="/tags/技术/">技术</a></li>
+    
+      <li><a href="/tags/理财/">理财</a></li>
+    
+      <li><a href="/tags/生活/">生活</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+    <li><a href="/atom.xml">RSS</a></li>
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
+        <time datetime="2015-05-03T03:30:46.000Z"><a href="/2015/05/03/lock/">5月 3 2015</a></time>
+      
+      
+  
+    <h1 class="title">Java自旋锁、排队自旋锁、MCS锁、CLH锁</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="自旋锁（Spin_lock）">自旋锁（Spin lock）</h2>
+<p>自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。</p>
+<p>自旋锁适用于锁保护的临界区很小的情况，临界区很小的话，锁占用的时间就很短。</p>
+<h3 id="简单的实现">简单的实现</h3>
+<pre><code>    import java.util.concurrent.atomic.AtomicReference;
+
+    <span class="keyword">public</span> <span class="keyword">class</span> SpinLock {
+       <span class="keyword">private</span> AtomicReference&lt;Thread&gt; owner = <span class="keyword">new</span> AtomicReference&lt;Thread&gt;();
+
+       <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>() {
+           Thread currentThread = Thread.currentThread();
+
+                  <span class="comment">// 如果锁未被占用，则设置当前线程为锁的拥有者</span>
+           <span class="keyword">while</span> (owner.compareAndSet(<span class="keyword">null</span>, currentThread)) {
+           }
+       }
+
+       <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>() {
+           Thread currentThread = Thread.currentThread();
+
+                  <span class="comment">// 只有锁的拥有者才能释放锁</span>
+           owner.compareAndSet(currentThread, <span class="keyword">null</span>);
+       }
+    }
+</code></pre><p>SimpleSpinLock里有一个owner属性持有锁当前拥有者的线程的引用，如果该引用为null，则表示锁未被占用，不为null则被占用。</p>
+<p>这里用AtomicReference是为了使用它的原子性的compareAndSet方法（CAS操作），解决了多线程并发操作导致数据不一致的问题，确保其他线程可以看到锁的真实状态。</p>
+<h3 id="缺点">缺点</h3>
+<ul>
+<li>CAS操作需要硬件的配合；</li>
+<li>保证各个CPU的缓存（L1、L2、L3、跨CPU Socket、主存）的数据一致性，通讯开销很大，在多处理器系统上更严重；</li>
+<li>没法保证公平性，不保证等待进程/线程按照FIFO顺序获得锁。</li>
+</ul>
+<h2 id="Ticket_Lock">Ticket Lock</h2>
+<p>Ticket Lock 是为了解决上面的公平性问题，类似于现实中银行柜台的排队叫号：锁拥有一个服务号，表示正在服务的线程，还有一个排队号；每个线程尝试获取锁之前先拿一个排队号，然后不断轮询锁的当前服务号是否是自己的排队号，如果是，则表示自己拥有了锁，不是则继续轮询。</p>
+<p>当线程释放锁时，将服务号加1，这样下一个线程看到这个变化，就退出自旋。</p>
+<h3 id="简单的实现-1">简单的实现</h3>
+<pre><code>    import java.util.concurrent.atomic.AtomicInteger;
+
+    <span class="keyword">public</span> <span class="keyword">class</span> TicketLock {
+       <span class="keyword">private</span> AtomicInteger serviceNum = <span class="keyword">new</span> AtomicInteger(); <span class="comment">// 服务号</span>
+       <span class="keyword">private</span> AtomicInteger ticketNum = <span class="keyword">new</span> AtomicInteger(); <span class="comment">// 排队号</span>
+
+       <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">lock</span>() {
+             <span class="comment">// 首先原子性地获得一个排队号</span>
+             <span class="keyword">int</span> myTicketNum = ticketNum.getAndIncrement();
+
+                  <span class="comment">// 只要当前服务号不是自己的就不断轮询</span>
+           <span class="keyword">while</span> (serviceNum.<span class="keyword">get</span>() != myTicketNum) {
+           }
+
+           <span class="keyword">return</span> myTicketNum;
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(<span class="keyword">int</span> myTicket) {
+            <span class="comment">// 只有当前线程拥有者才能释放锁</span>
+            <span class="keyword">int</span> next = myTicket + <span class="number">1</span>;
+            serviceNum.compareAndSet(myTicket, next);
+        }
+    }
+</code></pre><h3 id="缺点-1">缺点</h3>
+<ul>
+<li>Ticket Lock 虽然解决了公平性的问题，但是多处理器系统上，每个进程/线程占用的处理器都在读写同一个变量serviceNum ，每次读写操作都必须在多个处理器缓存之间进行缓存同步，这会导致繁重的系统总线和内存的流量，大大降低系统整体的性能。</li>
+</ul>
+<p>下面介绍的CLH锁和MCS锁都是为了解决这个问题的。</p>
+<p>MCS 来自于其发明人名字的首字母： John Mellor-Crummey和Michael Scott。</p>
+<p>CLH的发明人是：Craig，Landin and Hagersten。</p>
+<h2 id="MCS锁">MCS锁</h2>
+<p>MCS Spinlock 是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，直接前驱负责通知其结束自旋，从而极大地减少了不必要的处理器缓存同步的次数，降低了总线和内存的开销。</p>
+<pre><code>    <span class="keyword">import</span> java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MCSLock</span> </span>{
+        <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MCSNode</span> </span>{
+            <span class="keyword">volatile</span> MCSNode next;
+            <span class="keyword">volatile</span> <span class="keyword">boolean</span> isBlock = <span class="keyword">true</span>; <span class="comment">// 默认是在等待锁</span>
+        }
+
+        <span class="keyword">volatile</span> MCSNode queue;<span class="comment">// 指向最后一个申请锁的MCSNode</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicReferenceFieldUpdater UPDATER = AtomicReferenceFieldUpdater
+                .newUpdater(MCSLock.class, MCSNode.class, <span class="string">"queue"</span>);
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>(MCSNode currentThread) {
+            MCSNode predecessor = UPDATER.getAndSet(<span class="keyword">this</span>, currentThread);<span class="comment">// step 1</span>
+            <span class="keyword">if</span> (predecessor != <span class="keyword">null</span>) {
+                predecessor.next = currentThread;<span class="comment">// step 2</span>
+
+                <span class="keyword">while</span> (currentThread.isBlock) {<span class="comment">// step 3</span>
+                }
+            }
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(MCSNode currentThread) {
+            <span class="keyword">if</span> (currentThread.isBlock) {<span class="comment">// 锁拥有者进行释放锁才有意义</span>
+                <span class="keyword">return</span>;
+            }
+
+            <span class="keyword">if</span> (currentThread.next == <span class="keyword">null</span>) {<span class="comment">// 检查是否有人排在自己后面</span>
+                <span class="keyword">if</span> (UPDATER.compareAndSet(<span class="keyword">this</span>, currentThread, <span class="keyword">null</span>)) {<span class="comment">// step 4</span>
+                    <span class="comment">// compareAndSet返回true表示确实没有人排在自己后面</span>
+                    <span class="keyword">return</span>;
+                } <span class="keyword">else</span> {
+                    <span class="comment">// 突然有人排在自己后面了，可能还不知道是谁，下面是等待后续者</span>
+                    <span class="comment">// 这里之所以要忙等是因为：step 1执行完后，step 2可能还没执行完</span>
+                    <span class="keyword">while</span> (currentThread.next == <span class="keyword">null</span>) { <span class="comment">// step 5</span>
+                    }
+                }
+            }
+
+            currentThread.next.isBlock = <span class="keyword">false</span>;
+            currentThread.next = <span class="keyword">null</span>;<span class="comment">// for GC</span>
+        }
+    }
+</code></pre><h2 id="CLH锁">CLH锁</h2>
+<p>CLH锁也是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，它不断轮询前驱的状态，如果发现前驱释放了锁就结束自旋。</p>
+<pre><code>    <span class="keyword">import</span> java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CLHLock</span> </span>{
+        <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">CLHNode</span> </span>{
+            <span class="keyword">private</span> <span class="keyword">boolean</span> isLocked = <span class="keyword">true</span>; <span class="comment">// 默认是在等待锁</span>
+        }
+
+        <span class="annotation">@SuppressWarnings</span>(<span class="string">"unused"</span> )
+        <span class="keyword">private</span> <span class="keyword">volatile</span> CLHNode tail ;
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicReferenceFieldUpdater&lt;CLHLock, CLHNode&gt; UPDATER = AtomicReferenceFieldUpdater
+                      . newUpdater(CLHLock.class, CLHNode .class , <span class="string">"tail"</span> );
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>(CLHNode currentThread) {
+            CLHNode preNode = UPDATER.getAndSet( <span class="keyword">this</span>, currentThread);
+            <span class="keyword">if</span>(preNode != <span class="keyword">null</span>) {<span class="comment">//已有线程占用了锁，进入自旋</span>
+                <span class="keyword">while</span>(preNode.isLocked ) {
+                }
+            }
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(CLHNode currentThread) {
+            <span class="comment">// 如果队列里只有当前线程，则释放对当前线程的引用（for GC）。</span>
+            <span class="keyword">if</span> (!UPDATER .compareAndSet(<span class="keyword">this</span>, currentThread, <span class="keyword">null</span>)) {
+                <span class="comment">// 还有后续线程</span>
+                currentThread. isLocked = <span class="keyword">false</span> ;<span class="comment">// 改变状态，让后续线程结束自旋</span>
+            }
+        }
+    }
+</code></pre><h2 id="CLH锁_与_MCS锁_的比较">CLH锁 与 MCS锁 的比较</h2>
+<p>下图是CLH锁和MCS锁队列图示：<br><img src="/img/lock.png"></p>
+<p>差异：</p>
+<ul>
+<li>从代码实现来看，CLH比MCS要简单得多。</li>
+<li>从自旋的条件来看，CLH是在前驱节点的属性上自旋，而MCS是在本地属性变量上自旋。</li>
+<li>从链表队列来看，CLH的队列是隐式的，CLHNode并不实际持有下一个节点；MCS的队列是物理存在的。</li>
+<li>CLH锁释放时只需要改变自己的属性，MCS锁释放则需要改变后继节点的属性。</li>
+</ul>
+<p> <strong> 注意：这里实现的锁都是独占的，且不能重入的。</strong></p>
+
+      
+    </div>
+    <footer>
+      
+
+        
+        
+          <div class="alignright post-nav">
+            <em>下一篇: </em><a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+          </div>
+          <div class="clearfix"></div>
+        
+
+        
+          <div class="copyright">
+            
+              <span class="claim">版权声明：自由转载-非商用-无演绎-保持署名 @ Lawrence-zxc</span>
+            
+            
+              <span class="from-link">
+                <em>本文链接地址:</em>
+                <a href="/2015/05/03/lock/">
+                  http://lawrence-zxc.github.io/2015/05/03/lock/
+                </a>
+              </span>
+            
+          </div>
+        
+        
+  
+  <div class="categories">
+    <a href="/categories/日志/">日志</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/Java/">Java</a>
+  </div>
+
+        
+  <div class="addthis addthis_toolbox addthis_default_style">
+    
+      <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+    
+    
+      <a class="addthis_button_tweet"></a>
+    
+    
+      <a class="addthis_button_sinaweibo_like"></a>
+    
+    
+      <a class="addthis_button_linkedin"></a>
+    
+    
+    
+    <a class="addthis_counter addthis_pill_style"></a>
+  </div>
+  <!--<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js"></script>-->
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+<nav id="pagination" >
+    
+    
+    <a href="/2015/04/04/jishu-hehuoren/" class="alignright next" >下一页</a>
+    
+    <div class="clearfix"></div>
+</nav>
+
+<section id="comment">
+    <h1 class="title">留言</h1>
+    <div id="disqus_thread">
+    	<noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2015/05/03/lock/" data-title="Java自旋锁、排队自旋锁、MCS锁、CLH锁" data-url="http://lawrence-zxc.github.io/2015/05/03/lock/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"zxc337"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+</section>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="text" name="q" results="0" placeholder="搜一下">
+    <i class="icon-search"></i>
+    <input type="hidden" name="q" value="site:lawrence-zxc.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">标签</h3>
+  <ul class="entry">
+  
+    <li><a href="/tags/Git/">Git</a><small>2</small></li>
+  
+    <li><a href="/tags/Java/">Java</a><small>28</small></li>
+  
+    <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
+  
+    <li><a href="/tags/LeetCode/">LeetCode</a><small>2</small></li>
+  
+    <li><a href="/tags/Linux/">Linux</a><small>21</small></li>
+  
+    <li><a href="/tags/Mac-Unix/">Mac/Unix</a><small>1</small></li>
+  
+    <li><a href="/tags/Maven/">Maven</a><small>2</small></li>
+  
+    <li><a href="/tags/Mysql/">Mysql</a><small>2</small></li>
+  
+    <li><a href="/tags/Nginx/">Nginx</a><small>5</small></li>
+  
+    <li><a href="/tags/Oracle/">Oracle</a><small>4</small></li>
+  
+    <li><a href="/tags/Python/">Python</a><small>3</small></li>
+  
+    <li><a href="/tags/XMPP/">XMPP</a><small>2</small></li>
+  
+    <li><a href="/tags/其他/">其他</a><small>0</small></li>
+  
+    <li><a href="/tags/开始/">开始</a><small>3</small></li>
+  
+    <li><a href="/tags/技术/">技术</a><small>1</small></li>
+  
+    <li><a href="/tags/旅行/">旅行</a><small>1</small></li>
+  
+    <li><a href="/tags/架构/">架构</a><small>3</small></li>
+  
+    <li><a href="/tags/生活/">生活</a><small>1</small></li>
+  
+    <li><a href="/tags/读书/">读书</a><small>0</small></li>
+  
+    <li><a href="/tags/随感/">随感</a><small>7</small></li>
+  
+  </ul>
+</div>
+
+
+  <div class="trace-invest">
+    <span>
+        <a href="https://github.com/Lawrence-zxc" target="_blank">欢迎光临我的技术Blog网站 </br>Fork me on Github</a>
+    </span>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">最新文章</h3>
+  <ul class="entry">
+    
+      <li>
+        <a href="/2015/05/03/lock/">Java自旋锁、排队自旋锁、MCS锁、CLH锁</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
+      </li>
+    
+      <li>
+        <a href="/2015/04/01/reverse-o2o/">分享一个用户自发需求的反向O2O设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/08/shujiawang/">面向企业和个人O2O图书租赁服务设想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/03/05/pingjiaapp/">关于电商商品评价评论独立第三方平台构想</a>
+      </li>
+    
+      <li>
+        <a href="/2015/01/23/suishoupai/">关于随手拍图片人脸识别APP需求的想法</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/25/xushen/">徐神的诗</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/20/openfire/">Openfire服务端错误解决</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/16/xmpp/">xmpp通信过程分析</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a>
+      </li>
+    
+      <li>
+        <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
+      </li>
+    
+      <li>
+        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
+      </li>
+    
+  </ul>
+</div>
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <div id="go-pg-top"><i class="icon-arrow-up"></i></div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2015 Jeck Zhang
+  
+</div>
+<div class="clearfix"></div></footer>
+  <script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript" charset="utf-8" src="/js/page.js"></script>
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?a5eb19e532c0b101d72226b1325e6a78";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+</body>
+
+</html>

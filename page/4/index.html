@@ -89,6 +89,78 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2013-04-02T09:20:33.000Z"><a href="/2013/04/02/nginx-upstream/">4月 2 2013</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2013/04/02/nginx-upstream/">nginx upstream的5种配置方式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>1、轮询（默认）<br>每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。<br>weight指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> bakend {</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.14</span> weight=<span class="number">10</span>;</div><div class="line">     <span class="title">server</span> <span class="number">192.168.0.15</span> weight=<span class="number">10</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>2、ip_hash<br>每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。<br>例如：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream bakend {</div><div class="line">     ip_hash;</div><div class="line">     server 192.168.0.14:88;</div><div class="line">     server 192.168.0.15:80;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>3、fair（第三方）<br>按后端服务器的响应时间来分配请求，响应时间短的优先分配。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">upstream backend {</div><div class="line">    server server1;</div><div class="line">    server server2;</div><div class="line">    fair;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>4、url_hash（第三方）<br>按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。<br>例：在upstream中加入hash语句，server语句中不能写入weight等其他的参数，hash_method是使用的hash算法</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">upstream</span> backend {</div><div class="line">    <span class="title">server</span> squid1:<span class="number">3128</span>;</div><div class="line">    <span class="title">server</span> squid2:<span class="number">3128</span>;</div><div class="line">    <span class="title">hash</span>   <span class="variable">$request_uri</span>;</div><div class="line">    <span class="title">hash_method</span> crc32;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>5、tips:<br>upstream bakend{#定义负载均衡设备的Ip及设备状态</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">ip_hash;</div><div class="line">    server 127.0.0.1:9090 down;</div><div class="line">    server 127.0.0.1:8080 weight=2;</div><div class="line">    server 127.0.0.1:6060;</div><div class="line">    server 127.0.0.1:7070 backup;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>在需要使用负载均衡的server中增加</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="title">proxy_pass</span> <span class="url">http://bakend/</span>;</div></pre></td></tr></table></figure>
+
+<p>每个设备的状态设置为:</p>
+<ul>
+<li>1.down 表示单前的server暂时不参与负载</li>
+<li>2.weight 默认为1.weight越大，负载的权重就越大。</li>
+<li>3.max_fails ：允许请求失败的次数默认为1.当超过最大次数时，返回proxy_next_upstream 模块定义的错误</li>
+<li>4.fail_timeout:max_fails次失败后，暂停的时间。</li>
+<li>5.backup： 其它所有的非backup机器down或者忙的时候，请求backup机器。所以这台机器压力会最轻。<br>  nginx支持同时设置多组的负载均衡，用来给不用的server来使用。<br>  client_body_in_file_only 设置为On 可以讲client post过来的数据记录到文件中用来做debug<br>  client_body_temp_path 设置记录文件的目录 可以设置最多3层目录<br>  location 对URL进行匹配.可以进行重定向或者进行新的代理 负载均衡</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2013-03-21T04:00:35.000Z"><a href="/2013/03/21/nginx-gzip/">3月 21 2013</a></time>
       
       
@@ -1083,163 +1155,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2012-09-24T08:36:39.000Z"><a href="/2012/09/24/tomcat-session/">9月 24 2012</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2012/09/24/tomcat-session/">基于memcached的tomcat Session集群共享</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <h3 id="session是什么">session是什么</h3>
-<p>用户访问服务器资源主要分成两类，一类是无状态访问，例如请求一张图片。另一类是有状态访问，这种情况下，服务器需要记录追踪用户状态，并根据用户所处状态做出不同响应，典型的例子是购物车。Session的作用就是在Web服务器上保持用户的状态信息。</p>
-<h3 id="tomcat集群为什么需要共享session">tomcat集群为什么需要共享session</h3>
-<p>当客户端访问Tomcat集群时，所有的请求将被Nginx拦截，由Nginx做负载均衡后转发给后台真实Tomcat。按照这个流程就可能出现一个问题，当用户进行页面刷新或跳转时，每次请求将被转发给不同的Tomcat处理，这样就会造成Session的不同步。举个简单的栗子，例如当用户往购物车添加商品时，兴高采烈地准备买单了，当他跳转到付款页面却发现购物车被清空了，这就是Session丢失的典型栗子。因此，我们需要为集群环境做Session同步。</p>
-<h3 id="session共享方案">session共享方案</h3>
-<p>在服务器集群的环境下，共享Session的方案主要分为4类：</p>
-<ul>
-<li><p>用户端本地保存Cookie<br>在这种方式下，Web应用会将用户状态写到Cookie并保存到用户本地。但是，如果用户使用的浏览器不支持Cookie或者禁用Cookie，该方案将会失效。并且Cookie能保存的数据是有大小限制的，而且数据暴露给用户本地浏览器，存在安全性问题。不过现在很多基于MD5加密的方式对安全性方面提升很多。</p>
-</li>
-<li><p>采用数据库方式保存Session<br>相对本地Cookie方式，将用户信息保存到服务端数据库解决了数据安全性问题。然而，这么做是有代价的，应用中所有对Session的访问都必须经过数据库，加大数据库负担，导致系统整体性能降低。</p>
-</li>
-<li><p>代理服务器<br>通过代理服务器实现Session共享的思路非常简单，就是Session数据在哪台Tomcat，之后的请求都转发到这台Tomcat。例如Nginx，具体实现只需要修改转发规则为ip_hash即可。但这时候可能存在某一时间段大量用户始终访问某台Tomcat的负载很大，也就失去了负载均衡的意义。</p>
-</li>
-<li><p>搭建缓存服务器<br>这种方案也是应用最普遍的方案，通过搭建缓存服务器，并使用第三方工具接管Tomcat对Session的管理。</p>
-</li>
-</ul>
-<p>我这里采用方案4进行Session管理，使用的缓存服务器是Memcached，并使用memcached-session-manager管理Session。memcached-session-manager（以下简称msm）的使用方法很简单，只需要根据Tomcat版本和序列化方式下载相应jar包，拷贝至Tomcat的lib目录下，最后修改Tomcat配置文件，更换Session管理模块即可。</p>
-<h3 id="软件环境">软件环境</h3>
-<p>目前msm的最新版本是1.8.3。</p>
-<h4 id="备注：">备注：</h4>
-<ul>
-<li>千万不要用这个项目<a href="https://github.com/magro/memcached-session-manager/" target="_blank" rel="external">github仓库</a>里lib目录的jar，因为版本不对，会启动失败。</li>
-<li>详情可查看<a href="https://code.google.com/p/memcached-session-manager/wiki/SetupAndConfiguration" target="_blank" rel="external">官方文档</a>.</li>
-</ul>
-<h4 id="步骤：">步骤：</h4>
-<ul>
-<li>准备两个tomcat，msm支持tomcat 6、7、8</li>
-<li>下载<a href="http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager/" target="_blank" rel="external">memcached-session-manager-1.8.3.jar</a></li>
-<li>根据你的tomcat版本选择对应的<br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc6/" target="_blank" rel="external">memcached-session-manager-tc6-1.8.3.jar</a><br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc7/" target="_blank" rel="external">memcached-session-manager-tc7-1.8.3.jar</a><br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/msm/memcached-session-manager-tc8/" target="_blank" rel="external">memcached-session-manager-tc8-1.8.3.jar</a></li>
-<li>下载<a href="http://repo1.maven.org/maven2/net/spy/spymemcached/2.11.1/spymemcached-2.11.1.jar" target="_blank" rel="external">spymemcached-2.11.1.jar</a>memcached的java客户端</li>
-<li><code>kryo-serializer</code>的一套东西作为序列化策略,所以需要添加如下用于实现对象序列化的jar包<br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/msm/msm-kryo-serializer/" target="_blank" rel="external">msm-kryo-serializer-1.8.3.jar</a><br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/kryo-serializers/0.11/" target="_blank" rel="external">kryo-serializers-0.11.jar</a><br>  <a href="http://repo1.maven.org/maven2/com/googlecode/kryo/" target="_blank" rel="external">kryo-1.04.jar</a><br>  <a href="http://repo1.maven.org/maven2/com/googlecode/minlog/" target="_blank" rel="external">minlog-1.2.jar</a><br>  <a href="http://repo1.maven.org/maven2/com/googlecode/reflectasm/" target="_blank" rel="external">reflectasm-1.01.jar</a><br>  <a href="http://repo1.maven.org/maven2/asm/asm/3.2/" target="_blank" rel="external">asm-3.2.jar</a></li>
-<li>还需要添加<code>javolution-serializer</code>所需jar包<br>  <a href="http://repo1.maven.org/maven2/de/javakaffee/msm/msm-javolution-serializer/" target="_blank" rel="external">msm-javolution-serializer</a><br>  <a href="http://memcached-session-manager.googlecode.com/svn/maven/javolution/javolution/5.4.3.1/" target="_blank" rel="external">javolution-5.4.3.1</a></li>
-<li>把上面下载的这些东西都放到两个tomcat的lib目录下</li>
-<li>准备两个memcached实例，如果没有两台机器可以在同一个机器开两个不同端口的memcached</li>
-<li>准备一个负载均衡（haproxy，nginx）都可以，用来负载两个tomcat，后面的测试都从这个负载均衡走，负载策略本文用的是sticky。</li>
-</ul>
-<p>当这些都准备完毕后就可以进行配置了，<a href="https://code.google.com/p/memcached-session-manager/" target="_blank" rel="external">msm</a>提供两种配置方式sticky和non sticky的，下面分别进行介绍</p>
-<h4 id="安装">安装</h4>
-<p>服务器环境：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">cat /etc/redhat-release </div><div class="line"><span class="comment"># CentOS release 6.5 (Final)</span></div><div class="line">uname <span class="operator">-a</span></div><div class="line"><span class="comment"># Linux zxc-Server 2.6.32-431.el6.x86_64 #1 SMP Fri Nov 22 03:15:09 UTC 2013 x86_64 x86_64 x86_64 GNU/Linux</span></div></pre></td></tr></table></figure>
-
-<p>安装Memcached<br><a href="http://memcached.org/" target="_blank" rel="external">Memcached</a>是一个高性能的分布式缓存系统，进入下载页面下载<a href="http://memcached.org/downloads" target="_blank" rel="external">最新稳定版本</a>。或者，可以通过<code>wget</code>下载：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">wget http://memcached.org/latest</div></pre></td></tr></table></figure>
-
-<p>安装Memcached之前，需要安装<code>libevent-devel</code>依赖：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">yum -y install libevent-devel</div></pre></td></tr></table></figure>
-
-<p>解压并安装：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">tar -zxvf memcached-<span class="number">1</span>.x.x.tar.gz</div><div class="line"><span class="built_in">cd</span> memcached-<span class="number">1</span>.x.x</div><div class="line">./configure && make && make test && <span class="built_in">sudo</span> make install</div></pre></td></tr></table></figure>
-
-<p>启动<code>memcached</code>运行命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/usr/local/memcached-<span class="number">1.4</span>.<span class="number">21</span>/bin/memcached <span class="operator">-d</span> -uroot -m <span class="number">1024</span> -P /usr/local/memcached-<span class="number">1.4</span>.<span class="number">21</span>/memcached.pid</div></pre></td></tr></table></figure>
-
-<p>这里-d参数表示开启守护线程，-u参数指定用户，-m参数指定分配给memcached的内存大小。更多启动参数如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="operator">-d</span> 选项是启动一个守护进程</div><div class="line">-m 是分配给Memcache使用的内存数量，单位是MB，这里是<span class="number">1024</span>MB，默认是<span class="number">64</span>MB</div><div class="line">-u 是运行Memcache的用户，这里是root</div><div class="line"><span class="operator">-l</span> 是监听的服务器IP地址，默认应该是本机</div><div class="line">-p 是设置Memcache监听的端口，默认是<span class="number">11211</span>，最好是<span class="number">1024</span>以上的端口</div><div class="line">-c 选项是最大运行的并发连接数，默认是<span class="number">1024</span>，这里设置了<span class="number">10240</span>，按照你服务器的负载量来设定</div><div class="line">-P 是设置保存Memcache的pid文件位置</div><div class="line">-h 打印帮助信息</div><div class="line">-v 输出警告和错误信息</div><div class="line">-vv 打印客户端的请求和返回信息</div></pre></td></tr></table></figure>
-
-<p>查看端口状态：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[zxc@zxc-server bin]<span class="comment"># netstat -ntlp | grep memcached</span></div><div class="line">tcp        <span class="number">0</span>      <span class="number">0</span> <span class="number">0.0</span>.<span class="number">0.0</span>:<span class="number">11211</span>               <span class="number">0.0</span>.<span class="number">0.0</span>:*                   LISTEN      <span class="number">2222</span>/memcached      </div><div class="line">tcp        <span class="number">0</span>      <span class="number">0</span> :::<span class="number">11211</span>                    :::*                        LISTEN      <span class="number">2222</span>/memcached</div></pre></td></tr></table></figure>
-
-
-<p>在集群环境中，Tomcat需要访问缓存服务器读取并更新Session信息，因此缓存服务器需要对11211端口放行：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">vi /etc/sysconfig/iptables</div></pre></td></tr></table></figure>
-
-<p>添加如下内容：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># 放行Memcached端口</span></div><div class="line">-A INPUT -m state --state NEW -m tcp -p tcp --dport <span class="number">11211</span> -j ACCEPT</div></pre></td></tr></table></figure>
-
-<p>重启iptables：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">service iptables restart</div></pre></td></tr></table></figure>
-
-<p>停止memcached通过kill命令：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">kill `cat /usr/local/memcached-<span class="number">1.4</span>.<span class="number">21</span>/memcached.pid`</div></pre></td></tr></table></figure>
-
-<h3 id="sticky_to_memcached_node方式">sticky to memcached node方式</h3>
-<p>按照<a href="https://code.google.com/p/memcached-session-manager/wiki/SetupAndConfiguration" target="_blank" rel="external">官方文档</a>推荐的做法，每个机器上同时有一个tomcat和memcached实例。且配置的时候将本机的memcached节点作为failover节点。这么做暗含的逻辑是：需要failover的tomcat是一个正在运行的tomcat，那么tomcat所在机器肯定也是在运行的，从而可以比较靠谱的推测运行在本机上的memcached也是在运行的。如果将failover节点设置成其他机器，那实际上是很不靠谱的。</p>
-<p>分别修改两个tomcat的<code>conf/context.xml</code>文件，添加<code>Manager</code>配置，内容分别如下</p>
-<p>tomcat1:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">Manager</span> <span class="attribute">className</span>=<span class="value">"de.javakaffee.web.msm.MemcachedBackupSessionManager"</span></span></div><div class="line">  <span class="attribute">memcachedNodes</span>=<span class="value">"n1:localhost:11211,n2:ip-to-machine-2:11211"</span></div><div class="line">  <span class="attribute">failoverNodes</span>=<span class="value">"n1"</span></div><div class="line">  <span class="attribute">requestUriIgnorePattern</span>=<span class="value">".*\.(ico|png|gif|jpg|css|js)$"</span></div><div class="line">  <span class="attribute">transcoderFactoryClass</span>=<span class="value">"de.javakaffee.web.msm.serializer.kryo.KryoTranscoderFactory"</span></div><div class="line">  /&gt;</div></pre></td></tr></table></figure>
-
-<p>tomcat2:</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">Manager</span> <span class="attribute">className</span>=<span class="value">"de.javakaffee.web.msm.MemcachedBackupSessionManager"</span></span></div><div class="line">  <span class="attribute">memcachedNodes</span>=<span class="value">"n1:ip-to-machine-1:11211,n2:localhost:11211"</span></div><div class="line">  <span class="attribute">failoverNodes</span>=<span class="value">"n2"</span></div><div class="line">  <span class="attribute">requestUriIgnorePattern</span>=<span class="value">".*\.(ico|png|gif|jpg|css|js)$"</span></div><div class="line">  <span class="attribute">transcoderFactoryClass</span>=<span class="value">"de.javakaffee.web.msm.serializer.kryo.KryoTranscoderFactory"</span></div><div class="line">  /&gt;</div></pre></td></tr></table></figure>
-
-<p>下面分别模拟不同的服务器异常情况</p>
-<p><em>当memcached节点挂掉时</em></p>
-<p>假设当前sessionid是<code>188B2D54D6AEC1D069D0F80B7A2B52C9-n1</code>，从sessionid可以看出session是存在n1节点上的，我们把n1节点关掉，然后重新访问，tomcat日志会出现以下信息：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="number">2012</span><span class="subst">-</span><span class="number">09</span><span class="subst">-</span><span class="number">10</span> <span class="number">14</span>:<span class="number">24</span>:<span class="number">10.834</span> INFO net<span class="built_in">.</span>spy<span class="built_in">.</span>memcached<span class="built_in">.</span>MemcachedConnection:  Reconnecting due <span class="keyword">to</span> exception <span class="keyword">on</span> {QA sa<span class="subst">=</span>localhost/<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">11211</span>, <span class="variable">#Rops</span><span class="subst">=</span><span class="number">1</span>, <span class="variable">#Wops</span><span class="subst">=</span><span class="number">0</span>, <span class="variable">#iq</span><span class="subst">=</span><span class="number">0</span>, topRop<span class="subst">=</span>Cmd: get Keys: ping<span class="attribute">-n1Exp</span>: <span class="number">0</span>, topWop<span class="subst">=</span><span class="built_in">null</span>, toWrite<span class="subst">=</span><span class="number">0</span>, interested<span class="subst">=</span><span class="number">1</span>}</div><div class="line">java<span class="built_in">.</span>io<span class="built_in">.</span>IOException: Connection reset <span class="keyword">by</span> peer</div><div class="line"><span class="attribute">...</span><span class="attribute">...</span></div><div class="line"><span class="number">2012</span><span class="subst">-</span><span class="number">09</span><span class="subst">-</span><span class="number">10</span> <span class="number">14</span>:<span class="number">24</span>:<span class="number">10.836</span> WARN net<span class="built_in">.</span>spy<span class="built_in">.</span>memcached<span class="built_in">.</span>MemcachedConnection:  Closing, <span class="literal">and</span> reopening {QA sa<span class="subst">=</span>localhost/<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">11211</span>, <span class="variable">#Rops</span><span class="subst">=</span><span class="number">1</span>, <span class="variable">#Wops</span><span class="subst">=</span><span class="number">0</span>, <span class="variable">#iq</span><span class="subst">=</span><span class="number">0</span>, topRop<span class="subst">=</span>Cmd: get Keys: ping<span class="attribute">-n1Exp</span>: <span class="number">0</span>, topWop<span class="subst">=</span><span class="built_in">null</span>, toWrite<span class="subst">=</span><span class="number">0</span>, interested<span class="subst">=</span><span class="number">1</span>}, attempt <span class="number">0.</span></div><div class="line"><span class="number">2012</span><span class="subst">-</span><span class="number">09</span><span class="subst">-</span><span class="number">10</span> <span class="number">14</span>:<span class="number">24</span>:<span class="number">10.836</span> WARN net<span class="built_in">.</span>spy<span class="built_in">.</span>memcached<span class="built_in">.</span>protocol<span class="built_in">.</span>ascii<span class="built_in">.</span>AsciiMemcachedNodeImpl:  Discarding partially completed op: Cmd: get Keys: ping<span class="attribute">-n1Exp</span>: <span class="number">0</span></div><div class="line"><span class="number">2012</span><span class="subst">-</span><span class="number">09</span><span class="subst">-</span><span class="number">10</span> <span class="number">14</span>:<span class="number">24</span>:<span class="number">12.841</span> INFO net<span class="built_in">.</span>spy<span class="built_in">.</span>memcached<span class="built_in">.</span>MemcachedConnection:  Reconnecting {QA sa<span class="subst">=</span>localhost/<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">11211</span>, <span class="variable">#Rops</span><span class="subst">=</span><span class="number">0</span>, <span class="variable">#Wops</span><span class="subst">=</span><span class="number">0</span>, <span class="variable">#iq</span><span class="subst">=</span><span class="number">0</span>, topRop<span class="subst">=</span><span class="built_in">null</span>, topWop<span class="subst">=</span><span class="built_in">null</span>, toWrite<span class="subst">=</span><span class="number">0</span>, interested<span class="subst">=</span><span class="number">0</span>}</div><div class="line"><span class="number">2012</span><span class="subst">-</span><span class="number">09</span><span class="subst">-</span><span class="number">10</span> <span class="number">14</span>:<span class="number">24</span>:<span class="number">12.842</span> INFO net<span class="built_in">.</span>spy<span class="built_in">.</span>memcached<span class="built_in">.</span>MemcachedConnection:  Connection state changed for sun<span class="built_in">.</span>nio<span class="built_in">.</span>ch<span class="built_in">.</span>SelectionKeyImpl@<span class="number">461</span>bf970</div></pre></td></tr></table></figure>
-
-<p>可以看到msm连接n1的时候失败了，从浏览器角度看session信息也丢失了。</p>
-<p>结论：memcached挂的时候，会导致session信息丢失，而且<code>188B2D54D6AEC1D069D0F80B7A2B52C9-n1</code>只会存在n1节点，n2节点上没有它的备份。</p>
-<p><em>当tomcat节点挂掉时</em></p>
-<p>假设当前sessionid是<code>FAB07CFF93768C46633EC4F12BAA69D4-n1</code>，然后找到了用户当前是sticky到tomcat2上。</p>
-<p>我们把tomcat2关闭人为造成tomcat2挂掉的现象，然后再访问应用，那这个时候http请求肯定走tomcat1。结果是session依然保留了。</p>
-<p>结论：当请求从tomcat1切换到tomcat2的时候，msm知道自己到哪里去取session，所以session不会丢失。</p>
-<h3 id="non-sticky_to_memcached_node方式">non-sticky to memcached node方式</h3>
-<p>分别修改两个tomcat的<code>conf/context.xml</code>文件，添加Manager配置，内容都是：</p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="title">Manager</span> <span class="attribute">className</span>=<span class="value">"de.javakaffee.web.msm.MemcachedBackupSessionManager"</span></span></div><div class="line">  <span class="attribute">memcachedNodes</span>=<span class="value">"n1:ip-to-machine-1:11211,n2:ip-to-machine-2:11211"</span></div><div class="line">  <span class="attribute">sticky</span>=<span class="value">"false"</span></div><div class="line">  <span class="attribute">sessionBackupAsync</span>=<span class="value">"false"</span></div><div class="line">  <span class="attribute">lockingMode</span>=<span class="value">"all"</span></div><div class="line">  <span class="attribute">requestUriIgnorePattern</span>=<span class="value">".*\.(ico|png|gif|jpg|css|js)$"</span></div><div class="line">  <span class="attribute">transcoderFactoryClass</span>=<span class="value">"de.javakaffee.web.msm.serializer.kryo.KryoTranscoderFactory"</span></div><div class="line">/&gt;</div></pre></td></tr></table></figure>
-
-<p>下面分别模拟不同的服务器异常情况:</p>
-<p><em>当memcached节点挂掉时</em></p>
-<p>假设当前sessionid是<code>9971F12F4257DB9DF11AB91D902A845C-n2</code>，从sessionid可以看出session是存在n2节点上的，我们把n2节点关掉，然后重新访问，tomcat日志会出现以下信息：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">2012-09-10 13:38:05.472 INFO net.spy.memcached.MemcachedConnection:  Reconnecting due to exception on {QA sa=localhost/127.0.0.1:11212, #Rops=1, #Wops=0, #iq=0, topRop=Cmd: get Keys: ping-n2Exp: 0, topWop=null, toWrite=0, interested=1}</div><div class="line">java.io.IOException: Connection <span class="operator"><span class="keyword">reset</span> <span class="keyword">by</span> peer</span></div><div class="line">......</div><div class="line"><span class="number">2012</span>-<span class="number">09</span>-<span class="number">10</span> <span class="number">13</span>:<span class="number">38</span>:<span class="number">05.473</span> WARN net.spy.memcached.MemcachedConnection:  Closing, <span class="keyword">and</span> reopening {QA sa=localhost/<span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span>:<span class="number">11212</span>, #Rops=<span class="number">1</span>, #Wops=<span class="number">0</span>, #iq=<span class="number">0</span>, topRop=Cmd: <span class="keyword">get</span> Keys: ping-n2Exp: <span class="number">0</span>, topWop=<span class="literal">null</span>, toWrite=<span class="number">0</span>, interested=<span class="number">1</span>}, attempt <span class="number">0.</span></div><div class="line"><span class="number">2012</span>-<span class="number">09</span>-<span class="number">10</span> <span class="number">13</span>:<span class="number">38</span>:<span class="number">05.474</span> WARN net.spy.memcached.protocol.<span class="keyword">ascii</span>.AsciiMemcachedNodeImpl:  Discarding partially completed op: Cmd: <span class="keyword">get</span> Keys: ping-n2Exp: <span class="number">0</span></div><div class="line">九月 <span class="number">10</span>, <span class="number">2012</span> <span class="number">1</span>:<span class="number">38</span>:<span class="number">05</span> 下午 de.javakaffee.web.msm.MemcachedSessionService changeSessionIdOnMemcachedFailover</div><div class="line">信息: <span class="keyword">Session</span> needs <span class="keyword">to</span> be relocated <span class="keyword">as</span> node n2 <span class="keyword">is</span> <span class="keyword">not</span> available, loading <span class="keyword">backup</span> <span class="keyword">session</span> <span class="keyword">for</span> <span class="number">9971</span>F12F4257DB9DF11AB91D902A845C-n2</div><div class="line">九月 <span class="number">10</span>, <span class="number">2012</span> <span class="number">1</span>:<span class="number">38</span>:<span class="number">05</span> 下午 de.javakaffee.web.msm.MemcachedSessionService loadBackupSession</div><div class="line">信息: <span class="keyword">Session</span> <span class="keyword">backup</span> loaded <span class="keyword">from</span> secondary memcached <span class="keyword">for</span> <span class="number">9971</span>F12F4257DB9DF11AB91D902A845C-n2 (will be relocated), setting new id <span class="number">9971</span>F12F4257DB9DF11AB91D902A845C-n1 <span class="keyword">on</span> <span class="keyword">session</span>...</div><div class="line">九月 <span class="number">10</span>, <span class="number">2012</span> <span class="number">1</span>:<span class="number">38</span>:<span class="number">05</span> 下午 de.javakaffee.web.msm.MemcachedSessionService deleteFromMemcached</div><div class="line">信息: Could <span class="keyword">not</span> <span class="keyword">delete</span> <span class="keyword">session</span> <span class="keyword">from</span> memcached.</div><div class="line">java.lang.IllegalArgumentException: <span class="keyword">No</span> node <span class="keyword">found</span> <span class="keyword">for</span> <span class="keyword">key</span> bak:<span class="number">9971</span>F12F4257DB9DF11AB91D902A845C-n1 (nodeId: <span class="literal">null</span>, known nodeIds: [n1, n2])</div><div class="line">...</div><div class="line">九月 <span class="number">10</span>, <span class="number">2012</span> <span class="number">1</span>:<span class="number">38</span>:<span class="number">05</span> 下午 de.javakaffee.web.msm.LockingStrategy$OnAfterBackupSessionTask <span class="keyword">call</span></div><div class="line">信息: Could <span class="keyword">not</span> store secondary <span class="keyword">backup</span> <span class="keyword">of</span> <span class="keyword">session</span> <span class="number">2</span>FAD78BB5AF31155975CFD9CEE655DC9-n1</div><div class="line">java.lang.IllegalArgumentException: <span class="keyword">No</span> node <span class="keyword">found</span> <span class="keyword">for</span> <span class="keyword">key</span> bak:<span class="number">2</span>FAD78BB5AF31155975CFD9CEE655DC9-n1 (nodeId: <span class="literal">null</span>, known nodeIds: [n1, n2])</div></pre></td></tr></table></figure>
-
-<p>可以看到：</p>
-<p>msm发现n2节点不可用了,会将sessionid从n2改成n1，然后尝试到n1里去获取,发现修改后的sessionid也获取不到,会创建新的sessionid是<code>2FAD78BB5AF31155975CFD9CEE655DC9-n1</code>,然后会发现没有办法给这个session做备份(因为n2挂了)</p>
-<p>结论：当memcached挂的时候，会导致session丢失。事实上<code>9971F12F4257DB9DF11AB91D902A845C-n2</code>只会保存在n1里，并不会在n2里做备份。</p>
-<p><em>当tomcat节点挂掉时</em></p>
-<p>假设当前sessionid是<code>90D43F329A804E460A26CAC1608A3F08-n1</code>，然后找到了用户当前是sticky到tomcat1上。</p>
-<p>我们把tomcat1关闭人为造成tomcat1挂掉的现象，然后再访问应用，那这个时候http请求肯定走tomcat2。结果是session依然保留了。</p>
-<p>结论：当请求从tomcat1切换到tomcat2的时候，msm知道自己到哪里去取session，所以session不会丢失。</p>
-<h3 id="总结">总结</h3>
-<p>无论哪种配置方式，只要memcached节点一挂，那么其所包含的session信息也都丢失了。并且不会在各节点间作备份。</p>
-<p>但是tomcat挂了无所谓，因为sessionid里告诉了msm应该到哪个memcached节点取session信息。</p>
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1273,7 +1188,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>27</small></li>
+    <li><a href="/tags/Java/">Java</a><small>28</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -1328,6 +1243,10 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/05/03/lock/">Java自旋锁、排队自旋锁、MCS锁、CLH锁</a>
+      </li>
+    
+      <li>
         <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
       </li>
     
@@ -1369,10 +1288,6 @@
     
       <li>
         <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
       </li>
     
   </ul>

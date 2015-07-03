@@ -89,6 +89,203 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2015-05-03T03:30:46.000Z"><a href="/2015/05/03/lock/">5月 3 2015</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/05/03/lock/">Java自旋锁、排队自旋锁、MCS锁、CLH锁</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="自旋锁（Spin_lock）">自旋锁（Spin lock）</h2>
+<p>自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。</p>
+<p>自旋锁适用于锁保护的临界区很小的情况，临界区很小的话，锁占用的时间就很短。</p>
+<h3 id="简单的实现">简单的实现</h3>
+<pre><code>    import java.util.concurrent.atomic.AtomicReference;
+
+    <span class="keyword">public</span> <span class="keyword">class</span> SpinLock {
+       <span class="keyword">private</span> AtomicReference&lt;Thread&gt; owner = <span class="keyword">new</span> AtomicReference&lt;Thread&gt;();
+
+       <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>() {
+           Thread currentThread = Thread.currentThread();
+
+                  <span class="comment">// 如果锁未被占用，则设置当前线程为锁的拥有者</span>
+           <span class="keyword">while</span> (owner.compareAndSet(<span class="keyword">null</span>, currentThread)) {
+           }
+       }
+
+       <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>() {
+           Thread currentThread = Thread.currentThread();
+
+                  <span class="comment">// 只有锁的拥有者才能释放锁</span>
+           owner.compareAndSet(currentThread, <span class="keyword">null</span>);
+       }
+    }
+</code></pre><p>SimpleSpinLock里有一个owner属性持有锁当前拥有者的线程的引用，如果该引用为null，则表示锁未被占用，不为null则被占用。</p>
+<p>这里用AtomicReference是为了使用它的原子性的compareAndSet方法（CAS操作），解决了多线程并发操作导致数据不一致的问题，确保其他线程可以看到锁的真实状态。</p>
+<h3 id="缺点">缺点</h3>
+<ul>
+<li>CAS操作需要硬件的配合；</li>
+<li>保证各个CPU的缓存（L1、L2、L3、跨CPU Socket、主存）的数据一致性，通讯开销很大，在多处理器系统上更严重；</li>
+<li>没法保证公平性，不保证等待进程/线程按照FIFO顺序获得锁。</li>
+</ul>
+<h2 id="Ticket_Lock">Ticket Lock</h2>
+<p>Ticket Lock 是为了解决上面的公平性问题，类似于现实中银行柜台的排队叫号：锁拥有一个服务号，表示正在服务的线程，还有一个排队号；每个线程尝试获取锁之前先拿一个排队号，然后不断轮询锁的当前服务号是否是自己的排队号，如果是，则表示自己拥有了锁，不是则继续轮询。</p>
+<p>当线程释放锁时，将服务号加1，这样下一个线程看到这个变化，就退出自旋。</p>
+<h3 id="简单的实现-1">简单的实现</h3>
+<pre><code>    import java.util.concurrent.atomic.AtomicInteger;
+
+    <span class="keyword">public</span> <span class="keyword">class</span> TicketLock {
+       <span class="keyword">private</span> AtomicInteger serviceNum = <span class="keyword">new</span> AtomicInteger(); <span class="comment">// 服务号</span>
+       <span class="keyword">private</span> AtomicInteger ticketNum = <span class="keyword">new</span> AtomicInteger(); <span class="comment">// 排队号</span>
+
+       <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">lock</span>() {
+             <span class="comment">// 首先原子性地获得一个排队号</span>
+             <span class="keyword">int</span> myTicketNum = ticketNum.getAndIncrement();
+
+                  <span class="comment">// 只要当前服务号不是自己的就不断轮询</span>
+           <span class="keyword">while</span> (serviceNum.<span class="keyword">get</span>() != myTicketNum) {
+           }
+
+           <span class="keyword">return</span> myTicketNum;
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(<span class="keyword">int</span> myTicket) {
+            <span class="comment">// 只有当前线程拥有者才能释放锁</span>
+            <span class="keyword">int</span> next = myTicket + <span class="number">1</span>;
+            serviceNum.compareAndSet(myTicket, next);
+        }
+    }
+</code></pre><h3 id="缺点-1">缺点</h3>
+<ul>
+<li>Ticket Lock 虽然解决了公平性的问题，但是多处理器系统上，每个进程/线程占用的处理器都在读写同一个变量serviceNum ，每次读写操作都必须在多个处理器缓存之间进行缓存同步，这会导致繁重的系统总线和内存的流量，大大降低系统整体的性能。</li>
+</ul>
+<p>下面介绍的CLH锁和MCS锁都是为了解决这个问题的。</p>
+<p>MCS 来自于其发明人名字的首字母： John Mellor-Crummey和Michael Scott。</p>
+<p>CLH的发明人是：Craig，Landin and Hagersten。</p>
+<h2 id="MCS锁">MCS锁</h2>
+<p>MCS Spinlock 是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，直接前驱负责通知其结束自旋，从而极大地减少了不必要的处理器缓存同步的次数，降低了总线和内存的开销。</p>
+<pre><code>    <span class="keyword">import</span> java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MCSLock</span> </span>{
+        <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MCSNode</span> </span>{
+            <span class="keyword">volatile</span> MCSNode next;
+            <span class="keyword">volatile</span> <span class="keyword">boolean</span> isBlock = <span class="keyword">true</span>; <span class="comment">// 默认是在等待锁</span>
+        }
+
+        <span class="keyword">volatile</span> MCSNode queue;<span class="comment">// 指向最后一个申请锁的MCSNode</span>
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicReferenceFieldUpdater UPDATER = AtomicReferenceFieldUpdater
+                .newUpdater(MCSLock.class, MCSNode.class, <span class="string">"queue"</span>);
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>(MCSNode currentThread) {
+            MCSNode predecessor = UPDATER.getAndSet(<span class="keyword">this</span>, currentThread);<span class="comment">// step 1</span>
+            <span class="keyword">if</span> (predecessor != <span class="keyword">null</span>) {
+                predecessor.next = currentThread;<span class="comment">// step 2</span>
+
+                <span class="keyword">while</span> (currentThread.isBlock) {<span class="comment">// step 3</span>
+                }
+            }
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(MCSNode currentThread) {
+            <span class="keyword">if</span> (currentThread.isBlock) {<span class="comment">// 锁拥有者进行释放锁才有意义</span>
+                <span class="keyword">return</span>;
+            }
+
+            <span class="keyword">if</span> (currentThread.next == <span class="keyword">null</span>) {<span class="comment">// 检查是否有人排在自己后面</span>
+                <span class="keyword">if</span> (UPDATER.compareAndSet(<span class="keyword">this</span>, currentThread, <span class="keyword">null</span>)) {<span class="comment">// step 4</span>
+                    <span class="comment">// compareAndSet返回true表示确实没有人排在自己后面</span>
+                    <span class="keyword">return</span>;
+                } <span class="keyword">else</span> {
+                    <span class="comment">// 突然有人排在自己后面了，可能还不知道是谁，下面是等待后续者</span>
+                    <span class="comment">// 这里之所以要忙等是因为：step 1执行完后，step 2可能还没执行完</span>
+                    <span class="keyword">while</span> (currentThread.next == <span class="keyword">null</span>) { <span class="comment">// step 5</span>
+                    }
+                }
+            }
+
+            currentThread.next.isBlock = <span class="keyword">false</span>;
+            currentThread.next = <span class="keyword">null</span>;<span class="comment">// for GC</span>
+        }
+    }
+</code></pre><h2 id="CLH锁">CLH锁</h2>
+<p>CLH锁也是一种基于链表的可扩展、高性能、公平的自旋锁，申请线程只在本地变量上自旋，它不断轮询前驱的状态，如果发现前驱释放了锁就结束自旋。</p>
+<pre><code>    <span class="keyword">import</span> java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CLHLock</span> </span>{
+        <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">CLHNode</span> </span>{
+            <span class="keyword">private</span> <span class="keyword">boolean</span> isLocked = <span class="keyword">true</span>; <span class="comment">// 默认是在等待锁</span>
+        }
+
+        <span class="annotation">@SuppressWarnings</span>(<span class="string">"unused"</span> )
+        <span class="keyword">private</span> <span class="keyword">volatile</span> CLHNode tail ;
+        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> AtomicReferenceFieldUpdater&lt;CLHLock, CLHNode&gt; UPDATER = AtomicReferenceFieldUpdater
+                      . newUpdater(CLHLock.class, CLHNode .class , <span class="string">"tail"</span> );
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">lock</span>(CLHNode currentThread) {
+            CLHNode preNode = UPDATER.getAndSet( <span class="keyword">this</span>, currentThread);
+            <span class="keyword">if</span>(preNode != <span class="keyword">null</span>) {<span class="comment">//已有线程占用了锁，进入自旋</span>
+                <span class="keyword">while</span>(preNode.isLocked ) {
+                }
+            }
+        }
+
+        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span>(CLHNode currentThread) {
+            <span class="comment">// 如果队列里只有当前线程，则释放对当前线程的引用（for GC）。</span>
+            <span class="keyword">if</span> (!UPDATER .compareAndSet(<span class="keyword">this</span>, currentThread, <span class="keyword">null</span>)) {
+                <span class="comment">// 还有后续线程</span>
+                currentThread. isLocked = <span class="keyword">false</span> ;<span class="comment">// 改变状态，让后续线程结束自旋</span>
+            }
+        }
+    }
+</code></pre><h2 id="CLH锁_与_MCS锁_的比较">CLH锁 与 MCS锁 的比较</h2>
+<p>下图是CLH锁和MCS锁队列图示：<br><img src="/img/lock.png"></p>
+<p>差异：</p>
+<ul>
+<li>从代码实现来看，CLH比MCS要简单得多。</li>
+<li>从自旋的条件来看，CLH是在前驱节点的属性上自旋，而MCS是在本地属性变量上自旋。</li>
+<li>从链表队列来看，CLH的队列是隐式的，CLHNode并不实际持有下一个节点；MCS的队列是物理存在的。</li>
+<li>CLH锁释放时只需要改变自己的属性，MCS锁释放则需要改变后继节点的属性。</li>
+</ul>
+<p> <strong> 注意：这里实现的锁都是独占的，且不能重入的。</strong></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2015-04-04T14:59:07.000Z"><a href="/2015/04/04/jishu-hehuoren/">4月 4 2015</a></time>
       
       
@@ -774,54 +971,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:35:30.000Z"><a href="/2014/11/10/oracle-partition/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div></pre></td><td class="code"><pre><div class="line"><span class="comment">--create tablespaces</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_1 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_1.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_2 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_2.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">tablespace</span> cus_area_3 datafile <span class="string">'/mnt/oracle/oradata/zuobian/cus_area_3.dbf'</span>  <span class="keyword">SIZE</span> <span class="number">5</span>m  autoextend <span class="keyword">ON</span> <span class="keyword">NEXT</span>  <span class="number">10</span>m maxsize unlimited;</span></div><div class="line"></div><div class="line"><span class="comment">--create table with partition declaration</span></div><div class="line"><span class="operator"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> CUSTOMER</span></div><div class="line">(</div><div class="line">  CUSTOMER_ID <span class="built_in">NUMBER</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">PRIMARY</span> <span class="keyword">KEY</span>,</div><div class="line">  CUST_AREA <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  FIRST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  LAST_NAME VARCHAR2(<span class="number">30</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  PHONE VARCHAR2(<span class="number">15</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</div><div class="line">  EMAIL VARCHAR2(<span class="number">80</span>),</div><div class="line">  SEX VARCHAR2(<span class="number">10</span>),</div><div class="line">  <span class="keyword">STATUS</span> VARCHAR2(<span class="number">10</span>),</div><div class="line">  CREATE_DATE <span class="built_in">DATE</span></div><div class="line">)</div><div class="line"><span class="keyword">PARTITION</span> <span class="keyword">BY</span> LIST (CUST_AREA) <span class="comment">--partition declaration</span></div><div class="line">(</div><div class="line">  <span class="keyword">PARTITION</span> area_1 <span class="keyword">VALUES</span>(<span class="number">1</span>) <span class="keyword">TABLESPACE</span> cus_area_1,</div><div class="line">  <span class="keyword">PARTITION</span> area_2 <span class="keyword">VALUES</span>(<span class="number">2</span>) <span class="keyword">TABLESPACE</span> cus_area_2,</div><div class="line">  <span class="keyword">PARTITION</span> area_3 <span class="keyword">VALUES</span>(<span class="number">3</span>) <span class="keyword">TABLESPACE</span> cus_area_3</div><div class="line">);</div><div class="line"></div><div class="line"><span class="comment">-- test data</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">1</span>,<span class="number">1</span>,<span class="string">'geln'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">2</span>,<span class="number">2</span>,<span class="string">'eric'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">3</span>,<span class="number">3</span>,<span class="string">'tom'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> CUSTOMER(CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME,PHONE,CREATE_DATE) <span class="keyword">VALUES</span>(<span class="number">4</span>,<span class="number">3</span>,<span class="string">'tony'</span>,<span class="string">'zhang'</span>,<span class="string">'18912386146'</span>,<span class="keyword">sysdate</span>);</span></div><div class="line"><span class="operator"><span class="keyword">commit</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- query by partition</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> CUSTOMER_ID,CUST_AREA,FIRST_NAME,LAST_NAME <span class="keyword">FROM</span> CUSTOMER <span class="keyword">partition</span> (area_1) ;</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> <span class="comment">/*+rowid(CUSTOMER)*/</span> ROWID,LAST_NAME,FIRST_NAME,PHONE <span class="keyword">FROM</span> CUSTOMER  <span class="keyword">partition</span> (AREA_1)  <span class="keyword">WHERE</span>  ROWID&gt;=<span class="string">'AAASrfAAIAAAACAAAA'</span> <span class="keyword">AND</span>  ROWID&lt;=<span class="string">'AAASrfAAIAAAACHCcQ'</span>;</span></div><div class="line"></div><div class="line"><span class="comment">-- find all partitioin data for a table</span></div><div class="line"><span class="operator"><span class="keyword">SELECT</span> e.owner,e.segment_name,e.partition_name,o.data_object_id,</span></div><div class="line">    e.RELATIVE_FNO,</div><div class="line">    e.BLOCK_ID MIN_BLOCK,</div><div class="line">    e.BLOCK_ID + e.BLOCKS - <span class="number">1</span> MAX_BLOCK</div><div class="line"><span class="keyword">FROM</span> dba_extents e, dba_objects o</div><div class="line"><span class="keyword">WHERE</span>     e.segment_name = <span class="string">'CUSTOMER'</span>  <span class="comment">-- table name</span></div><div class="line">    <span class="keyword">AND</span> o.object_name = e.segment_name</div><div class="line">    <span class="keyword">AND</span> e.owner = <span class="string">'MASK'</span> <span class="comment">-- schema name</span></div><div class="line">    <span class="keyword">AND</span> o.OWNER = e.owner</div><div class="line">    <span class="keyword">AND</span> NVL (e.partition_name, <span class="number">0</span>) = NVL (o.SUBOBJECT_NAME, <span class="number">0</span>)</div><div class="line">    <span class="keyword">AND</span> o.data_object_id <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="literal">NULL</span>;</div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -853,7 +1002,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>27</small></li>
+    <li><a href="/tags/Java/">Java</a><small>28</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -908,6 +1057,10 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/05/03/lock/">Java自旋锁、排队自旋锁、MCS锁、CLH锁</a>
+      </li>
+    
+      <li>
         <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
       </li>
     
@@ -949,10 +1102,6 @@
     
       <li>
         <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
       </li>
     
   </ul>

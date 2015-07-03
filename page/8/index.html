@@ -89,6 +89,231 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-07-16T07:45:02.000Z"><a href="/2010/07/16/shell-style/">7月 16 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/07/16/shell-style/">Shell编码风格和脚本配置文件格式</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p><a href="http://wiki.bash-hackers.org/scripting/style" target="_blank" rel="external">Scripting with style</a> 是少见的一篇介绍 Shell 编码风格 的文章，相信对大多数运维人员和linux爱好者都有用，现在将译文奉上。</p>
+<h2 id="Shell编码风格">Shell编码风格</h2>
+<h3 id="缩进准则">缩进准则</h3>
+<p>我一般使用2个空格来缩进（尽管大多人使用4个空格），原因是：</p>
+<ul>
+<li>输入简单快速；</li>
+<li>没有输入一个Tab键，避免不同环境下显示的差异问题；</li>
+<li>缩进的效果已经足够，并且没有浪费太多的空间；</li>
+</ul>
+<p><strong><em>译者注：本人也是使用4个空格，如果你也与本文作者的风格不一样，下面说到2个空格的地方请自觉替换成你实际使用的空格数。个人认为，缩进只是一个个人的风格，只要不影响可读性即可。</em></strong></p>
+<p>顺便说一句，尽量不要使用Tab键，它们容易带来麻烦，我只能想到一种情况下它是有用的：here document中的缩进。</p>
+<h3 id="分隔长行">分隔长行</h3>
+<p>如果需要分隔过长的代码，你可以使用下面的任意一种方法：</p>
+<p>1） 使用与命令宽度相同的缩进</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">activate some_very_long_option <span class="command">\</span></div><div class="line">         some_other_option</div></pre></td></tr></table></figure>
+
+<p>2） 使用2个空格缩进</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">activate some_very_long_option <span class="command">\</span></div><div class="line">  some_other_option</div></pre></td></tr></table></figure>
+
+<p>从个人的角度来说，除非有特别的需要，我更倾向于第一种形式，因为它突出“上下两行的内容是一起的”这一联系。</p>
+<h3 id="分离复合命令">分离复合命令</h3>
+<p><strong><em>译者注：其实这里的复合命令就是指块语句，例如for/while循环, if分支结构等等。</em></strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="title">HEAD_KEYWORD</span> parameters; <span class="title">BODY_BEGIN</span></div><div class="line">  BODY_COMMANDS</div><div class="line">BODY_END</div></pre></td></tr></table></figure>
+
+<p>我习惯于：</p>
+<ul>
+<li>将HEAD_KEYWORD和初始化命令或者参数放在第一行；</li>
+<li>将BODY_BEGIN同样放在第一行；</li>
+<li>复合命令中的BODY部分以2个空格缩进；</li>
+<li>BODY_END部分独立一行放在最后；</li>
+</ul>
+<p>1）if/then/elif/else分支语句</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> <span class="keyword">...</span>; then</div><div class="line">  <span class="keyword">...</span></div><div class="line">elif <span class="keyword">...</span>; then</div><div class="line">  <span class="keyword">...</span></div><div class="line"><span class="keyword">else</span></div><div class="line">  <span class="keyword">...</span></div><div class="line">fi</div></pre></td></tr></table></figure>
+
+<p>2）for循环</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">for</span> f <span class="keyword">in</span> /etc/*; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<p>3） while/until循环</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">while</span> [[ $answer != [YyNn] ]]; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<p>4） case分支语句</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">case</span> <span class="variable">$input</span> <span class="keyword">in</span></div><div class="line">  hello)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said hello"</span></div><div class="line">  ;;</div><div class="line">  bye)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said bye"</span></div><div class="line">    <span class="keyword">if</span> foo; <span class="keyword">then</span></div><div class="line">      bar</div><div class="line">    <span class="keyword">fi</span></div><div class="line">  ;;</div><div class="line">  *)</div><div class="line">    <span class="built_in">echo</span> <span class="string">"You said something weird..."</span></div><div class="line">  ;;</div><div class="line"><span class="keyword">esac</span></div></pre></td></tr></table></figure>
+
+<p>几点注意的地方：</p>
+<ul>
+<li>如果不是100%需要，匹配部分左右的括号不需要写（译者注：例如写成hello)而不是(hello)）；</li>
+<li>匹配模式与分支的终止符号;;位于同一缩进级别</li>
+<li>分支内部的命令多缩进一层；</li>
+<li>尽管是可选的，这里还是把最后一个分支的终止符号也写上了；</li>
+</ul>
+<h3 id="语法和编码指引">语法和编码指引</h3>
+<p>晦涩的语法结构</p>
+<p>我们都喜欢一些晦涩的语法结构，因为它们很简洁。但是如果不是100%需要用到，尽量不要使用它们，否则大多数人无法理解你的代码。</p>
+<p>所以有有时候，我们需要在代码的智能，效率与可读性之间找到一个平衡点。</p>
+<p>如果你一定要使用这种语法结构，记得在用的地方写上一小段注释。</p>
+<p><strong><em>译者注：Shell提供的一些语法糖很难理解，但是有非常简洁实用，本人也很喜欢用，这样可以省下一大堆精力，而且用熟了也没有什么难以理解的，但是作者说的也有道理，这一点就仁者见仁，智者见智了</em></strong></p>
+<h3 id="变量名">变量名</h3>
+<p>因为所有保留的变量名都是大写的，最安全的方法是仅使用小写字母作为变量名，例如读入用户的输入、循环变量等等……：</p>
+<ul>
+<li>变量名尽量选择小写字母；</li>
+<li>如果你使用大写的变量名，不要使用保留的变量名（一份不完全的列表参见SUS）；</li>
+<li>如果你使用大写的变量名，最后在变量名前面加一个独特的前缀（例如下面例子中的MY_）；</li>
+</ul>
+<p>下面是一个例子：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!/bin/bash</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># the prefix 'MY_'</span></div><div class="line">MY_LOG_DIRECTORY=/var/adm/</div><div class="line"></div><div class="line"><span class="keyword">for</span> file <span class="keyword">in</span> <span class="string">"<span class="variable">$MY_LOG_DIRECTORY</span>"</span>/*; <span class="keyword">do</span></div><div class="line">  <span class="built_in">echo</span> <span class="string">"Found Logfile: <span class="variable">$file</span>"</span></div><div class="line"><span class="keyword">done</span></div></pre></td></tr></table></figure>
+
+<h3 id="变量初始化">变量初始化</h3>
+<p>正如C语言一样，最好的处理是在变量声明的时候初始化。</p>
+<p>用户可以将一个变量以环境变量的形式传递到脚本中。如果你盲目地假定你使用的所有变量都是未初始化的，其它人可以以环境变量的形式劫持一个变量。</p>
+<p><strong><em>译者注：一个例子说明这一点：</em></strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> <span class="keyword">b</span>.<span class="keyword">sh</span> </div><div class="line"></div><div class="line"><span class="keyword">if</span> [ -<span class="keyword">z</span> <span class="string">"$var"</span> ]; then</div><div class="line">    <span class="keyword">echo</span> <span class="string">"$var is not set"</span></div><div class="line">    var=<span class="number">1</span></div><div class="line">fi</div><div class="line"></div><div class="line"><span class="keyword">echo</span> <span class="string">"Now, var is equals to $var"</span></div><div class="line">var=<span class="number">2</span> <span class="keyword">sh</span> <span class="keyword">b</span>.<span class="keyword">sh</span></div><div class="line">Now, var <span class="keyword">is</span> equals <span class="keyword">to</span> <span class="number">2</span></div></pre></td></tr></table></figure>
+
+<p>解决这个问题的方法很简单，将变量初始化：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="variable">my_input=</span><span class="string">""</span></div><div class="line"><span class="variable">my_array=</span>()</div><div class="line"><span class="variable">my_number=</span><span class="number">0</span></div></pre></td></tr></table></figure>
+
+<h3 id="参数展开">参数展开</h3>
+<p>除非你知道自己做的事情，请在参数展开的地方使用双引号</p>
+<p>当然，也有一些地方并不需要使用双引号，例如：</p>
+<ul>
+<li>[[ ]]测试表达式内部是不会展开的；</li>
+<li>在case $WORD in语法中WORD也不会展开的；</li>
+<li>在变量赋值var=$WORD的地方也是不会展开的</li>
+</ul>
+<p>但是在这些地方使用引号并不会出错，如果你习惯于在每个可能展开参数的地方使用引号，你写得代码会很安全。</p>
+<p>如果你要传递一个参数作为一个单词列表，你可以不使用引号，例如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">list=<span class="string">"one two three"</span></div><div class="line"><span class="comment">#</span></div><div class="line"><span class="comment"># you MUST NOT quote $list here</span></div><div class="line"><span class="keyword">for</span> word <span class="keyword">in</span> $list; do</div><div class="line">  <span class="keyword">...</span></div><div class="line">done</div></pre></td></tr></table></figure>
+
+<h3 id="函数名称">函数名称</h3>
+<p>函数名称应该采用小写的形式，并且有一个很好的意义。函数名称应该容易让人理解，比如f1这个名称虽然容易输入但是对调试和其它人阅读代码造成了很大的困难，它说明不了任何东西。好的函数名称可以帮助说明代码，而不需要额外的注释。</p>
+<p>一个或多或少有趣的是：如果你无意这样做，不要把函数名称命名为常见的命令名，新手往往比较容易将脚本或者函数名命名成test，这样就和UNIX的test命令冲突了。</p>
+<p>除非绝对必要，仅使用字母、数字和下划线作为函数名称。/bin/ls也是一个合法的Bash函数名称。</p>
+<p><strong><em>译者注：/bin/ls不是一个合法的函数名称。</em></strong></p>
+<h3 id="命令替换">命令替换</h3>
+<p>正如文章<a href="http://wiki.bash-hackers.org/syntax/expansion/cmdsubst" target="_blank" rel="external">the article about command substitution [Bash Hackers Wiki]</a>中提及的，你应该使用$( .. )形式。</p>
+<p>不过，如果可移植性是一个问题，你可能必须使用反引号的形式<code>...</code>。</p>
+<p>在任何情况，如果其它展开或者单词分隔并不是你期望的，你应该将命令替换用双引号引起来。</p>
+<h3 id="Eval命令">Eval命令</h3>
+<p>正如Greg据说的：<strong><em>“If eval is the answer, surely you are asking the wrong question.”</em></strong>。</p>
+<p>避免它，除非绝对必要：</p>
+<ul>
+<li>eval can be your neckshot（可能是你的麻烦？）</li>
+<li>很有可能有其它的方法来实现你需要的；</li>
+<li>如果可能，重新思考下脚本的工作过程，当eval的使用不可避免的时候；</li>
+<li>如果你实在需要使用，小心慎用；</li>
+</ul>
+<h3 id="脚本的基本结构">脚本的基本结构</h3>
+<p>一个脚本的基本结构是这样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="shebang">#!SHEBANG</span></div><div class="line"></div><div class="line">CONFIGURATION_VARIABLES</div><div class="line"></div><div class="line">FUNCTION_DEFINITIONS</div><div class="line"></div><div class="line">MAIN_CODE</div></pre></td></tr></table></figure>
+
+<h3 id="Shebang">Shebang</h3>
+<p>如果可能，请不要忘记shebang。</p>
+<p>请小心使用/bin/sh作为shebang，在Linux系统中，/bin/sh就是Bash这是一个错误的观点。</p>
+<p>于我而言，shebang有两个目的：</p>
+<ul>
+<li>说明直接执行时以哪个解释器来执行；</li>
+<li>明确该脚本应该以哪个解释器来执行；</li>
+</ul>
+<h3 id="配置变量">配置变量</h3>
+<p>在这里，我将这一类变量——可以被用户更改的——叫做配置变量。</p>
+<p>让这类变量容易找到，一般放在脚本的头部，给它们有意义的名称并且加上注释说明。正如上面说的，仅当你知道你为什么这么做的时候，才用大写的变量名形式，否则小写形式更加安全。</p>
+<p>函数定义</p>
+<p>所有函数定义应该在脚本主要代码执行之前，这样可以给人全局的印象，并且确保所有函数在使用之前它是已知的。</p>
+<p>你应该使用可移植性高的函数定义形式，即不带function关键字的形式。</p>
+<h3 id="脚本行为和健壮性">脚本行为和健壮性</h3>
+<p>当脚本检测到问题时尽早退出，以免执行潜在的问题；<br>如果你需要用到的命令可能并没有安装在系统上，在脚本执行的时候最好检查命令是否存在并且提醒用户缺少什么；<br>采用有意义的脚本返回值，例如0代码成功，1代码错误或者失败；</p>
+<h3 id="其它">其它</h3>
+<p>输出内容</p>
+<ul>
+<li>if the script is interactive, if it works for you and if you think this is a nice feature, you can try to save the terminal content and restore it after execution；（译者注：不理解这一点是什么意思）</li>
+<li>在屏幕中输出简单易理解的消息；</li>
+<li>使用颜色或者特别的前缀区分错误和警告信息；</li>
+<li>输出正常的内容到STDOUT，而输出错误、警告或者诊断的信息到STDERR；</li>
+<li>在日志文件中输出所有详细的信息；</li>
+</ul>
+<p>输入</p>
+<p>不要盲目地假设任何事情，如果你希望用户输入一个数字，请在脚本中主动检查它是否真得是一个数字，检查头部是否包含0，等等。我们都应该知道这一点，用户仅仅是用户而不是程序员，他们会做他们想要的，而不是程序想要的。</p>
+<h2 id="Sehll脚本配置文件格式">Sehll脚本配置文件格式</h2>
+<p>开发过程中为了减少 hardcode，不可避免的需要提供配置文件给用户定制。对于高级编程语言来说，因为有丰富的第三方库，可供选择的配置文件格式有很多，比如 xml、jsno、ini、yaml 等等。</p>
+<h3 id="key=value_文本格式配置">key=value 文本格式配置</h3>
+<p>而对于 linux shell，基本上很难使用前面提到的各种格式。所以在 unix 系统上，很多 shell 脚本的配置文件都是纯粹的 key=value 文本格式，例如绝大多数的开机服务启动脚本、网络配置文件等。</p>
+<p>例子 1：ntp 配置文件</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/sysconfig/ntpd</div><div class="line"># <span class="operator"><span class="keyword">Drop</span> root <span class="keyword">to</span> id <span class="string">'ntp:ntp'</span> <span class="keyword">by</span> <span class="keyword">default</span>.</span></div><div class="line">OPTIONS=<span class="string">"-u ntp:ntp -p /var/run/ntpd.pid"</span></div><div class="line">#</div><div class="line"># <span class="keyword">Set</span> <span class="keyword">to</span> <span class="string">'yes'</span> <span class="keyword">to</span> sync hw clock <span class="keyword">after</span> successful ntpdate</div><div class="line">SYNC_HWCLOCK=<span class="keyword">no</span></div><div class="line">#</div><div class="line"># Additional options <span class="keyword">for</span> ntpdate</div><div class="line">NTPDATE_OPTIONS=<span class="string">""</span></div></pre></td></tr></table></figure>
+
+<p>例子 2：网络配置文件</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/sysconfig/network</div><div class="line"><span class="constant">NETWORKING</span>=<span class="string">"yes"</span></div><div class="line"><span class="constant">HOSTNAME</span>=<span class="string">"xx.com"</span></div></pre></td></tr></table></figure>
+
+<p>而且，要注意得是，一般<code>key=value</code>的等号两边不应该有空格，因为大多数脚本都是直接 source 配置文件的（当然，也有部分脚本是会自己处理配置文件格式），使用起来很简单，基本上没有解析的操作：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">$ cat /etc/init.d/network</div><div class="line"><span class="keyword">if</span> [ ! <span class="operator">-f</span> /etc/sysconfig/network ]; <span class="keyword">then</span></div><div class="line">    <span class="keyword">exit</span> <span class="number">0</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"><span class="comment">#</span></div><div class="line">. /etc/sysconfig/network</div></pre></td></tr></table></figure>
+
+<p>理所当然，这种格式无法满足更复杂的配置文件需求，比如 ini 格式的 section。那么，在 shell 中除了满世界去找一个解析库之外，能有什么方法可以实现呢？</p>
+<h3 id="扩展_key=value_文本格式配置">扩展 key=value 文本格式配置</h3>
+<p>假设，我们管理着 n 个集群，每个集群配置项都是一样的，我们需要在 shell 脚本中，可以根据集群的名称来导入对应的配置。</p>
+<p>下面我们介绍一种最简单的方法，只需要针对第一种格式扩展下即可。我们创建一个配置文件目录<code>conf.d</code>，在这个目录下存放各个集群的配置文件。每个集群对应一个配置文件，文件名为集群名称，例如：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> <span class="keyword">conf</span>.<span class="keyword">d</span>/CLUSTER_A</div><div class="line">c_cluster_name=<span class="string">"CLUSTER_A"</span></div><div class="line">c_cluster_type=<span class="number">1</span></div></pre></td></tr></table></figure>
+
+<p>在脚本中，我们可以这样来导入相应集群的配置：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"conf.d/<span class="variable">$cluster_name</span>"</span> ]; <span class="keyword">then</span></div><div class="line">        . conf.d/<span class="variable">$cluster_name</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line">}</div><div class="line"><span class="comment">#</span></div><div class="line">load_config CLUSTER_A</div></pre></td></tr></table></figure>
+
+<p>因为各个集群的配置文件相互独立，所以如果包含一些全局范围的配置项，需要在每个配置文件中都增加。或者，再增加一个入口的配置文件：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment"># cat global.conf</span></div><div class="line"><span class="variable">g_conf_dir=</span>conf.d   <span class="comment"># 配置文件目录</span></div><div class="line"><span class="variable">g_version=</span><span class="string">"0.1"</span>  <span class="comment"># 全局配置</span></div></pre></td></tr></table></figure>
+
+<p>脚本相应调整下：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">GLOBAL_CONF=/etc/xxx/global.conf</div><div class="line"></div><div class="line"><span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"<span class="variable">$GLOBAL_CONF</span>"</span> ]; <span class="keyword">then</span></div><div class="line">    . <span class="variable">$GLOBAL_CONF</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> [[ <span class="string">"<span class="variable">$g_conf_dir</span>"</span> != /* ]]; <span class="keyword">then</span>  <span class="comment"># 如果是相对路径</span></div><div class="line">    g_conf_dir=<span class="string">"<span class="variable">$(dirname $GLOBAL_CONF)</span>/<span class="variable">$g_conf_dir</span>"</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [ <span class="operator">-f</span> <span class="string">"<span class="variable">$g_conf_dir</span>/<span class="variable">$cluster_name</span>"</span> ]; <span class="keyword">then</span></div><div class="line">        . <span class="variable">$g_conf_dir</span>/<span class="variable">$cluster_name</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line">}</div><div class="line"></div><div class="line">load_config CLUSTER_A</div></pre></td></tr></table></figure>
+
+<h3 id="类_ini_配置格式">类 ini 配置格式</h3>
+<p>第二种方法，基本上已经可以解决我们之前假设中提出的需求，简单而且实现方便，不足的是配置文件比较零散，管理上可能不是很方便。如果，你仍然倾向于一种类似 ini 格式的配置，可以试试下面这种方法。</p>
+<p>在这种场景下，每个集群应该是一个独立的 section，所以转换成 ini 格式，配置文件应该是这样的：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="title">[DEFAULT]</span></div><div class="line"><span class="setting">g_version=<span class="value"><span class="string">"0.1"</span>     ; 全局配置</span></span></div><div class="line"></div><div class="line"><span class="title">[CLUSTER_A]</span></div><div class="line"><span class="setting">c_cluster_name=<span class="value"><span class="string">"CLUSTER_A"</span></span></span></div><div class="line"><span class="setting">c_cluster_type=<span class="value"><span class="number">1</span></span></span></div></pre></td></tr></table></figure>
+
+<p>但是，我们前面提到过，原生的 shell 是很难去解析 ini 格式的配置文件的，所以上面的形式还得变化下，我们用 shell 中的函数来模拟 section：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">$ cat cluster.conf</div><div class="line"><span class="preprocessor"># global config</span></div><div class="line">g_version=<span class="string">"0.1"</span>  <span class="preprocessor"># 全局配置</span></div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">section_cluster_a</span><span class="params">()</span></span></div><div class="line">{</div><div class="line">    c_cluster_name=<span class="string">"CLUSTER_A"</span></div><div class="line">    c_cluster_type=<span class="number">1</span></div><div class="line">}</div><div class="line"></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">section_cluster_b</span><span class="params">()</span></span></div><div class="line">{</div><div class="line">    c_cluster_name=<span class="string">"CLUSTER_B"</span></div><div class="line">    c_cluster_type=<span class="number">1</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>配套的配置文件解析库：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">$ cat config.sh</div><div class="line"><span class="comment">#!/bin/echo Warnning, this library must only be sourced!</span></div><div class="line"></div><div class="line"><span class="keyword">if</span> [ ! <span class="operator">-f</span> <span class="string">"cluster.conf"</span> ]; <span class="keyword">then</span></div><div class="line">    <span class="keyword">exit</span> <span class="number">0</span>  <span class="comment"># or print error before exit</span></div><div class="line"><span class="keyword">fi</span></div><div class="line"></div><div class="line">. cluster.conf</div><div class="line"></div><div class="line">function <span class="function"><span class="title">load_config</span></span>()</div><div class="line">{</div><div class="line">    local cluster_name=$(<span class="built_in">echo</span> <span class="string">"<span class="variable">$1</span>"</span> | tr A-Z.- a-z__)  <span class="comment"># 特殊符号转换</span></div><div class="line">    section_<span class="variable">$cluster_name</span> &&gt;/dev/null  <span class="comment"># 执行函数，将集群的配置赋值给对应的全局变量</span></div><div class="line">}</div><div class="line"></div><div class="line">function <span class="function"><span class="title">option</span></span>()</div><div class="line">{</div><div class="line">    local opt_name=<span class="string">"<span class="variable">$1</span>"</span></div><div class="line"></div><div class="line">    <span class="keyword">if</span> [[ <span class="string">"<span class="variable">$opt_name</span>"</span> != c_* ]]; <span class="keyword">then</span>   <span class="comment"># no "c_" prefix</span></div><div class="line">        opt_name=<span class="string">"c_<span class="variable">$opt_name</span>"</span></div><div class="line">    <span class="keyword">fi</span></div><div class="line"></div><div class="line">    <span class="built_in">echo</span> <span class="string">"<span class="variable">${!opt_name}</span>"</span>  <span class="comment"># indirect reference by variable name</span></div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>测试脚本：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">$ <span class="keyword">cat</span> test.<span class="keyword">sh</span></div><div class="line">. config.<span class="keyword">sh</span></div><div class="line"></div><div class="line">load_config CLUSTER_B</div><div class="line">option cluster_name  # puts CLUSTER_B</div></pre></td></tr></table></figure>
+
+<p>在<code>PET</code>运维工具中，我是采取了第三种方式来维护集群的配置文件，基本上可以满足绝大多数需求。大家也可以贴出你们是怎么设计shell的配置文件的？我们探讨下!</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2010-05-11T08:53:37.000Z"><a href="/2010/05/11/transient-volatile-strictfp/">5月 11 2010</a></time>
       
       
@@ -1128,7 +1353,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>27</small></li>
+    <li><a href="/tags/Java/">Java</a><small>28</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -1183,6 +1408,10 @@
   <ul class="entry">
     
       <li>
+        <a href="/2015/05/03/lock/">Java自旋锁、排队自旋锁、MCS锁、CLH锁</a>
+      </li>
+    
+      <li>
         <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
       </li>
     
@@ -1224,10 +1453,6 @@
     
       <li>
         <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/load-balancing/">负载均衡和过载保护</a>
       </li>
     
   </ul>
