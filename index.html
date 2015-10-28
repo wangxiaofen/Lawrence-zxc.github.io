@@ -286,6 +286,104 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2015-04-28T16:59:27.000Z"><a href="/2015/04/29/java-enum/">4月 29 2015</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2015/04/29/java-enum/">java枚举Enum的理解</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="常见应用">常见应用</h3>
+<p>枚举类是 java.lang.Enum 类的子类，下述示例代码中：</p>
+<p>NEGRO、WHITE、ASIAN都是Human预定义好的Human的实例（public static final）<br>在运行期间，我们无法再创建新的Enum的实例（构造方法私有）<br>示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Human {</div><div class="line">   <span class="comment">// 利用构造函数传参</span></div><div class="line">   NEGRO(<span class="number">1</span>, <span class="string">"黑人"</span>),</div><div class="line">   WHITE(<span class="number">2</span>, <span class="string">"白人"</span>),</div><div class="line">   ASIAN(<span class="number">4</span>, <span class="string">"黄种人"</span>);</div><div class="line">   </div><div class="line">   <span class="comment">// 定义私有变量</span></div><div class="line">   <span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">   <span class="keyword">private</span> String desc;</div><div class="line">   </div><div class="line">   <span class="comment">// 构造函数，枚举类型只能为私有，默认为私有</span></div><div class="line">   Human( <span class="keyword">int</span> value, String desc) {</div><div class="line">       <span class="keyword">this</span>.value = value;</div><div class="line">       <span class="keyword">this</span>.desc = desc;</div><div class="line">   }</div><div class="line">   </div><div class="line">   <span class="comment">// Getter and Setter </span></div><div class="line">   ... ...        </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>综上所述：</p>
+<p>enum 类的实例，默认是：public static final，例如上述的 NEGRO、WHITE、ASIAN<br>enum 类的默认构造方法是 private，也只能是private，保证外界无法创建 enum实例</p>
+<h3 id="为什么要用_enum">为什么要用 enum</h3>
+<p>实际上，枚举类的实例是静态常量，那为什么不直接使用静态常量呢？在没有 enum之前，静态常量的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 方法 1：静态常量</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeekDay</span> </span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MONDAY = <span class="number">1</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TUESDAY = <span class="number">2</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> WENSDAY = <span class="number">3</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> THURSDAY = <span class="number">4</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> FRIDAY = <span class="number">5</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用枚举类时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 方法 2：枚举类</span></div><div class="line"><span class="comment">// enum 类的等价实现方式，后文会单独写一个 enum</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeekDay</span> </span>{</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay MONDAY = <span class="keyword">new</span> WeekDay(<span class="number">1</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay TUESDAY = <span class="keyword">new</span> WeekDay(<span class="number">2</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay WENSDAY = <span class="keyword">new</span> WeekDay(<span class="number">3</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay THURSDAY = <span class="keyword">new</span> WeekDay(<span class="number">4</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay FRIDAY = <span class="keyword">new</span> WeekDay(<span class="number">5</span>);</div><div class="line">     </div><div class="line">     <span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">     </div><div class="line">     <span class="keyword">private</span> <span class="title">WeekDay</span>(<span class="keyword">int</span> i){</div><div class="line">               <span class="keyword">this</span>.value = i;</div><div class="line">     }</div><div class="line">     </div><div class="line">     <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValue</span>(){</div><div class="line">               <span class="keyword">return</span> value;</div><div class="line">     }   </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h4 id="方法_1，使用静态常量，存在几个问题：">方法 1，使用静态常量，存在几个问题：</h4>
+<ul>
+<li>类型不安全：由于常量的对应值是整数形，所以程序执行过程中很有可能给星期变量传入一个任意的整数值，导致出现错误。</li>
+<li>没有命名空间：由于常量只是类的属性，必须通过类来访问 如： Weekday.SUNDAY。</li>
+<li>一致性差：因为整形枚举属于编译期常量，所以编译过程完成后，所有客户端和服务器端引用的地方，会直接将整数值写入，修改需要重新编译。</li>
+<li>类型无指意性：由于枚举值仅仅是一些无任何含义的整数值，如果在运行期调试时候，你就会发现日志中有很多魔术数字（0-6），其他人很难明白具体含义。</li>
+</ul>
+<h4 id="相比来说，方法_2_，使用静态常量类（枚举类），好处：">相比来说，方法 2 ，使用静态常量类（枚举类），好处：</h4>
+<ul>
+<li>语意性强：字面即可理解功能</li>
+<li>不直接接受 int 类型数据，只接受 WeekDay 预定义好的static final的实例</li>
+<li>所有对象都是 public static final，是单例的，因此可以直接使用 equals 或者 ==</li>
+</ul>
+<p>下面写一个标准的枚举类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> WeekDayEnum {</div><div class="line">	MONDAY(<span class="number">1</span>),</div><div class="line">	TUSDAY(<span class="number">2</span>),</div><div class="line">	WENSDAY(<span class="number">3</span>),</div><div class="line">	THURSDAY(<span class="number">4</span>),</div><div class="line">	FRIDAY(<span class="number">5</span>);</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">	</div><div class="line">	WeekDayEnum(<span class="keyword">int</span> value){</div><div class="line">		<span class="keyword">this</span>.value = value;</div><div class="line">	}</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValue</span>(){</div><div class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.value;</div><div class="line">	}	</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>NOTE：实际上，枚举类继承自java.lang.Enum抽象类。</p>
+<h3 id="应用场景">应用场景</h3>
+<p>枚举的7中常用方式，主要有：</p>
+<ul>
+<li>表示常量</li>
+<li>用于switch</li>
+<li>添加更多方法</li>
+<li>覆盖Object方法</li>
+<li>实现接口</li>
+<li>枚举集合EnumSet和EnumMap，EnumSet保证集合中的元素不重复；EnumMap中的key是enum类型，而value则可以是任意类型。</li>
+</ul>
+<h3 id="特别写法">特别写法</h3>
+<p>枚举类，每个静态常量实例，都有一个序号（从 0 开始），常见的写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> WeekDayEnum {</div><div class="line">	MONDAY(<span class="string">"周一"</span>),</div><div class="line">	TUSDAY(<span class="string">"周二"</span>),</div><div class="line">	WENSDAY(<span class="string">"周三"</span>),</div><div class="line">	THURSDAY(<span class="string">"周四"</span>),</div><div class="line">	FRIDAY(<span class="string">"周五"</span>);</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> ordinal;</div><div class="line">	</div><div class="line">	WeekDayEnum(){</div><div class="line">		<span class="keyword">this</span>.ordinal = <span class="keyword">this</span>.ordinal();</div><div class="line">	}</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getOrdinal</span>(){</div><div class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.ordinal;</div><div class="line">	}	</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="避免错误使用_Enum">避免错误使用 Enum</h3>
+<p>不过在使用 Enum 时候有几个地方需要注意：</p>
+<ul>
+<li>enum 类型不支持 public 和 protected 修饰符的构造方法，因此构造函数一定要是 private 或 friendly 的。也正因为如此，所以枚举对象是无法在程序中通过直接调用其构造方法来初始化的。</li>
+<li>定义 enum 类型时候，如果是简单类型，那么最后一个枚举值后不用跟任何一个符号；但如果有定制方法，那么最后一个枚举值与后面代码要用分号’;’隔开，不能用逗号或空格。</li>
+<li>由于 enum 类型的值实际上是通过运行期构造出对象来表示的，所以在 cluster 环境下，每个虚拟机都会构造出一个同义的枚举对象。因而在做比较操作时候就需要注意，如果直接通过使用等号 ( ‘ == ’ ) 操作符，这些看似一样的枚举值一定不相等，因为这不是同一个对象实例。</li>
+</ul>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2015-04-04T14:59:07.000Z"><a href="/2015/04/04/jishu-hehuoren/">4月 4 2015</a></time>
       
       
@@ -920,57 +1018,6 @@
 
 
 
-  <article class="post">
-  
-    <div class="gallery">
-  <div class="photoset">
-    
-      <img src="">
-    
-  </div>
-  <div class="control">
-    <div class="prev"></div>
-    <div class="next"></div>
-  </div>
-</div>
-  
-  <div class="post-content">
-    <header>
-      
-        <time datetime="2014-11-10T08:37:49.000Z"><a href="/2014/11/10/oracle-index/">11月 10 2014</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2014/11/10/oracle-index/">Oracle大批量高效地更新大数据表索引字段</a></h1>
-  
-
-    </header>
-    <div class="entry">
-      
-        <p>更新索引字段会触发索引重建，如果是要大批量修改大数据表的索引字段，速度会很慢，时间大多花在重建索引上了。<br>高效的办法是将索引先unusable，待批次更新修改后再重建（rebuild）索引。<br>整理語法如下,需要注意：</p>
-<pre><code><span class="bullet">1. </span>通过索引判断一个table是否大数据表（大于50M）。
-<span class="bullet">2. </span>对于分区表的索引，需用对不同分区进行重建。
-</code></pre><figure class="highlight sql"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div></pre></td><td class="code"><pre><div class="line"><span class="operator"><span class="keyword">DECLARE</span></span></div><div class="line">    <span class="keyword">CURSOR</span> c1 <span class="keyword">IS</span></div><div class="line">    <span class="keyword">SELECT</span> index_name,PARTITIONED</div><div class="line">    <span class="keyword">FROM</span> user_indexes</div><div class="line">    <span class="keyword">WHERE</span> index_name <span class="keyword">IN</span> (</div><div class="line">            <span class="keyword">SELECT</span> <span class="keyword">DISTINCT</span> INDEX_NAME</div><div class="line">            <span class="keyword">FROM</span> user_ind_columns</div><div class="line">            <span class="keyword">WHERE</span> TABLE_NAME = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                <span class="keyword">AND</span> column_name = <span class="string">'COLUMN_NAME'</span> <span class="comment">--更新字段</span></div><div class="line">                <span class="keyword">AND</span> TABLE_NAME <span class="keyword">IN</span> (</div><div class="line">                    <span class="keyword">SELECT</span> segment_name</div><div class="line">                    <span class="keyword">FROM</span> (</div><div class="line">                        <span class="keyword">SELECT</span> segment_name</div><div class="line">                            ,<span class="keyword">SUM</span>(siz_M) <span class="keyword">AS</span> siz_M</div><div class="line">                        <span class="keyword">FROM</span> (</div><div class="line">                            <span class="keyword">SELECT</span> segment_name</div><div class="line">                                ,segment_type</div><div class="line">                                ,bytes / <span class="number">1024</span> / <span class="number">1024</span> <span class="keyword">AS</span> siz_M</div><div class="line">                            <span class="keyword">FROM</span> user_segments</div><div class="line">                            <span class="keyword">WHERE</span> segment_type <span class="keyword">LIKE</span> <span class="string">'TABLE%'</span></div><div class="line">                                <span class="keyword">AND</span> segment_name = <span class="string">'TABLE_NAME'</span> <span class="comment">--表名</span></div><div class="line">                            )</div><div class="line">                        <span class="keyword">GROUP</span> <span class="keyword">BY</span> segment_name</div><div class="line">                        )</div><div class="line">                    <span class="keyword">WHERE</span> siz_M &gt;= <span class="number">50</span>  <span class="comment">--定义达到50M的表为大数据表</span></div><div class="line">                    )</div><div class="line">            );</div><div class="line">    </div><div class="line">    TYPE IDXINFOREC </div><div class="line">    IS TABLE OF c1%ROWTYPE INDEX BY BINARY_INTEGER; </div><div class="line"></div><div class="line">    idxinfo    c1%ROWTYPE; </div><div class="line">    idxinfolist IDXINFOREC; </div><div class="line">    counter INTEGER; </div><div class="line">    </div><div class="line"><span class="operator"><span class="keyword">BEGIN</span></span></div><div class="line">    counter := <span class="number">0</span>; </div><div class="line"></div><div class="line">    OPEN c1;</div><div class="line">    </div><div class="line">    LOOP </div><div class="line">        FETCH c1 INTO idxinfo; </div><div class="line"></div><div class="line">        IF c1%FOUND THEN </div><div class="line">          counter := counter + 1; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line"></div><div class="line">        idxinfolist(counter) := idxinfo; </div><div class="line"></div><div class="line">        IF c1%NOTFOUND THEN </div><div class="line">          EXIT; </div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span> </div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span> </div><div class="line"></div><div class="line">    CLOSE c1; </div><div class="line">    </div><div class="line">    <span class="comment">--1.unusable索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' unusable'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">        </div><div class="line">    <span class="comment">--2.中间执行更新任务</span></div><div class="line">    <span class="comment">-- update something</span></div><div class="line">    <span class="operator"><span class="keyword">COMMIT</span>;</span></div><div class="line">    </div><div class="line">    <span class="comment">--3.重建索引</span></div><div class="line">    FOR i IN 1..counter LOOP </div><div class="line">        IF idxinfolist(i).PARTITIONED = 'NO' THEN</div><div class="line">            <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild parallel nologging'</span>;</span></div><div class="line">            </div><div class="line">        ELSE </div><div class="line">            IF idxinfolist(i).PARTITIONED = 'YES' THEN</div><div class="line">                FOR x IN (</div><div class="line">                            <span class="operator"><span class="keyword">SELECT</span> PARTITION_NAME</span></div><div class="line">                            <span class="keyword">FROM</span> user_IND_PARTITIONS</div><div class="line">                            <span class="keyword">WHERE</span> index_name = idxinfolist(i).index_name</div><div class="line">                            <span class="keyword">ORDER</span> <span class="keyword">BY</span> PARTITION_POSITION</div><div class="line">                            ) LOOP</div><div class="line"></div><div class="line">                        <span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' rebuild PARTITION '</span> || x.PARTITION_NAME || <span class="string">' parallel nologging'</span>;</div><div class="line">                <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line">            <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">END</span> <span class="keyword">IF</span>;</span></div><div class="line">        <span class="operator"><span class="keyword">EXECUTE</span> <span class="keyword">immediate</span> <span class="string">'ALTER INDEX '</span> || idxinfolist(i).index_name || <span class="string">' noparallel'</span>;</span></div><div class="line">    <span class="operator"><span class="keyword">END</span> LOOP;</span></div><div class="line"><span class="operator"><span class="keyword">END</span>;</span></div></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer>
-      
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-
-
-
 
 <ul class="page-direction" id="page-direction">
     <li><a class="page-prev icon-chevron-sign-left" href="javascript:;" title="上一页"></a></li>
@@ -1002,7 +1049,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>28</small></li>
+    <li><a href="/tags/Java/">Java</a><small>29</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -1061,6 +1108,10 @@
       </li>
     
       <li>
+        <a href="/2015/04/29/java-enum/">java枚举Enum的理解</a>
+      </li>
+    
+      <li>
         <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
       </li>
     
@@ -1098,10 +1149,6 @@
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
       </li>
     
   </ul>

@@ -89,6 +89,103 @@
   <div class="post-content">
     <header>
       
+        <time datetime="2010-10-14T09:09:55.000Z"><a href="/2010/10/14/thread-jichu/">10月 14 2010</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2010/10/14/thread-jichu/">线程的使用经验(设置名称、响应中断、使用ThreadLocal)</a></h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h3 id="启动线程的注意事项">启动线程的注意事项</h3>
+<p>方式一</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"thread name"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="comment">// do xxx</span></div><div class="line">	}</div><div class="line">};</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>方式二</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>{ </div><div class="line">	<span class="keyword">public</span> <span class="title">MyThread</span>() {</div><div class="line">		<span class="keyword">super</span>(<span class="string">"thread name"</span>);</div><div class="line">	}</div><div class="line"></div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() { </div><div class="line">		<span class="comment">// do xxx</span></div><div class="line">	} </div><div class="line">};</div><div class="line">MyThread thread = <span class="keyword">new</span> MyThread (); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>方式三</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread() { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="comment">// do xxx  </span></div><div class="line">	}</div><div class="line">};</div><div class="line">thread.setName(<span class="string">"thread name"</span>); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>方式四</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Thread thread = new Thread(task); </div><div class="line">// 传入任务 </div><div class="line">thread.setName(“thread name"); </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>方式五</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Thread thread = new Thread(task, “thread name");</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>无论何种方式,启动一个线程,就要给它一个名字!这对排错诊断系统监控有帮助。否则诊断问题时,无法直观知道某个线程的用途。</p>
+<h3 id="要响应线程中断">要响应线程中断</h3>
+<p>thread.interrupt();<br>方式一</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"interrupt test"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="keyword">for</span> (;;) { </div><div class="line">			doXXX();</div><div class="line">			<span class="keyword">if</span> (Thread.interrupted()) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">};</div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>方式二</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">foo</span>() <span class="keyword">throws</span> InterruptedException { </div><div class="line">	<span class="keyword">if</span> (Thread.interrupted()) {</div><div class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException(); </div><div class="line">	}</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>方式三</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">Thread thread = <span class="keyword">new</span> Thread(<span class="string">"interrupt test"</span>) { </div><div class="line">	<span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span>() {</div><div class="line">		<span class="keyword">for</span> (;;) { </div><div class="line">			<span class="keyword">try</span> {</div><div class="line">				doXXX();</div><div class="line">			} <span class="keyword">catch</span> (InterruptedException e) { </div><div class="line">				<span class="keyword">break</span>;</div><div class="line">			} <span class="keyword">catch</span> (Exception e) {</div><div class="line">				<span class="comment">// handle Exception</span></div><div class="line">			} </div><div class="line">		}</div><div class="line">	}</div><div class="line">}; </div><div class="line">thread.start();</div></pre></td></tr></table></figure>
+
+<p>程序应该对线程中断作出恰当的响应。</p>
+<h3 id="ThreadLocal">ThreadLocal</h3>
+<pre><code><span class="code">+-------------+</span>---------+
+<span class="header">|     ThreadLocal&lt;T&gt;    |
++-------------+---------+</span>
+<span class="code">+-------------+</span>---------+
+| initialValue() : T    |
+| get() : T             |
+| set(T value)          |
+<span class="header">| remove()              |
++-------------+---------+</span>
+</code></pre><p>顾名思义它是local variable(线程局部变量)。它的功用非常简单,就是为每一个使用该变量的线程都提供一个变量值的副本,是每一个线程都可以独立地改变自己的副本,而不 会和其它线程的副本冲突。从线程的角度看,就好像每一个线程都完全拥有该变量。</p>
+<p>使用场景</p>
+<ul>
+<li>To keep state with a thread (user-id, transaction-id, logging-id) </li>
+<li>To cache objects which you need frequently</li>
+<li>隐式传参</li>
+</ul>
+<p>注意:使用ThreadLocal,一般都是声明在静态变量中,如果不断的创建ThreadLocal而且没有调用其remove方法,将会导致<code>内存泄露</code>。<br>同时请注意,如果是static的ThreadLocal,一般不需要调用remove。</p>
+<h3 id="线程间的协调(lock、condition、wait、notify、notifyAll)">线程间的协调(lock、condition、wait、notify、notifyAll)</h3>
+<h4 id="ReentrantLock和Synchronized">ReentrantLock和Synchronized</h4>
+<p>Synchronized是Lock的一种简化实现,一个Lock可以对应多个Condition,而synchronized把Lock和Condition合并了,一个synchronized Lock只对应一个Condition,可以说Synchronized是Lock的简化版本。<br>在JDK 5,Synchronized要比Lock慢很多,但是在JDK 6中,它们的效 率差不多。</p>
+<p><img src="/img/thread.jpg"></p>
+<p>不要在Lock和Condition上使用wait、notiffy、notifyAll方法!</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+
+
+  <article class="post">
+  
+    <div class="gallery">
+  <div class="photoset">
+    
+      <img src="">
+    
+  </div>
+  <div class="control">
+    <div class="prev"></div>
+    <div class="next"></div>
+  </div>
+</div>
+  
+  <div class="post-content">
+    <header>
+      
         <time datetime="2010-07-16T07:45:02.000Z"><a href="/2010/07/16/shell-style/">7月 16 2010</a></time>
       
       
@@ -1353,7 +1450,7 @@
   
     <li><a href="/tags/Git/">Git</a><small>2</small></li>
   
-    <li><a href="/tags/Java/">Java</a><small>28</small></li>
+    <li><a href="/tags/Java/">Java</a><small>29</small></li>
   
     <li><a href="/tags/JavaScript/">JavaScript</a><small>4</small></li>
   
@@ -1412,6 +1509,10 @@
       </li>
     
       <li>
+        <a href="/2015/04/29/java-enum/">java枚举Enum的理解</a>
+      </li>
+    
+      <li>
         <a href="/2015/04/04/jishu-hehuoren/">技术合伙人为什么喜欢谈钱胜过情怀？</a>
       </li>
     
@@ -1449,10 +1550,6 @@
     
       <li>
         <a href="/2014/11/10/oracle-partition/">Oracle Partition Common Usage</a>
-      </li>
-    
-      <li>
-        <a href="/2014/10/28/jvm-strace/">jvm退出的原因,使用strace定位</a>
       </li>
     
   </ul>

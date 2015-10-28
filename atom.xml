@@ -4,7 +4,7 @@
   <subtitle><![CDATA[Write the Code. Change the World.]]></subtitle>
   <link href="/atom.xml" rel="self"/>
   <link href="http://lawrence-zxc.github.io/"/>
-  <updated>2015-07-03T05:40:40.538Z</updated>
+  <updated>2015-10-28T17:10:43.980Z</updated>
   <id>http://lawrence-zxc.github.io/</id>
   
   <author>
@@ -176,6 +176,77 @@
     <![CDATA[<h2 id="自旋锁（Spin_lock）">自旋锁（Spin lock）</h2>
 <p>自旋锁是指当一个线程尝试获取某个锁时，如果该锁已被其他线程占用，就一直循环检测锁是否被释放，而不是进入线程挂起或睡眠状态。</p>
 <p>自旋锁适用于锁保护的临界区很小的情况，临界区很小]]>
+    </summary>
+    
+      <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
+    
+      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
+    
+  </entry>
+  
+  <entry>
+    <title><![CDATA[java枚举Enum的理解]]></title>
+    <link href="http://lawrence-zxc.github.io/2015/04/29/java-enum/"/>
+    <id>http://lawrence-zxc.github.io/2015/04/29/java-enum/</id>
+    <published>2015-04-28T16:59:27.000Z</published>
+    <updated>2015-10-28T17:09:40.000Z</updated>
+    <content type="html"><![CDATA[<h3 id="常见应用">常见应用</h3>
+<p>枚举类是 java.lang.Enum 类的子类，下述示例代码中：</p>
+<p>NEGRO、WHITE、ASIAN都是Human预定义好的Human的实例（public static final）<br>在运行期间，我们无法再创建新的Enum的实例（构造方法私有）<br>示例代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> Human {</div><div class="line">   <span class="comment">// 利用构造函数传参</span></div><div class="line">   NEGRO(<span class="number">1</span>, <span class="string">"黑人"</span>),</div><div class="line">   WHITE(<span class="number">2</span>, <span class="string">"白人"</span>),</div><div class="line">   ASIAN(<span class="number">4</span>, <span class="string">"黄种人"</span>);</div><div class="line">   </div><div class="line">   <span class="comment">// 定义私有变量</span></div><div class="line">   <span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">   <span class="keyword">private</span> String desc;</div><div class="line">   </div><div class="line">   <span class="comment">// 构造函数，枚举类型只能为私有，默认为私有</span></div><div class="line">   Human( <span class="keyword">int</span> value, String desc) {</div><div class="line">       <span class="keyword">this</span>.value = value;</div><div class="line">       <span class="keyword">this</span>.desc = desc;</div><div class="line">   }</div><div class="line">   </div><div class="line">   <span class="comment">// Getter and Setter </span></div><div class="line">   ... ...        </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>综上所述：</p>
+<p>enum 类的实例，默认是：public static final，例如上述的 NEGRO、WHITE、ASIAN<br>enum 类的默认构造方法是 private，也只能是private，保证外界无法创建 enum实例</p>
+<h3 id="为什么要用_enum">为什么要用 enum</h3>
+<p>实际上，枚举类的实例是静态常量，那为什么不直接使用静态常量呢？在没有 enum之前，静态常量的写法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 方法 1：静态常量</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeekDay</span> </span>{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> MONDAY = <span class="number">1</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TUESDAY = <span class="number">2</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> WENSDAY = <span class="number">3</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> THURSDAY = <span class="number">4</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> FRIDAY = <span class="number">5</span>;</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>使用枚举类时：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 方法 2：枚举类</span></div><div class="line"><span class="comment">// enum 类的等价实现方式，后文会单独写一个 enum</span></div><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WeekDay</span> </span>{</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay MONDAY = <span class="keyword">new</span> WeekDay(<span class="number">1</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay TUESDAY = <span class="keyword">new</span> WeekDay(<span class="number">2</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay WENSDAY = <span class="keyword">new</span> WeekDay(<span class="number">3</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay THURSDAY = <span class="keyword">new</span> WeekDay(<span class="number">4</span>);</div><div class="line">     <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> WeekDay FRIDAY = <span class="keyword">new</span> WeekDay(<span class="number">5</span>);</div><div class="line">     </div><div class="line">     <span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">     </div><div class="line">     <span class="keyword">private</span> <span class="title">WeekDay</span>(<span class="keyword">int</span> i){</div><div class="line">               <span class="keyword">this</span>.value = i;</div><div class="line">     }</div><div class="line">     </div><div class="line">     <span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValue</span>(){</div><div class="line">               <span class="keyword">return</span> value;</div><div class="line">     }   </div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h4 id="方法_1，使用静态常量，存在几个问题：">方法 1，使用静态常量，存在几个问题：</h4>
+<ul>
+<li>类型不安全：由于常量的对应值是整数形，所以程序执行过程中很有可能给星期变量传入一个任意的整数值，导致出现错误。</li>
+<li>没有命名空间：由于常量只是类的属性，必须通过类来访问 如： Weekday.SUNDAY。</li>
+<li>一致性差：因为整形枚举属于编译期常量，所以编译过程完成后，所有客户端和服务器端引用的地方，会直接将整数值写入，修改需要重新编译。</li>
+<li>类型无指意性：由于枚举值仅仅是一些无任何含义的整数值，如果在运行期调试时候，你就会发现日志中有很多魔术数字（0-6），其他人很难明白具体含义。</li>
+</ul>
+<h4 id="相比来说，方法_2_，使用静态常量类（枚举类），好处：">相比来说，方法 2 ，使用静态常量类（枚举类），好处：</h4>
+<ul>
+<li>语意性强：字面即可理解功能</li>
+<li>不直接接受 int 类型数据，只接受 WeekDay 预定义好的static final的实例</li>
+<li>所有对象都是 public static final，是单例的，因此可以直接使用 equals 或者 ==</li>
+</ul>
+<p>下面写一个标准的枚举类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> WeekDayEnum {</div><div class="line">	MONDAY(<span class="number">1</span>),</div><div class="line">	TUSDAY(<span class="number">2</span>),</div><div class="line">	WENSDAY(<span class="number">3</span>),</div><div class="line">	THURSDAY(<span class="number">4</span>),</div><div class="line">	FRIDAY(<span class="number">5</span>);</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> value;</div><div class="line">	</div><div class="line">	WeekDayEnum(<span class="keyword">int</span> value){</div><div class="line">		<span class="keyword">this</span>.value = value;</div><div class="line">	}</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValue</span>(){</div><div class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.value;</div><div class="line">	}	</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<p>NOTE：实际上，枚举类继承自java.lang.Enum抽象类。</p>
+<h3 id="应用场景">应用场景</h3>
+<p>枚举的7中常用方式，主要有：</p>
+<ul>
+<li>表示常量</li>
+<li>用于switch</li>
+<li>添加更多方法</li>
+<li>覆盖Object方法</li>
+<li>实现接口</li>
+<li>枚举集合EnumSet和EnumMap，EnumSet保证集合中的元素不重复；EnumMap中的key是enum类型，而value则可以是任意类型。</li>
+</ul>
+<h3 id="特别写法">特别写法</h3>
+<p>枚举类，每个静态常量实例，都有一个序号（从 0 开始），常见的写法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">enum</span> WeekDayEnum {</div><div class="line">	MONDAY(<span class="string">"周一"</span>),</div><div class="line">	TUSDAY(<span class="string">"周二"</span>),</div><div class="line">	WENSDAY(<span class="string">"周三"</span>),</div><div class="line">	THURSDAY(<span class="string">"周四"</span>),</div><div class="line">	FRIDAY(<span class="string">"周五"</span>);</div><div class="line">	</div><div class="line">	<span class="keyword">private</span> <span class="keyword">int</span> ordinal;</div><div class="line">	</div><div class="line">	WeekDayEnum(){</div><div class="line">		<span class="keyword">this</span>.ordinal = <span class="keyword">this</span>.ordinal();</div><div class="line">	}</div><div class="line">	</div><div class="line">	<span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getOrdinal</span>(){</div><div class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.ordinal;</div><div class="line">	}	</div><div class="line">}</div></pre></td></tr></table></figure>
+
+<h3 id="避免错误使用_Enum">避免错误使用 Enum</h3>
+<p>不过在使用 Enum 时候有几个地方需要注意：</p>
+<ul>
+<li>enum 类型不支持 public 和 protected 修饰符的构造方法，因此构造函数一定要是 private 或 friendly 的。也正因为如此，所以枚举对象是无法在程序中通过直接调用其构造方法来初始化的。</li>
+<li>定义 enum 类型时候，如果是简单类型，那么最后一个枚举值后不用跟任何一个符号；但如果有定制方法，那么最后一个枚举值与后面代码要用分号’;’隔开，不能用逗号或空格。</li>
+<li>由于 enum 类型的值实际上是通过运行期构造出对象来表示的，所以在 cluster 环境下，每个虚拟机都会构造出一个同义的枚举对象。因而在做比较操作时候就需要注意，如果直接通过使用等号 ( ‘ == ’ ) 操作符，这些看似一样的枚举值一定不相等，因为这不是同一个对象实例。</li>
+</ul>
+]]></content>
+    <summary type="html">
+    <![CDATA[<h3 id="常见应用">常见应用</h3>
+<p>枚举类是 java.lang.Enum 类的子类，下述示例代码中：</p>
+<p>NEGRO、WHITE、ASIAN都是Human预定义好的Human的实例（public static final）<br>在运行期间，我们无法]]>
     </summary>
     
       <category term="Java" scheme="http://lawrence-zxc.github.io/tags/Java/"/>
@@ -996,58 +1067,6 @@ Youtube上apigee关于API Desion的视频，讲的也很不错，请自备梯子
     </summary>
     
       <category term="Nginx" scheme="http://lawrence-zxc.github.io/tags/Nginx/"/>
-    
-      <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
-    
-  </entry>
-  
-  <entry>
-    <title><![CDATA[REST风格的软件架构]]></title>
-    <link href="http://lawrence-zxc.github.io/2014/09/05/blog1/"/>
-    <id>http://lawrence-zxc.github.io/2014/09/05/blog1/</id>
-    <published>2014-09-05T06:10:03.000Z</published>
-    <updated>2015-04-14T16:03:32.000Z</updated>
-    <content type="html"><![CDATA[<p>REST风格的软件架构</p>
-<p>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code><span class="title">Resources</span> 一切都是资源
-</code></pre><p>分布在整个网络中的内容都是一种资源，并由URI来确定，资源可以是文本、图片、服务等实体的存在，并用URI来提供这种资源，例如， /book/2 可以用来提供id为2的一本书。</p>
-<pre><code><span class="title">Representation</span> 表现层
-</code></pre><p>资源是一种实体，需要通过一种形式表现出来，这种形式可以是HTML、XML、JSON等文本格式，也可以是图片、音频或视频等多媒体格式，例如，通过访问 /book/2 返回了一下JSON数据：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">{</div><div class="line">    <span class="string">"title"</span>: <span class="string">"Gone with the Wind"</span>,</div><div class="line">    <span class="string">"author"</span>: <span class="string">"Margaret Mitchell"</span> </div><div class="line">}</div></pre></td></tr></table></figure>
-
-<p>JSON数据就这本书的表现层。</p>
-<p>State Transfer 显示的使用HTTP方法来转化资源的状态</p>
-<p>使用HTTP规范中的GET、POST、PUT、DELETE方法来操作资源，例如</p>
-<pre><code>GET <span class="regexp">/book/</span><span class="number">2</span>
-</code></pre><p>可以获得id为2的一本书，HTTP方法与操作资源的对应关系如下</p>
-<pre><code>POST 创建或更新资源
-
-GET 获取资源
-
-PUT 更新资源
-
-<span class="keyword">DELETE</span> 删除资源
-</code></pre><p>举例如下：<br>同样是访问 /book/2，</p>
-<pre><code>POST 创建一本书
-
-GET 获取一本的信息
-
-PUT 更新书的信息
-
-<span class="keyword">DELETE</span> 删除id为<span class="number">2</span>的书
-
-Stateless 无状态
-</code></pre><p>服务器端不会保存请求之间的上下文状态。</p>
-<pre><code>Client-Server 基于<span class="keyword">C</span>/S结构
-</code></pre><p>Client端不关心数据如何存储，Server端也不关心怎样展现数据，因此，Client和Server可以分开部署，适用于iOS与Android等移动客户端与Server端的通信。</p>
-]]></content>
-    <summary type="html">
-    <![CDATA[<p>REST风格的软件架构</p>
-<p>REST(REpresentational State Transfer)，表征状态转移，是一种针对分布式架构的软件架构风格，这种软件架构风格已经被广泛的应用在了Web API的设计上面，具有以下几个特点：</p>
-<pre><code]]>
-    </summary>
-    
-      <category term="架构" scheme="http://lawrence-zxc.github.io/tags/%E6%9E%B6%E6%9E%84/"/>
     
       <category term="日志" scheme="http://lawrence-zxc.github.io/categories/%E6%97%A5%E5%BF%97/"/>
     
